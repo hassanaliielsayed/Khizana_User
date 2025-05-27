@@ -1,0 +1,56 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+
+# === Built files ===
+*.apk
+*.ap_
+*.dex
+**/build/
+
+# === Gradle ===
+.gradle/
+
+# === Local configuration ===
+local.properties
+.idea/
+*.iml
+
+# === Android Studio ===
+captures/
+output.json
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+
+# === Keystore ===
+*.jks
+
+# === Firebase / Crashlytics / Fabric ===
+crashlytics-build.properties
+fabric.properties
+app/google-services.json 
+
+# === Kotlin ===
+*.kotlin_module
+
+# === Native / NDK (optional, but safe to ignore) ===
+.cxx/
+.externalNativeBuild/
+
+# === Jetpack Compose ===
+compose-compiler/
