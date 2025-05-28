@@ -5,7 +5,6 @@ plugins {
 
     id("com.google.devtools.ksp")
     kotlin("plugin.serialization") version "2.1.10"
-    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -67,9 +66,9 @@ dependencies {
 
     //Scoped API
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose-android:2.8.7")
-    // Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    //Retrofit
+    implementation ("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
     //Room
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
@@ -106,9 +105,4 @@ dependencies {
     implementation("io.insert-koin:koin-android:$koin_android_version")
     implementation("io.insert-koin:koin-androidx-compose:$koin_android_version")
     implementation("io.insert-koin:koin-androidx-compose-navigation:$koin_android_version")
-
-
-    //Hilt
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    ksp("com.google.dagger:hilt-android-compiler:2.51.1")
 }
