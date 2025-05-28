@@ -1,5 +1,6 @@
 
 package com.example.khizana_user.data.dto
+
 import com.google.gson.annotations.SerializedName
 
 data class AllBrandsResponse(

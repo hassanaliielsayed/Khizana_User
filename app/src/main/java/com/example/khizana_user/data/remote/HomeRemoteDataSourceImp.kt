@@ -4,9 +4,10 @@ import android.util.Log
 import com.example.khizana_user.data.api.KhizanaAPIService
 import com.example.khizana_user.data.dto.BrandResponse
 import com.example.khizana_user.data.repositoryImpl.HomeRemoteDataSourceIn
+import javax.inject.Inject
 
 
-class HomeRemoteDataSourceImp(private val apiService: KhizanaAPIService) : HomeRemoteDataSourceIn {
+class HomeRemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPIService) : HomeRemoteDataSourceIn {
 
     override suspend fun fetchAllBrands():  List<BrandResponse> {
 

@@ -18,23 +18,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.example.khizana_user.data.api.KhizanaClient
-import com.example.khizana_user.data.remote.HomeRemoteDataSourceImp
-import com.example.khizana_user.data.repositoryImpl.HomeRepositoryImp
-import com.example.khizana_user.domain.usecase.GetAllBrandsUseCase
-import com.example.khizana_user.presentation.home.viewModel.AllBrandsViewModelFactory
-import com.example.khizana_user.presentation.home.viewModel.BrandViewModel
+import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 
 
 @OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: BrandViewModel = viewModel(
-    factory = AllBrandsViewModelFactory(GetAllBrandsUseCase(
-        HomeRepositoryImp(
-            HomeRemoteDataSourceImp(KhizanaClient.getInstance())
-        ))
-    )
-)) {
+fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
 
     val brands by viewModel.brands.collectAsState()
     val error by viewModel.error.collectAsState()

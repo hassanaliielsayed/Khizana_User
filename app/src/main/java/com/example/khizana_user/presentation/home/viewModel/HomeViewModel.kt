@@ -2,17 +2,20 @@ package com.example.khizana_user.presentation.home.viewModel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.usecase.GetAllBrandsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlin.collections.forEach
 
 
-class BrandViewModel(private val getAllBrandsUseCase: GetAllBrandsUseCase) : ViewModel() {
+
+@HiltViewModel
+class HomeViewModel @Inject constructor(private val getAllBrandsUseCase: GetAllBrandsUseCase) : ViewModel() {
 
     private val _brands = MutableStateFlow<List<Brand>>(emptyList())
     val brands: StateFlow<List<Brand>> = _brands
@@ -45,8 +48,8 @@ class BrandViewModel(private val getAllBrandsUseCase: GetAllBrandsUseCase) : Vie
 
 
 
-class AllBrandsViewModelFactory (private val useCase: GetAllBrandsUseCase):ViewModelProvider.Factory{
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return BrandViewModel(useCase) as T
-    }
-}
+//class AllBrandsViewModelFactory (private val useCase: GetAllBrandsUseCase):ViewModelProvider.Factory{
+//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+//        return BrandViewModel(useCase) as T
+//    }
+//}
