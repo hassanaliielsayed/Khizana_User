@@ -3,7 +3,7 @@ package com.example.khizana_user.data.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class AllBrandsResponse(
+data class BrandsResponse(
     @SerializedName("smart_collections")
     val allBrands: List<BrandResponse>
 )

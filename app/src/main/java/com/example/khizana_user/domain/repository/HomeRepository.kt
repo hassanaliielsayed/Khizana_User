@@ -1,8 +1,8 @@
-package com.example.khizana_user.domain.repositoryInterfaces
+package com.example.khizana_user.domain.repository
 
 import com.example.khizana_user.domain.model.Brand
 
 
-interface HomeRepositoryIn {
+interface HomeRepository {
     suspend fun getAllBrands(): List<Brand>
 }

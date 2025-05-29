@@ -1,9 +1,9 @@
-package com.example.khizana_user.data.repositoryImpl
+package com.example.khizana_user.data.repository
 
 import com.example.khizana_user.data.dto.BrandResponse
 
 
-interface HomeRemoteDataSourceIn {
+interface RemoteDataSource {
 
     suspend fun fetchAllBrands():  List<BrandResponse>
 

@@ -1,4 +1,4 @@
-package com.example.khizana_user.data.repositoryImpl.mapper
+package com.example.khizana_user.data.repository.mapper
 
 import com.example.khizana_user.data.dto.BrandResponse
 import com.example.khizana_user.domain.model.Brand

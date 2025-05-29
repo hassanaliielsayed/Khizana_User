@@ -1,13 +1,13 @@
-package com.example.khizana_user.data.remote
+package com.example.khizana_user.data.dataSource.remote
 
 import android.util.Log
-import com.example.khizana_user.data.api.KhizanaAPIService
+import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dto.BrandResponse
-import com.example.khizana_user.data.repositoryImpl.HomeRemoteDataSourceIn
+import com.example.khizana_user.data.repository.RemoteDataSource
 import javax.inject.Inject
 
 
-class HomeRemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPIService) : HomeRemoteDataSourceIn {
+class RemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPIService) : RemoteDataSource {
 
     override suspend fun fetchAllBrands():  List<BrandResponse> {
 

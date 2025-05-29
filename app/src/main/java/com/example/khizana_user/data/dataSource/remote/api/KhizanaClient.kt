@@ -1,4 +1,4 @@
-package com.example.khizana_user.data.api
+package com.example.khizana_user.data.dataSource.remote.api
 
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

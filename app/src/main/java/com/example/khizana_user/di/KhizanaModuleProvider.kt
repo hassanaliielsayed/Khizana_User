@@ -1,6 +1,6 @@
 package com.example.khizana_user.di
 
-import com.example.khizana_user.data.api.KhizanaAPIService
+import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
