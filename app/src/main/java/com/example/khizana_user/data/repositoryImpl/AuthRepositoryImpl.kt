@@ -1,24 +1,18 @@
 package com.example.khizana_user.data.repositoryImpl
 
+import com.example.khizana_user.domain.repositoryInterfaces.AuthDataSource
 import com.example.khizana_user.domain.repositoryInterfaces.AuthRepository
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class AuthRepositoryImpl @Inject constructor() : AuthRepository {
-    private val auth = FirebaseAuth.getInstance()
+class AuthRepositoryImpl @Inject constructor(
+    private val authDataSource: AuthDataSource
+) : AuthRepository {
 
-    override suspend fun login(email: String, password: String): Result<Unit> = try {
-        auth.signInWithEmailAndPassword(email, password).await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+    override suspend fun login(email: String, password: String): Result<Unit> {
+        return authDataSource.login(email, password)
     }
 
-    override suspend fun register(email: String, password: String): Result<Unit> = try {
-        auth.createUserWithEmailAndPassword(email, password).await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+    override suspend fun register(email: String, password: String): Result<Unit> {
+        return authDataSource.register(email, password)
     }
 }
