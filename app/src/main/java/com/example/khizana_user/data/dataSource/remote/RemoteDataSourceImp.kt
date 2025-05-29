@@ -2,14 +2,15 @@ package com.example.khizana_user.data.dataSource.remote
 
 import android.util.Log
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
-import com.example.khizana_user.data.dto.BrandResponse
+import com.example.khizana_user.data.dto.BrandResponseDto
+import com.example.khizana_user.data.dto.CouponsResponseDto
 import com.example.khizana_user.data.repository.RemoteDataSource
 import javax.inject.Inject
 
 
 class RemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPIService) : RemoteDataSource {
 
-    override suspend fun fetchAllBrands():  List<BrandResponse> {
+    override suspend fun fetchAllBrands():  List<BrandResponseDto> {
 
         val response = apiService.getAllBrands()
         val body = response.body()
@@ -27,4 +28,6 @@ class RemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPI
 
         }
     }
+
+    override suspend fun getCoupons() = apiService.getCoupons()
 }
