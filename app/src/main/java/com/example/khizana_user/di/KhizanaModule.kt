@@ -21,6 +21,9 @@ abstract class KhizanaModule {
     @Singleton
     abstract fun bindHomeRepository (repo: HomeRepositoryImp): HomeRepository
 
+
+
+
 //    @Provides
 //    fun provideGetAllBrandsUseCase(
 //        repository: HomeRepositoryIn

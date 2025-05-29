@@ -4,27 +4,36 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Brand
+import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.usecase.GetAllBrandsUseCase
+import com.example.khizana_user.domain.usecase.GetAllCouponsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.khizana_user.utils.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.collections.forEach
 
-
-
 @HiltViewModel
-class HomeViewModel @Inject constructor(private val getAllBrandsUseCase: GetAllBrandsUseCase) : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val getAllBrandsUseCase: GetAllBrandsUseCase,
+    private val getAllCouponsUseCase: GetAllCouponsUseCase
+) : ViewModel() {
 
     private val _brands = MutableStateFlow<List<Brand>>(emptyList())
     val brands: StateFlow<List<Brand>> = _brands
+
+    private val _coupons = MutableStateFlow<Result<List<Coupon>>>(Result.Loading)
+    val coupons = _coupons.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
     init {
         fetchBrands()
+        fetchCoupons()
     }
 
     fun fetchBrands() {
@@ -44,6 +53,19 @@ class HomeViewModel @Inject constructor(private val getAllBrandsUseCase: GetAllB
             }
         }
     }
+
+    fun fetchCoupons() {
+        viewModelScope.launch {
+            try {
+                val result = getAllCouponsUseCase()
+                _coupons.value = Result.Success(result)
+            } catch (e: Exception) {
+                _coupons.value = Result.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+
 }
 
 

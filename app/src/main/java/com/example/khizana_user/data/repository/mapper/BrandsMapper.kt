@@ -1,10 +1,10 @@
 package com.example.khizana_user.data.repository.mapper
 
-import com.example.khizana_user.data.dto.BrandResponse
+import com.example.khizana_user.data.dto.BrandResponseDto
 import com.example.khizana_user.domain.model.Brand
 
 
-fun BrandResponse.toBrandModel(): Brand {
+fun BrandResponseDto.toBrandModel(): Brand {
     return Brand(
         id = this.id,
         title = this.title,
