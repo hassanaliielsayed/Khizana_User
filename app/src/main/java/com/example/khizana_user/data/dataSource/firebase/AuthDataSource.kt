@@ -1,2 +1,2 @@
-package com.example.khizana_user.data.dataSource.firebase
+package com.example.khizana_user.data.dataSource.remote.firebase
 

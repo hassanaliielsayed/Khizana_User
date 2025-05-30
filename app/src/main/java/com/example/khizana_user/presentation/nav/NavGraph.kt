@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
-
+import com.example.khizana_user.presentation.home.view.HomeScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -17,7 +17,9 @@ fun AppNavGraph(navController: NavHostController) {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
-                    // TODO: Navigate to home or dashboard
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 },
                 onNavigateToRegister = {
                     navController.navigate("register")
@@ -28,9 +30,18 @@ fun AppNavGraph(navController: NavHostController) {
         composable("register") {
             RegisterScreen(
                 onRegisterSuccess = {
-                    navController.popBackStack()
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack("login", inclusive = false)
                 }
             )
+        }
+
+        composable("home") {
+            HomeScreen()
         }
     }
 }
