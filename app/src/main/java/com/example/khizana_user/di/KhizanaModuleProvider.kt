@@ -1,6 +1,12 @@
 package com.example.khizana_user.di
 
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
+import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
+import com.example.khizana_user.data.repositoryImpl.AuthRepositoryImpl
+import com.example.khizana_user.domain.repositoryInterfaces.AuthDataSource
+import com.example.khizana_user.domain.repositoryInterfaces.AuthRepository
+import com.example.khizana_user.domain.usecase.LoginUseCase
+import com.example.khizana_user.domain.usecase.RegisterUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,4 +41,20 @@ class KhizanaModuleProvider {
     fun provideKhizanaService (retrofit: Retrofit): KhizanaAPIService {
         return retrofit.create(KhizanaAPIService::class.java)
     }
+
+
+    @Provides
+    fun provideAuthDataSource(): AuthDataSource = FirebaseAuthDataSourceImpl()
+
+    @Provides
+    fun provideAuthRepository(authDataSource: AuthDataSource): AuthRepository =
+        AuthRepositoryImpl(authDataSource)
+
+    @Provides
+    fun provideLoginUseCase(repository: AuthRepository): LoginUseCase =
+        LoginUseCase(repository)
+
+    @Provides
+    fun provideRegisterUseCase(repository: AuthRepository): RegisterUseCase =
+        RegisterUseCase(repository)
 }

@@ -1,4 +1,4 @@
-package com.example.khizana_user.data.firebase
+package com.example.khizana_user.data.dataSource.remote.firebase
 
 import com.example.khizana_user.domain.repositoryInterfaces.AuthDataSource
 import com.google.firebase.auth.FirebaseAuth
