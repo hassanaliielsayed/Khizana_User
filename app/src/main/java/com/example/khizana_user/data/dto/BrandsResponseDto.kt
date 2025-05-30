@@ -1,19 +1,20 @@
 
 package com.example.khizana_user.data.dto
+
 import com.google.gson.annotations.SerializedName
 
-data class AllBrandsResponse(
+data class BrandsResponseDto(
     @SerializedName("smart_collections")
-    val allBrands: List<BrandResponse>
+    val allBrands: List<BrandResponseDto>
 )
 
-data class BrandResponse(
+data class BrandResponseDto(
     val id: Long,
     val title: String,
-    val image: ImageResponse?
+    val image: ImageResponseDto?
 )
 
-data class ImageResponse(
+data class ImageResponseDto(
     val src: String
 )
 
