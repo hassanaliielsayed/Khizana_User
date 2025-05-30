@@ -1,4 +1,17 @@
 <resources>
     <string name="app_name">Khizana_User</string>
     <string name="title_activity_home">Home</string>
+    <string name="project_name">Khizana Store</string>
+    <string name="filter">Filter</string>
+    <string name="favorites">Favorites</string>
+    <string name="shopping_cart">ShoppingCart</string>
+    <string name="background_image">Background Image</string>
+    <string name="user_image">User Image</string>
+    <string name="welcome_message">Hi, Aya \nWelcome To Khizana Store</string>
+    <string name="search_for_products">Search For products</string>
+    <string name="brands">Brands</string>
+    <string name="products">Products</string>
+    <string name="see_more_products">See More Products</string>
+    <string name="brand_image">brand image</string>
+    <string name="products_image">products image</string>
 </resources>

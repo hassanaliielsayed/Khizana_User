@@ -7,4 +7,11 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+<!--    Home Colos-->
+
+<!--    <color name="dark_blue">0xFF4157FF</color>-->
+<!--    <color name="dark_blue">#4157FF</color>-->
+    <color name="dark_blue">#FF4157FF</color>
+    <color name="light_blue">#FFE3F2FD</color>
 </resources>
