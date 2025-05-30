@@ -7,7 +7,10 @@ plugins {
     kotlin("plugin.serialization") version "2.1.10"
 
     id("com.google.dagger.hilt.android")
+    kotlin("kapt")
+    alias(libs.plugins.google.gms.google.services)
 }
+
 
 android {
     namespace = "com.example.khizana_user"
@@ -54,6 +57,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -68,9 +72,9 @@ dependencies {
 
     //Scoped API
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose-android:2.8.7")
-    // Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    //Retrofit
+    implementation ("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
     //Room
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
@@ -83,6 +87,8 @@ dependencies {
     //LiveData & Compose
     val compose_version = "1.0.0"
     implementation ("androidx.compose.runtime:runtime-livedata:$compose_version")
+    implementation("androidx.navigation:navigation-compose:2.9.0")
+
 
     // Location
     implementation(libs.play.services.location)
@@ -108,10 +114,17 @@ dependencies {
     implementation("io.insert-koin:koin-androidx-compose:$koin_android_version")
     implementation("io.insert-koin:koin-androidx-compose-navigation:$koin_android_version")
 
+    // Hilt Core
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
 
-    //Hilt
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    ksp("com.google.dagger:hilt-android-compiler:2.51.1")
+// Hilt + Jetpack Compose
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
+    //firebase
+    implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
 
     implementation ("com.google.accompanist:accompanist-pager:0.34.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.34.0")
