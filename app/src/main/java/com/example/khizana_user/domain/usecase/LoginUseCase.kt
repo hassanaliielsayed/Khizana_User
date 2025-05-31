@@ -1,6 +1,6 @@
 package com.example.khizana_user.domain.usecase
 
-import com.example.khizana_user.domain.repositoryInterfaces.AuthRepository
+import com.example.khizana_user.domain.repository.AuthRepository
 import javax.inject.Inject
 
 class LoginUseCase @Inject constructor(

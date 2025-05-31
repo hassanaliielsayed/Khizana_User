@@ -1,10 +1,9 @@
-package com.example.khizana_user.data.repositoryImpl
+package com.example.khizana_user.data.repository
 
-import com.example.khizana_user.domain.repositoryInterfaces.AuthDataSource
-import com.example.khizana_user.domain.repositoryInterfaces.AuthRepository
+import com.example.khizana_user.domain.repository.AuthRepository
 import javax.inject.Inject
 
-class AuthRepositoryImpl @Inject constructor(
+class AuthRepositoryImp @Inject constructor(
     private val authDataSource: AuthDataSource
 ) : AuthRepository {
 
