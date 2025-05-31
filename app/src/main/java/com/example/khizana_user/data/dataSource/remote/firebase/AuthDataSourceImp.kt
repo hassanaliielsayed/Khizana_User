@@ -1,6 +1,6 @@
 package com.example.khizana_user.data.dataSource.remote.firebase
 
-import com.example.khizana_user.domain.repositoryInterfaces.AuthDataSource
+import com.example.khizana_user.data.repository.AuthDataSource
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject

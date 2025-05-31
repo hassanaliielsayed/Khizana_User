@@ -8,6 +8,7 @@ plugins {
 
     id("com.google.dagger.hilt.android")
     kotlin("kapt")
+
     alias(libs.plugins.google.gms.google.services)
 }
 
@@ -123,7 +124,7 @@ dependencies {
 
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
-    //firebase
+    //firebase dependency
     implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
 
     implementation ("com.google.accompanist:accompanist-pager:0.34.0")

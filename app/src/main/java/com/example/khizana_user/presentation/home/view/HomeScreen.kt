@@ -3,7 +3,6 @@ package com.example.khizana_user.presentation.home.view
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,10 +22,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -58,7 +55,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -71,7 +70,7 @@ import com.example.khizana_user.R
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 import com.example.khizana_user.utils.Result
-import com.google.accompanist.pager.ExperimentalPagerApi
+import com.example.khizana_user.utils.customFontFamily
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
@@ -90,15 +89,22 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Khizana Store") },
+                title = {
+                    Text(
+                        stringResource(R.string.project_name),
+                        fontFamily = customFontFamily,
+                        fontSize = 20.sp,
+                        color = Color.White
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF4157FF)
+                    containerColor = colorResource(id = R.color.dark_blue)
                 ),
                 actions = {
                     IconButton(onClick = {}) {
                         Image(
                             painter = painterResource(id = R.drawable.filter),
-                            contentDescription = "Filter",
+                            contentDescription = stringResource(R.string.filter),
                             modifier = Modifier.size(24.dp)
                         )
 
@@ -106,14 +112,18 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
-                            contentDescription = "Favorite"
+                            tint = Color.White,
+                            contentDescription = stringResource(R.string.favorites),
+                            modifier = Modifier.size(24.dp)
                         )
 
                     }
                     IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "ShoppingCart"
+                            tint = Color.White,
+                            contentDescription = stringResource(R.string.shopping_cart),
+                            modifier = Modifier.size(24.dp)
                         )
 
                     }
@@ -126,19 +136,18 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
         ) {
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(350.dp)
+                        .height(363.dp)
                 ) {
 
                     Image(
 
                         painter = painterResource(id = R.drawable.home_background),
-                        contentDescription = "Background",
+                        contentDescription = stringResource(R.string.background_image),
                         modifier = Modifier.fillMaxSize()
 
                     )
@@ -155,7 +164,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                         Image(
 
                             painter = painterResource(id = R.drawable.person),
-                            contentDescription = "User Image",
+                            contentDescription = stringResource(R.string.user_image),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(55.dp)
@@ -166,8 +175,10 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Hi, Aya \nWelcome To Khizana Store",
-                            fontSize = 20.sp,
+                            text = stringResource(R.string.welcome_message),
+                            fontSize = 22.sp,
+                            fontFamily = customFontFamily,
+                            fontWeight = FontWeight.Normal,
                             //fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
@@ -181,14 +192,15 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
                             value = searchText.value,
                             onValueChange = { searchText.value = it },
-                            placeholder = { Text("Search For products") },
+                            placeholder = { Text(stringResource(R.string.search_for_products)) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(24.dp),
                             colors = TextFieldDefaults.colors(
                                 unfocusedContainerColor = Color.White,
-                                focusedContainerColor = Color.Blue
+                                focusedContainerColor = Color.Gray
 
-                            )
+                            ),
+
                         )
                     }
                 }
@@ -196,10 +208,12 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
             item {
                 Text(
-                    text = "Brands",
-                    fontSize = 16.sp,
+                    text = stringResource(R.string.brands),
+                    fontSize = 20.sp,
+                    fontFamily = customFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                    color = colorResource(id = R.color.dark_blue),
+                    modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -239,29 +253,6 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
             item {
                 Row(
-
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-
-                ) {
-                    Text(
-                        text = "Products",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Text(
-                        text = "See More Products",
-                        color = Color.Blue,
-                        fontSize = 14.sp
-                    )
-                }
-
-            }
-
-            item {
-                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
@@ -269,14 +260,19 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Products",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
+                        text = stringResource(R.string.products),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = customFontFamily,
+                        color = colorResource(id = R.color.dark_blue)
+
                     )
                     Text(
-                        text = "See More Products",
-                        color = Color.Blue,
-                        fontSize = 14.sp
+                        text = stringResource(R.string.see_more_products),
+                        color = Color.Black,
+                        fontSize = 13.sp,
+                        fontFamily = customFontFamily,
+                        fontWeight = FontWeight.Normal,
                     )
                 }
             }
@@ -315,21 +311,25 @@ fun CategoryItem(category: String) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFE3F2FD))
+                .background(colorResource(R.color.light_blue))
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Image(
                 painter = painterResource(id = R.drawable.person),
-                contentDescription = "test category",
+                contentDescription = stringResource(R.string.brand_image),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
                     .clip(CircleShape)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = category)
+            Text(text = category,
+                fontSize = 14.sp,
+                fontFamily = customFontFamily,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black)
         }
     }
 }
@@ -344,25 +344,29 @@ fun ProductItem(product: String) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFE3F2FD)),
+                .background(colorResource(R.color.light_blue)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
 
             Image(
                 painter = painterResource(id = R.drawable.person),
-                contentDescription = "test category",
+                contentDescription = stringResource(R.string.products_image),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(35.dp)
                     .clip(CircleShape)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = product, fontSize = 10.sp)
+            Text(text = product, fontSize = 14.sp,
+                fontFamily = customFontFamily,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black)
         }
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 fun CouponCarousel(copuons: List<Coupon>) {
 

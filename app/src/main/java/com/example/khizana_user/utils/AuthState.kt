@@ -1,4 +1,4 @@
-package com.example.khizana_user.presentation.auth.state
+package com.example.khizana_user.utils
 
 
 sealed class AuthState {

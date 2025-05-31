@@ -2,9 +2,9 @@ package com.example.khizana_user.di
 
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
-import com.example.khizana_user.data.repositoryImpl.AuthRepositoryImpl
-import com.example.khizana_user.domain.repositoryInterfaces.AuthDataSource
-import com.example.khizana_user.domain.repositoryInterfaces.AuthRepository
+import com.example.khizana_user.data.repository.AuthRepositoryImp
+import com.example.khizana_user.data.repository.AuthDataSource
+import com.example.khizana_user.domain.repository.AuthRepository
 import com.example.khizana_user.domain.usecase.LoginUseCase
 import com.example.khizana_user.domain.usecase.RegisterUseCase
 import dagger.Module
@@ -48,7 +48,7 @@ class KhizanaModuleProvider {
 
     @Provides
     fun provideAuthRepository(authDataSource: AuthDataSource): AuthRepository =
-        AuthRepositoryImpl(authDataSource)
+        AuthRepositoryImp(authDataSource)
 
     @Provides
     fun provideLoginUseCase(repository: AuthRepository): LoginUseCase =
