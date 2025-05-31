@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,15 +60,18 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.example.khizana_user.R
+import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
+import com.example.khizana_user.domain.model.Product
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.customFontFamily
@@ -85,6 +89,21 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val brands by viewModel.brands.collectAsState()
     val error by viewModel.error.collectAsState()
     val couponState by viewModel.coupons.collectAsStateWithLifecycle()
+    val products by viewModel.products.collectAsState()
+
+    var selectedVendor by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(brands) {
+        if (selectedVendor == null && brands.isNotEmpty()) {
+            selectedVendor = brands.first().title
+        }
+    }
+
+    LaunchedEffect(selectedVendor) {
+        selectedVendor?.let {
+            viewModel.fetchProductsByVendor(it)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -201,7 +220,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
                             ),
 
-                        )
+                            )
                     }
                 }
             }
@@ -223,12 +242,13 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
 
-                    items(listOf("ADIDAS", "ADIDAS", "ADIDAS", "ADIDAS", "ADIDAS")) { category ->
+                    items(brands) { brand ->
 
-                        CategoryItem(category = category)
+                        Brands(
+                            brand = brand,
+                        )
 
                     }
-
                 }
             }
 
@@ -279,60 +299,69 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(
-                        listOf(
-                            "CLASSIC BACKPACK",
-                            "CHERRY SMOOTH",
-                            "VANS SHOES",
-                            "NIKE CAP"
-                        )
-                    ) { product ->
-                        ProductItem(product = product)
+
+                if (products.isEmpty()) {
+                    Text(
+                        text = "there is no Product For this vendor",
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.Gray
+                    )
+                } else {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(
+                            listOf(
+                                "CLASSIC BACKPACK",
+                                "CHERRY SMOOTH",
+                                "VANS SHOES",
+                                "NIKE CAP"
+                            )
+                        ) { product ->
+                            ProductItem(product = product)
+                        }
                     }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
-                Spacer(modifier = Modifier.height(24.dp))
             }
-
-
         }
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun CategoryItem(category: String) {
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.size(80.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colorResource(R.color.light_blue))
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+fun Brands(brand: Brand) {
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.size(80.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.person),
-                contentDescription = stringResource(R.string.brand_image),
-                contentScale = ContentScale.Crop,
+            Column(
                 modifier = Modifier
-                    .size(35.dp)
-                    .clip(CircleShape)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = category,
-                fontSize = 14.sp,
-                fontFamily = customFontFamily,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black)
+                    .fillMaxSize()
+                    .background(colorResource(R.color.light_blue))
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                GlideImage(
+                    model = brand.imageUrl ?: "",
+                    contentDescription = "Brand Logo",
+                    modifier = Modifier.size(35.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = brand.title,
+                    fontSize = 14.sp,
+                    fontFamily = customFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black
+                )
+            }
         }
-    }
-}
+ }
+
 
 
 @Composable

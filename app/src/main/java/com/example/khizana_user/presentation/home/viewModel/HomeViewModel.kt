@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
+import com.example.khizana_user.domain.model.Product
 import com.example.khizana_user.domain.usecase.GetAllBrandsUseCase
 import com.example.khizana_user.domain.usecase.GetAllCouponsUseCase
+import com.example.khizana_user.domain.usecase.GetAllProductsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.example.khizana_user.utils.Result
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +21,8 @@ import kotlin.collections.forEach
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getAllBrandsUseCase: GetAllBrandsUseCase,
-    private val getAllCouponsUseCase: GetAllCouponsUseCase
+    private val getAllCouponsUseCase: GetAllCouponsUseCase,
+    private val getAllProductsUseCase: GetAllProductsUseCase
 ) : ViewModel() {
 
     private val _brands = MutableStateFlow<List<Brand>>(emptyList())
@@ -27,6 +30,9 @@ class HomeViewModel @Inject constructor(
 
     private val _coupons = MutableStateFlow<Result<List<Coupon>>>(Result.Loading)
     val coupons = _coupons.asStateFlow()
+
+    private val _products = MutableStateFlow<List<Product>>(emptyList())
+    val products: StateFlow<List<Product>> = _products
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
@@ -65,7 +71,16 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-
+    fun fetchProductsByVendor(vendor: String) {
+        viewModelScope.launch {
+            try {
+                val result = getAllProductsUseCase(vendor)
+                _products.value = result
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
 }
 
 
