@@ -1,17 +1,24 @@
 package com.example.khizana_user.di
 
+import android.content.Context
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
 import com.example.khizana_user.data.repository.AuthRepositoryImp
 import com.example.khizana_user.data.repository.AuthDataSource
+import com.example.khizana_user.data.repository.CustomerPreferencesRepositoryImpl
 import com.example.khizana_user.domain.repository.AuthRepository
+import com.example.khizana_user.domain.repository.CustomerPreferencesRepository
 import com.example.khizana_user.domain.repository.ProductRepository
+import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
+import com.example.khizana_user.domain.usecase.GetShopifyCustomerByEmailUseCase
 import com.example.khizana_user.domain.usecase.LoginUseCase
+import com.example.khizana_user.domain.usecase.RegisterShopifyCustomerUseCase
 import com.example.khizana_user.domain.usecase.RegisterUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -63,5 +70,15 @@ class KhizanaModuleProvider {
     @Provides
     fun provideGetProductDetailsUseCase(repo: ProductRepository): GetProductDetailsUseCase =
         GetProductDetailsUseCase(repo)
+
+    @Provides
+    fun provideRegisterShopifyCustomerUseCase(
+        repository: ShopifyRepository
+    ): RegisterShopifyCustomerUseCase = RegisterShopifyCustomerUseCase(repository)
+
+    @Provides
+    fun provideGetShopifyCustomerByEmailUseCase(repo: ShopifyRepository): GetShopifyCustomerByEmailUseCase =
+        GetShopifyCustomerByEmailUseCase(repo)
+
 
 }
