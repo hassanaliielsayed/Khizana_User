@@ -136,4 +136,8 @@ dependencies {
 
     //serializable
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    //data store
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
 }

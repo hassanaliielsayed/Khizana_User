@@ -7,7 +7,11 @@ import com.example.khizana_user.data.dto.CouponsResponseDto
 import com.example.khizana_user.data.dto.ProductDetailsDto
 import com.example.khizana_user.data.dto.ProductDto
 import com.example.khizana_user.data.dto.ProductResponseDto
+import com.example.khizana_user.data.dto.ShopifyCreateCustomerRequest
+import com.example.khizana_user.data.dto.ShopifyCustomerCreatedResponse
+import com.example.khizana_user.data.dto.ShopifyCustomerSearchResponseDto
 import com.example.khizana_user.data.repository.RemoteDataSource
+import retrofit2.Response
 import javax.inject.Inject
 
 
@@ -60,6 +64,14 @@ class RemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPI
         } else {
             throw Exception("Error fetching product: ${response.message()}")
         }
+    }
+
+    override suspend fun registerShopifyCustomer(request: ShopifyCreateCustomerRequest): Response<ShopifyCustomerCreatedResponse> {
+        return apiService.registerCustomer(request)
+    }
+
+    override suspend fun searchShopifyCustomerByEmail(query: String): Response<ShopifyCustomerSearchResponseDto> {
+        return apiService.searchCustomerByEmail(query)
     }
 
 }

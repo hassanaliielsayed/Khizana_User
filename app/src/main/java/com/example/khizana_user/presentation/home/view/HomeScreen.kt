@@ -73,6 +73,7 @@ import com.example.khizana_user.R
 import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.model.Product
+import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.utils.Result
@@ -87,16 +88,20 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
     navController: NavHostController
 )
+
  {
 
     val brands by viewModel.brands.collectAsState()
     val error by viewModel.error.collectAsState()
     val couponState by viewModel.coupons.collectAsStateWithLifecycle()
     val products by viewModel.products.collectAsState()
+     val currentCustomer by authViewModel.currentCustomer.collectAsState()
 
-    var selectedVendor by remember { mutableStateOf<String?>(null) }
+
+     var selectedVendor by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(brands) {
         if (brands.isNotEmpty()) {
@@ -197,11 +202,10 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = stringResource(R.string.welcome_message),
+                            text = "Welcome ${currentCustomer?.name ?: ""}",
                             fontSize = 22.sp,
                             fontFamily = customFontFamily,
                             fontWeight = FontWeight.Normal,
-                            //fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
 
