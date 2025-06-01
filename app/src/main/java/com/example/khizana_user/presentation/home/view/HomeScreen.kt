@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,15 +60,18 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.example.khizana_user.R
+import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
+import com.example.khizana_user.domain.model.Product
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.customFontFamily
@@ -85,6 +89,19 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val brands by viewModel.brands.collectAsState()
     val error by viewModel.error.collectAsState()
     val couponState by viewModel.coupons.collectAsStateWithLifecycle()
+    val products by viewModel.products.collectAsState()
+
+    var selectedVendor by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(brands) {
+        if (brands.isNotEmpty()) {
+            selectedVendor = brands.first().title
+        }
+    }
+
+    LaunchedEffect(selectedVendor){
+        viewModel.fetchProductsByVendor(selectedVendor.toString())
+    }
 
     Scaffold(
         topBar = {
@@ -185,7 +202,6 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-
                         val searchText = remember { mutableStateOf("") }
 
                         OutlinedTextField(
@@ -207,28 +223,37 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             }
 
             item {
+
                 Text(
+
                     text = stringResource(R.string.brands),
                     fontSize = 20.sp,
                     fontFamily = customFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = colorResource(id = R.color.dark_blue),
                     modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
+
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 LazyRow(
+
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
+
                 ) {
 
-                    items(listOf("ADIDAS", "ADIDAS", "ADIDAS", "ADIDAS", "ADIDAS")) { category ->
+                    items(brands) { brand ->
 
-                        CategoryItem(category = category)
-
+                        Brands(
+                            brands = brand,
+                            onClick = {
+                                selectedVendor = brand.title
+                            },
+                            isSelected = selectedVendor == brand.title
+                        )
                     }
-
                 }
             }
 
@@ -252,14 +277,18 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             }
 
             item {
+
                 Row(
+
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
+
                 ) {
                     Text(
+
                         text = stringResource(R.string.products),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -267,46 +296,59 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
                         color = colorResource(id = R.color.dark_blue)
 
                     )
-                    Text(
-                        text = stringResource(R.string.see_more_products),
-                        color = Color.Black,
-                        fontSize = 13.sp,
-                        fontFamily = customFontFamily,
-                        fontWeight = FontWeight.Normal,
-                    )
                 }
             }
 
             item {
+
                 Spacer(modifier = Modifier.height(8.dp))
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(
-                        listOf(
-                            "CLASSIC BACKPACK",
-                            "CHERRY SMOOTH",
-                            "VANS SHOES",
-                            "NIKE CAP"
-                        )
-                    ) { product ->
-                        ProductItem(product = product)
+
+                if (products.isEmpty()) {
+
+                    Text(
+
+                        text = "there is no Product For this vendor",
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.Gray
+
+                    )
+
+                } else {
+
+                    LazyRow(
+
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+                    ) {
+
+                        items(products) { product ->
+
+                            ProductItem(product = product)
+
+                        }
                     }
                 }
+
                 Spacer(modifier = Modifier.height(24.dp))
             }
-
-
         }
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun CategoryItem(category: String) {
+fun Brands(
+    brands: Brand,
+    onClick: () -> Unit = {},
+    isSelected: Boolean = false
+) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.size(80.dp)
+        modifier = Modifier
+            .size(80.dp)
+            .clickable { onClick() },
+        border = if (isSelected) BorderStroke(2.dp, colorResource(id = R.color.dark_blue)) else BorderStroke(2.dp, colorResource(id = R.color.black))
     ) {
         Column(
             modifier = Modifier
@@ -316,55 +358,72 @@ fun CategoryItem(category: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.person),
-                contentDescription = stringResource(R.string.brand_image),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(35.dp)
-                    .clip(CircleShape)
+
+            GlideImage(
+                model = brands.imageUrl ?: "",
+                contentDescription = "Brand Logo",
+                modifier = Modifier.size(35.dp)
             )
+
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = category,
+
+            Text(
+                text = brands.title,
                 fontSize = 14.sp,
                 fontFamily = customFontFamily,
                 fontWeight = FontWeight.Normal,
-                color = Color.Black)
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
         }
     }
 }
 
-
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun ProductItem(product: String) {
+fun ProductItem(product: Product) {
     Card(
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.size(110.dp)
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.size(150.dp),
+        border = BorderStroke(1.dp, colorResource(id = R.color.black))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorResource(R.color.light_blue)),
+                .background(colorResource(R.color.white)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
 
-            Image(
-                painter = painterResource(id = R.drawable.person),
-                contentDescription = stringResource(R.string.products_image),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(35.dp)
-                    .clip(CircleShape)
-            )
+            GlideImage(
+                    model = product.productImage,
+                    contentDescription = product.productTitle,
+                    modifier = Modifier
+                        .size(70.dp)
+                        .padding(4.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop,
+                )
+
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = product, fontSize = 14.sp,
+
+            Text(
+                text = product.productTitle.substringAfter("|").trim(),
+                fontSize = 14.sp,
                 fontFamily = customFontFamily,
                 fontWeight = FontWeight.Normal,
-                color = Color.Black)
+                color = Color.Black,
+                modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
         }
     }
 }
+
 
 @Suppress("DEPRECATION")
 @Composable
