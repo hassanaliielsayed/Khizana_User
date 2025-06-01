@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.khizana_user.R
@@ -73,6 +74,7 @@ import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.model.Product
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
+import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.customFontFamily
 import com.google.accompanist.pager.HorizontalPager
@@ -82,9 +84,12 @@ import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class)
-@Preview(showSystemUi = true, showBackground = true)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    navController: NavHostController
+)
+ {
 
     val brands by viewModel.brands.collectAsState()
     val error by viewModel.error.collectAsState()
@@ -324,7 +329,9 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
                         items(products) { product ->
 
-                            ProductItem(product = product)
+                            ProductItem(product = product) {
+                                navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                            }
 
                         }
                     }
@@ -383,11 +390,12 @@ fun Brands(
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun ProductItem(product: Product) {
+fun ProductItem(product: Product, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.size(150.dp),
-        border = BorderStroke(1.dp, colorResource(id = R.color.black))
+        modifier = Modifier.size(150.dp)
+        .clickable { onClick() },
+    border = BorderStroke(1.dp, colorResource(id = R.color.black))
     ) {
         Column(
             modifier = Modifier

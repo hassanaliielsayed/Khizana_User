@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dto.BrandResponseDto
 import com.example.khizana_user.data.dto.CouponsResponseDto
+import com.example.khizana_user.data.dto.ProductDetailsDto
 import com.example.khizana_user.data.dto.ProductDto
 import com.example.khizana_user.data.dto.ProductResponseDto
 import com.example.khizana_user.data.repository.RemoteDataSource
@@ -51,4 +52,14 @@ class RemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPI
 
         }
     }
+
+    override suspend fun getProductById(id: Long): ProductDetailsDto {
+        val response = apiService.getProductById(id)
+        if (response.isSuccessful && response.body() != null) {
+            return response.body()!!.product
+        } else {
+            throw Exception("Error fetching product: ${response.message()}")
+        }
+    }
+
 }

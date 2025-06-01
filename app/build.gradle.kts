@@ -133,4 +133,7 @@ dependencies {
 
     //lottie
     implementation ("com.airbnb.android:lottie-compose:6.4.0")
+
+    //serializable
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }

@@ -5,6 +5,8 @@ import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthData
 import com.example.khizana_user.data.repository.AuthRepositoryImp
 import com.example.khizana_user.data.repository.AuthDataSource
 import com.example.khizana_user.domain.repository.AuthRepository
+import com.example.khizana_user.domain.repository.ProductRepository
+import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
 import com.example.khizana_user.domain.usecase.LoginUseCase
 import com.example.khizana_user.domain.usecase.RegisterUseCase
 import dagger.Module
@@ -57,4 +59,9 @@ class KhizanaModuleProvider {
     @Provides
     fun provideRegisterUseCase(repository: AuthRepository): RegisterUseCase =
         RegisterUseCase(repository)
+
+    @Provides
+    fun provideGetProductDetailsUseCase(repo: ProductRepository): GetProductDetailsUseCase =
+        GetProductDetailsUseCase(repo)
+
 }
