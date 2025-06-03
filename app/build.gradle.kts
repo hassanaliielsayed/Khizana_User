@@ -5,7 +5,13 @@ plugins {
 
     id("com.google.devtools.ksp")
     kotlin("plugin.serialization") version "2.1.10"
+
+    id("com.google.dagger.hilt.android")
+    kotlin("kapt")
+
+    alias(libs.plugins.google.gms.google.services)
 }
+
 
 android {
     namespace = "com.example.khizana_user"
@@ -52,6 +58,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -81,6 +88,8 @@ dependencies {
     //LiveData & Compose
     val compose_version = "1.0.0"
     implementation ("androidx.compose.runtime:runtime-livedata:$compose_version")
+    implementation("androidx.navigation:navigation-compose:2.9.0")
+
 
     // Location
     implementation(libs.play.services.location)
@@ -105,4 +114,30 @@ dependencies {
     implementation("io.insert-koin:koin-android:$koin_android_version")
     implementation("io.insert-koin:koin-androidx-compose:$koin_android_version")
     implementation("io.insert-koin:koin-androidx-compose-navigation:$koin_android_version")
+
+    // Hilt Core
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-compiler:2.48")
+
+// Hilt + Jetpack Compose
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
+    //firebase dependency
+    implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
+
+    implementation ("com.google.accompanist:accompanist-pager:0.34.0")
+    implementation ("com.google.accompanist:accompanist-pager-indicators:0.34.0")
+    implementation ("io.coil-kt:coil-compose:2.4.0")
+
+    //lottie
+    implementation ("com.airbnb.android:lottie-compose:6.4.0")
+
+    //serializable
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    //data store
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
 }
