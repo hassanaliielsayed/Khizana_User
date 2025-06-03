@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -136,7 +138,9 @@ fun HomeScreen(
                         )
 
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(
+                        onClick = { }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             tint = Color.White,
@@ -150,6 +154,17 @@ fun HomeScreen(
                             imageVector = Icons.Default.ShoppingCart,
                             tint = Color.White,
                             contentDescription = stringResource(R.string.shopping_cart),
+                            modifier = Modifier.size(24.dp)
+                        )
+
+                    }
+                    IconButton(
+                        onClick = { navController.navigate(ScreenRoute.Settings.route) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            tint = Color.White,
+                            contentDescription = stringResource(R.string.settings),
                             modifier = Modifier.size(24.dp)
                         )
 
@@ -209,7 +224,7 @@ fun HomeScreen(
                             color = Color.White
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(64.dp))
 
                         val searchText = remember { mutableStateOf("") }
 
@@ -397,8 +412,9 @@ fun Brands(
 fun ProductItem(product: Product, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.size(150.dp)
-        .clickable { onClick() },
+        modifier = Modifier
+            .size(150.dp)
+            .clickable { onClick() },
     border = BorderStroke(1.dp, colorResource(id = R.color.black))
     ) {
         Column(
@@ -481,7 +497,14 @@ fun CouponCarousel(copuons: List<Coupon>) {
                     painter = painterResource(id = coupon.img),
                     contentDescription = coupon.title,
                     contentScale = ContentScale.FillBounds,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(
+                            BorderStroke(2.dp, Color.Red),
+                            RoundedCornerShape(16.dp)
+                        )
+
                 )
 
                 Row(

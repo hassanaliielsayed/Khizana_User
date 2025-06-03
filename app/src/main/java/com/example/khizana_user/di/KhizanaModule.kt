@@ -7,10 +7,12 @@ import com.example.khizana_user.data.repository.CustomerPreferencesRepositoryImp
 import com.example.khizana_user.data.repository.RemoteDataSource
 import com.example.khizana_user.data.repository.HomeRepositoryImp
 import com.example.khizana_user.data.repository.ProductRepositoryImp
+import com.example.khizana_user.data.repository.SettingRepositoryImpl
 import com.example.khizana_user.data.repository.ShopifyRepositoryImpl
 import com.example.khizana_user.domain.repository.CustomerPreferencesRepository
 import com.example.khizana_user.domain.repository.HomeRepository
 import com.example.khizana_user.domain.repository.ProductRepository
+import com.example.khizana_user.domain.repository.SettingRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import dagger.Binds
 import dagger.Module
@@ -31,6 +33,9 @@ abstract class KhizanaModule {
 
     @Binds
     abstract fun bindProductRepository(repo: ProductRepositoryImp): ProductRepository
+
+    @Binds
+    abstract fun bindSettingRepository(repo: SettingRepositoryImpl): SettingRepository
 
     @Binds
     abstract fun bindShopifyRepository(

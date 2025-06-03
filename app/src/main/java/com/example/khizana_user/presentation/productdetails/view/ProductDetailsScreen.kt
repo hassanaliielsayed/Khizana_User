@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.ProductDetails
 import com.example.khizana_user.presentation.productdetails.viewmodel.ProductDetailsViewModel
+import com.example.khizana_user.utils.toCurrentCurrency
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
@@ -122,7 +123,7 @@ fun ProductDetailsContent(product: ProductDetails) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("$${product.price}", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1E88E5))
+            Text("$${product.price.toCurrentCurrency()}", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1E88E5))
 
             Spacer(modifier = Modifier.height(12.dp))
 
