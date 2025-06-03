@@ -1,9 +1,11 @@
 package com.example.khizana_user.data.dataSource.remote
 
 import android.util.Log
+import com.example.khizana_user.data.dataSource.remote.api.CurrencyAPIService
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dto.BrandResponseDto
 import com.example.khizana_user.data.dto.CouponsResponseDto
+import com.example.khizana_user.data.dto.CurrencyResponseDto
 import com.example.khizana_user.data.dto.ProductDetailsDto
 import com.example.khizana_user.data.dto.ProductDto
 import com.example.khizana_user.data.dto.ProductResponseDto
@@ -11,11 +13,16 @@ import com.example.khizana_user.data.dto.ShopifyCreateCustomerRequest
 import com.example.khizana_user.data.dto.ShopifyCustomerCreatedResponse
 import com.example.khizana_user.data.dto.ShopifyCustomerSearchResponseDto
 import com.example.khizana_user.data.repository.RemoteDataSource
+import com.example.khizana_user.di.CurrencyApi
+import com.example.khizana_user.di.ShopifyApi
 import retrofit2.Response
 import javax.inject.Inject
 
 
-class RemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPIService) : RemoteDataSource {
+class RemoteDataSourceImp @Inject constructor(
+    private val apiService: KhizanaAPIService,
+    private val currencyAPIService: CurrencyAPIService
+) : RemoteDataSource {
 
     override suspend fun fetchAllBrands():  List<BrandResponseDto> {
 
@@ -37,6 +44,8 @@ class RemoteDataSourceImp @Inject constructor(private val apiService: KhizanaAPI
     }
 
     override suspend fun getCoupons() = apiService.getCoupons()
+
+    override suspend fun getCurrencyRate(base: String, target: String) = currencyAPIService.getLatestRates(base, target)
 
     override suspend fun fetchAllProducts(vendor: String): List<ProductDto>{
 
