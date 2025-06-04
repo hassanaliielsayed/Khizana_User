@@ -8,6 +8,9 @@ import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
+import com.example.khizana_user.presentation.setting.view.AboutUs
+import com.example.khizana_user.presentation.setting.view.ContactsScreen
+import com.example.khizana_user.presentation.setting.view.SettingScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -48,6 +51,22 @@ fun AppNavGraph(navController: NavHostController) {
             id?.let {
                 ProductDetailsScreen(productId = it)
             }
+        }
+
+        composable(ScreenRoute.Settings.route) {
+            SettingScreen(
+                navController = navController,
+                onContactUsClick = { navController.navigate("contact") },
+                onAboutUsClick = { navController.navigate("about") }
+            )
+        }
+
+        composable("contact") {
+            ContactsScreen()
+        }
+
+        composable("about") {
+            AboutUs()
         }
     }
 }

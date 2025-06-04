@@ -1,13 +1,10 @@
 package com.example.khizana_user.di
 
-import android.content.Context
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
-import com.example.khizana_user.data.repository.AuthRepositoryImp
 import com.example.khizana_user.data.repository.AuthDataSource
-import com.example.khizana_user.data.repository.CustomerPreferencesRepositoryImpl
+import com.example.khizana_user.data.repository.AuthRepositoryImp
 import com.example.khizana_user.domain.repository.AuthRepository
-import com.example.khizana_user.domain.repository.CustomerPreferencesRepository
 import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
@@ -18,11 +15,11 @@ import com.example.khizana_user.domain.usecase.RegisterUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -38,6 +35,7 @@ class KhizanaModuleProvider {
         }
         .build()
 
+    @ShopifyApi
     @Provides
     fun provideRetrofit (): Retrofit {
         return Retrofit.Builder().baseUrl("https://mad45-sv-and4.myshopify.com/admin/api/2025-04/")
@@ -47,7 +45,7 @@ class KhizanaModuleProvider {
     }
 
     @Provides
-    fun provideKhizanaService (retrofit: Retrofit): KhizanaAPIService {
+    fun provideKhizanaService (@ShopifyApi retrofit: Retrofit): KhizanaAPIService {
         return retrofit.create(KhizanaAPIService::class.java)
     }
 
