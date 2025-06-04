@@ -97,6 +97,7 @@ import kotlinx.coroutines.launch
 
 // HomeScreen.kt — Final Merged Version
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
@@ -179,6 +180,17 @@ fun HomeScreen(
                             .padding(paddingValues)
                             .padding(16.dp)
                     ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.person),
+                            contentDescription = "User Icon",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                                .border(1.dp, Color.Gray, CircleShape)
+                                .padding(4.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "Welcome ${currentCustomer?.name ?: ""}",
                             fontSize = 22.sp,
