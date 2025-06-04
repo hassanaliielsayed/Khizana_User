@@ -30,6 +30,7 @@ class HomeRepositoryImp @Inject constructor(private val remoteDateSource: Remote
 
         return remoteDateSource.fetchAllProducts(vendor)
             .map { it.toProductModel() }
+            .distinctBy { it.productTitle }
 
     }
 
