@@ -121,7 +121,7 @@ fun HomeScreen(
                         stringResource(R.string.project_name),
                         fontFamily = customFontFamily,
                         fontSize = 20.sp,
-                        color = Color.White
+                        color = Color.Black
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -130,7 +130,7 @@ fun HomeScreen(
                 actions = {
                     IconButton(onClick = {}) {
                         Image(
-                            painter = painterResource(id = R.drawable.filter),
+                            painter = painterResource(id = R.drawable.filter2),
                             contentDescription = stringResource(R.string.filter),
                             modifier = Modifier.size(24.dp)
                         )
@@ -139,7 +139,7 @@ fun HomeScreen(
                     IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
-                            tint = Color.White,
+                            tint = Color.Black,
                             contentDescription = stringResource(R.string.favorites),
                             modifier = Modifier.size(24.dp)
                         )
@@ -148,7 +148,7 @@ fun HomeScreen(
                     IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
-                            tint = Color.White,
+                            tint = Color.Black,
                             contentDescription = stringResource(R.string.shopping_cart),
                             modifier = Modifier.size(24.dp)
                         )
@@ -168,14 +168,15 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(363.dp)
+                        .height(340.dp)
                 ) {
 
                     Image(
 
-                        painter = painterResource(id = R.drawable.home_background),
+                        painter = painterResource(id = R.drawable.home_bg),
                         contentDescription = stringResource(R.string.background_image),
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillWidth
 
                     )
 
@@ -206,10 +207,10 @@ fun HomeScreen(
                             fontSize = 22.sp,
                             fontFamily = customFontFamily,
                             fontWeight = FontWeight.Normal,
-                            color = Color.White
+                            color = Color.Black
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         val searchText = remember { mutableStateOf("") }
 
@@ -233,13 +234,15 @@ fun HomeScreen(
 
             item {
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
 
                     text = stringResource(R.string.brands),
-                    fontSize = 20.sp,
+                    fontSize = 25.sp,
                     fontFamily = customFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    color = colorResource(id = R.color.dark_blue),
+                    color = colorResource(id = R.color.black),
                     modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
 
                 )
@@ -299,10 +302,10 @@ fun HomeScreen(
                     Text(
 
                         text = stringResource(R.string.products),
-                        fontSize = 20.sp,
+                        fontSize = 25.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = customFontFamily,
-                        color = colorResource(id = R.color.dark_blue)
+                        color = colorResource(id = R.color.black)
 
                     )
                 }
@@ -324,24 +327,36 @@ fun HomeScreen(
 
                 } else {
 
-                    LazyRow(
+                    val productRows = groupProductsInRows(products)
 
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        productRows.forEach { row ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                row.forEach { product ->
+                                    ProductItem(
+                                        modifier = Modifier.weight(1f),
+                                        product = product,
+                                        onClick = {
+                                            navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                                        }
+                                    )
+                                }
 
-                        items(products) { product ->
-
-                            ProductItem(product = product) {
-                                navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                                if (row.size == 1) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
-
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
@@ -357,14 +372,14 @@ fun Brands(
     Card(
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier
-            .size(80.dp)
+            .size(140.dp)
             .clickable { onClick() },
         border = if (isSelected) BorderStroke(2.dp, colorResource(id = R.color.dark_blue)) else BorderStroke(2.dp, colorResource(id = R.color.black))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorResource(R.color.light_blue))
+                .background(colorResource(R.color.white))
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -373,33 +388,39 @@ fun Brands(
             GlideImage(
                 model = brands.imageUrl ?: "",
                 contentDescription = "Brand Logo",
-                modifier = Modifier.size(35.dp)
+                modifier = Modifier.size(80.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = brands.title,
-                fontSize = 14.sp,
-                fontFamily = customFontFamily,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+//            Text(
+//                text = brands.title,
+//                fontSize = 18.sp,
+//                fontFamily = customFontFamily,
+//                fontWeight = FontWeight.Bold,
+//                color = Color.Black,
+//                maxLines = 1,
+//                overflow = TextOverflow.Ellipsis
+//            )
 
         }
     }
 }
 
+fun <T> groupProductsInRows(products: List<T>): List<List<T>> {
+    return products.chunked(2)
+}
+
+
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun ProductItem(product: Product, onClick: () -> Unit) {
+fun ProductItem(product: Product, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.size(150.dp)
-        .clickable { onClick() },
-    border = BorderStroke(1.dp, colorResource(id = R.color.black))
+        modifier = modifier
+            .height(200.dp)
+            .clickable { onClick() },
+        border = BorderStroke(1.dp, colorResource(id = R.color.black))
     ) {
         Column(
             modifier = Modifier
@@ -408,16 +429,15 @@ fun ProductItem(product: Product, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
             GlideImage(
-                    model = product.productImage,
-                    contentDescription = product.productTitle,
-                    modifier = Modifier
-                        .size(70.dp)
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop,
-                )
+                model = product.productImage,
+                contentDescription = product.productTitle,
+                modifier = Modifier
+                    .size(70.dp)
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -431,7 +451,6 @@ fun ProductItem(product: Product, onClick: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-
         }
     }
 }
