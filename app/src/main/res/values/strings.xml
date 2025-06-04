@@ -15,4 +15,6 @@
     <string name="brand_image">brand image</string>
     <string name="products_image">products image</string>
     <string name="title_activity_bottom_navigation_bar">BottomNavigationBar</string>
+    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="settings">Settings</string>
 </resources>

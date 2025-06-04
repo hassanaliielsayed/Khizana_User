@@ -130,4 +130,14 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-pager:0.34.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.34.0")
     implementation ("io.coil-kt:coil-compose:2.4.0")
+
+    //lottie
+    implementation ("com.airbnb.android:lottie-compose:6.4.0")
+
+    //serializable
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    //data store
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
 }

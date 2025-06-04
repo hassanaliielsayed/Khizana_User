@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.auth.view
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -33,7 +35,21 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val customer by viewModel.currentCustomer.collectAsStateWithLifecycle()
     val state by viewModel.authState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(state, customer) {
+        if (state is AuthState.Success && customer != null) {
+            Log.d("LoginScreen", "Navigating with customer: ${customer!!.name}")
+            viewModel.saveCustomer(customer!!)
+            viewModel.resetState()
+            onLoginSuccess()
+        } else {
+            Log.d("LoginScreen", "⏳ Waiting for login + customer data. State=$state, Customer=${customer?.name}")
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -109,13 +125,7 @@ fun LoginScreen(
                 Spacer(Modifier.height(16.dp))
                 Text("Error: ${(state as AuthState.Error).message}", color = Color.Red)
             }
-            is AuthState.Success -> {
-                LaunchedEffect(Unit) {
-                    viewModel.resetState()
-                    onLoginSuccess()
-                }
-            }
-            AuthState.Idle -> {}
+            is AuthState.Success, AuthState.Idle -> {}
         }
     }
 }
