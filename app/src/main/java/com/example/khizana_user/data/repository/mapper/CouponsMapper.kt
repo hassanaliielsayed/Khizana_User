@@ -14,7 +14,7 @@ fun Price_rulesItemEntity.toDomain(): Coupon {
     return Coupon(
         title = title,
         id = id,
-        img = R.drawable.ad11
+        img = R.drawable.test_add
     )
 }
 

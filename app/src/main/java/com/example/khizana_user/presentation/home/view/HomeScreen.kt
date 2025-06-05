@@ -18,21 +18,28 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,9 +62,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -86,33 +95,41 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class)
+// HomeScreen.kt — Final Merged Version
+
+// Imports are unchanged (omitted for brevity)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    paddingValues: PaddingValues = PaddingValues(),
     navController: NavHostController
-)
-
- {
-
+) {
     val brands by viewModel.brands.collectAsState()
-    val error by viewModel.error.collectAsState()
     val couponState by viewModel.coupons.collectAsStateWithLifecycle()
-    val products by viewModel.products.collectAsState()
-     val currentCustomer by authViewModel.currentCustomer.collectAsState()
+    val filteredProducts by viewModel.filteredProducts.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState(initial = "")
+    val suggestions by viewModel.suggestions.collectAsState()
+    val currentCustomer by authViewModel.currentCustomer.collectAsState()
+    val focusManager = LocalFocusManager.current
 
-
-     var selectedVendor by remember { mutableStateOf<String?>(null) }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedVendor by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(brands) {
-        if (brands.isNotEmpty()) {
-            selectedVendor = brands.first().title
-        }
+        if (brands.isNotEmpty()) selectedVendor = brands.first().title
     }
 
-    LaunchedEffect(selectedVendor){
-        viewModel.fetchProductsByVendor(selectedVendor.toString())
+    LaunchedEffect(selectedVendor) {
+        selectedVendor?.let { viewModel.fetchProductsByVendor(it) }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.navigateToProduct.collect { id ->
+            navController.navigate(ScreenRoute.ProductDetails.createRoute(id))
+        }
     }
 
     Scaffold(
@@ -123,244 +140,211 @@ fun HomeScreen(
                         stringResource(R.string.project_name),
                         fontFamily = customFontFamily,
                         fontSize = 20.sp,
-                        color = Color.White
+                        color = Color.Black
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorResource(id = R.color.dark_blue)
-                ),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
                 actions = {
                     IconButton(onClick = {}) {
-                        Image(
-                            painter = painterResource(id = R.drawable.filter),
-                            contentDescription = stringResource(R.string.filter),
-                            modifier = Modifier.size(24.dp)
-                        )
-
-                    }
-                    IconButton(
-                        onClick = { }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            tint = Color.White,
-                            contentDescription = stringResource(R.string.favorites),
-                            modifier = Modifier.size(24.dp)
-                        )
-
+                        Image(painter = painterResource(R.drawable.filter2), contentDescription = null, modifier = Modifier.size(24.dp))
                     }
                     IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            tint = Color.White,
-                            contentDescription = stringResource(R.string.shopping_cart),
-                            modifier = Modifier.size(24.dp)
-                        )
-
+                        Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.Black)
                     }
-                    IconButton(
-                        onClick = { navController.navigate(ScreenRoute.Settings.route) }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            tint = Color.White,
-                            contentDescription = stringResource(R.string.settings),
-                            modifier = Modifier.size(24.dp)
-                        )
-
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.Black)
                     }
                 }
             )
         }
-
     ) { paddingValues ->
-
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
         ) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(363.dp)
-                ) {
-
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colorResource(id = R.color.dark_blue))
+                    .padding(16.dp)
+            ) {
+                Column {
                     Image(
-
-                        painter = painterResource(id = R.drawable.home_background),
-                        contentDescription = stringResource(R.string.background_image),
-                        modifier = Modifier.fillMaxSize()
-
-                    )
-
-                    Column(
-
+                        painter = painterResource(id = R.drawable.person),
+                        contentDescription = "User Icon",
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.Center
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .border(1.dp, Color.Gray, CircleShape)
+                            .padding(4.dp)
+                    )
 
-                    ) {
-                        Image(
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                            painter = painterResource(id = R.drawable.person),
-                            contentDescription = stringResource(R.string.user_image),
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(55.dp)
-                                .clip(CircleShape)
-
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "Welcome ${currentCustomer?.name ?: ""}",
-                            fontSize = 22.sp,
-                            fontFamily = customFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.White
-                        )
-
-                        Spacer(modifier = Modifier.height(64.dp))
-
-                        val searchText = remember { mutableStateOf("") }
-
-                        OutlinedTextField(
-
-                            value = searchText.value,
-                            onValueChange = { searchText.value = it },
-                            placeholder = { Text(stringResource(R.string.search_for_products)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            colors = TextFieldDefaults.colors(
-                                unfocusedContainerColor = Color.White,
-                                focusedContainerColor = Color.Gray
-
-                            ),
-
-                        )
-                    }
-                }
-            }
-
-            item {
-
-                Text(
-
-                    text = stringResource(R.string.brands),
-                    fontSize = 20.sp,
-                    fontFamily = customFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colorResource(id = R.color.dark_blue),
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
-
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                LazyRow(
-
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-
-                ) {
-
-                    items(brands) { brand ->
-
-                        Brands(
-                            brands = brand,
-                            onClick = {
-                                selectedVendor = brand.title
-                            },
-                            isSelected = selectedVendor == brand.title
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                when (couponState) {
-                    is Result.Error -> {
-                        Text("Error loading coupons", color = MaterialTheme.colorScheme.error)
-                    }
-
-                    is Result.Loading -> {
-                        CircularProgressIndicator()
-                    }
-
-                    is Result.Success -> {
-                        val coupons = (couponState as Result.Success<List<Coupon>>).data
-                        CouponCarousel(copuons = coupons)
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            item {
-
-                Row(
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-
-                ) {
                     Text(
-
-                        text = stringResource(R.string.products),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        text = "Welcome ${currentCustomer?.name ?: ""}",
+                        fontSize = 22.sp,
                         fontFamily = customFontFamily,
-                        color = colorResource(id = R.color.dark_blue)
-
-                    )
-                }
-            }
-
-            item {
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (products.isEmpty()) {
-
-                    Text(
-
-                        text = "there is no Product For this vendor",
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Gray
-
+                        color = Color.Black
                     )
 
-                } else {
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    LazyRow(
-
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-
-                    ) {
-
-                        items(products) { product ->
-
-                            ProductItem(product = product) {
-                                navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = {
+                            viewModel.updateSearchQuery(it)
+                            expanded = true
+                        },
+                        placeholder = { Text("Search for products or brands") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp)),
+                        trailingIcon = {
+                            if (searchQuery.isNotBlank()) {
+                                IconButton(onClick = {
+                                    viewModel.updateSearchQuery("")
+                                    expanded = false
+                                }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear")
+                                }
                             }
+                        },
+                        shape = RoundedCornerShape(24.dp),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        )
+                    )
 
+                    if (expanded && suggestions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 300.dp) // adjust height here
+                                .shadow(6.dp, RoundedCornerShape(8.dp))
+                                .background(Color.White)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                suggestions.forEach { suggestion ->
+                                    Text(
+                                        text = suggestion,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                if (suggestion.startsWith("Brand: ")) {
+                                                    val brandName = suggestion.removePrefix("Brand: ").trim()
+                                                    viewModel.updateSearchQuery(brandName)
+                                                    viewModel.fetchProductsByVendor(brandName)
+                                                } else {
+                                                    viewModel.updateSearchQuery(suggestion)
+                                                }
+                                                expanded = false
+                                                focusManager.clearFocus()
+                                            }
+                                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Brands",
+                fontSize = 25.sp,
+                fontFamily = customFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                color = colorResource(id = R.color.black),
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
+            )
+
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(brands) { brand ->
+                    Brands(
+                        brands = brand,
+                        onClick = { selectedVendor = brand.title },
+                        isSelected = selectedVendor == brand.title
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            when (couponState) {
+                is Result.Error -> Text("Error loading coupons", color = MaterialTheme.colorScheme.error)
+                is Result.Loading -> CircularProgressIndicator()
+                is Result.Success -> {
+                    val coupons = (couponState as Result.Success<List<Coupon>>).data
+                    CouponCarousel(copuons = coupons)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Products",
+                fontSize = 25.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = customFontFamily,
+                color = colorResource(id = R.color.black),
+                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+            )
+
+            if (filteredProducts.isEmpty()) {
+                Text(
+                    text = "No matching products found.",
+                    modifier = Modifier.padding(16.dp),
+                    color = Color.Gray
+                )
+            } else {
+                val productRows = groupProductsInRows(filteredProducts)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    productRows.forEach { row ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            row.forEach { product ->
+                                ProductItem(
+                                    modifier = Modifier.weight(1f),
+                                    product = product,
+                                    onClick = {
+                                        navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                                    }
+                                )
+                            }
+                            if (row.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -372,14 +356,14 @@ fun Brands(
     Card(
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier
-            .size(80.dp)
+            .size(140.dp)
             .clickable { onClick() },
         border = if (isSelected) BorderStroke(2.dp, colorResource(id = R.color.dark_blue)) else BorderStroke(2.dp, colorResource(id = R.color.black))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorResource(R.color.light_blue))
+                .background(colorResource(R.color.white))
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -388,34 +372,42 @@ fun Brands(
             GlideImage(
                 model = brands.imageUrl ?: "",
                 contentDescription = "Brand Logo",
-                modifier = Modifier.size(35.dp)
+                modifier = Modifier.size(80.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = brands.title,
-                fontSize = 14.sp,
-                fontFamily = customFontFamily,
-                fontWeight = FontWeight.Normal,
-                color = Color.Black,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+//            Text(
+//                text = brands.title,
+//                fontSize = 18.sp,
+//                fontFamily = customFontFamily,
+//                fontWeight = FontWeight.Bold,
+//                color = Color.Black,
+//                maxLines = 1,
+//                overflow = TextOverflow.Ellipsis
+//            )
 
         }
     }
 }
 
+fun <T> groupProductsInRows(products: List<T>): List<List<T>> {
+    return products.chunked(2)
+}
+
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun ProductItem(product: Product, onClick: () -> Unit) {
+fun ProductItem(
+    product: Product,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier
-            .size(150.dp)
+        modifier = modifier
+            .height(200.dp)
             .clickable { onClick() },
-    border = BorderStroke(1.dp, colorResource(id = R.color.black))
+        border = BorderStroke(1.dp, colorResource(id = R.color.black))
     ) {
         Column(
             modifier = Modifier
@@ -424,16 +416,15 @@ fun ProductItem(product: Product, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
             GlideImage(
-                    model = product.productImage,
-                    contentDescription = product.productTitle,
-                    modifier = Modifier
-                        .size(70.dp)
-                        .padding(4.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop,
-                )
+                model = product.productImage,
+                contentDescription = product.productTitle,
+                modifier = Modifier
+                    .size(100.dp)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -441,13 +432,13 @@ fun ProductItem(product: Product, onClick: () -> Unit) {
                 text = product.productTitle.substringAfter("|").trim(),
                 fontSize = 14.sp,
                 fontFamily = customFontFamily,
-                fontWeight = FontWeight.Normal,
+                fontWeight = FontWeight.Medium,
                 color = Color.Black,
-                modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 4.dp),
+                modifier = Modifier
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-
         }
     }
 }
@@ -501,7 +492,7 @@ fun CouponCarousel(copuons: List<Coupon>) {
                         .fillMaxSize()
                         .clip(RoundedCornerShape(16.dp))
                         .border(
-                            BorderStroke(2.dp, Color.Red),
+                            BorderStroke(2.dp, Color.White),
                             RoundedCornerShape(16.dp)
                         )
 
