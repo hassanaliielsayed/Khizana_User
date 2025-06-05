@@ -23,6 +23,10 @@ fun BottomNavigationBar(navController: NavController) {
             NavigationBarItem(
                 icon = { screen.icon?.let { Icon(it, contentDescription = screen.label) } },
                 label = { Text(screen.label ?: "") },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = Color.Black
+                ),
                 selected = currentRoute == screen.route,
                 onClick = {
                     if (currentRoute != screen.route) {
