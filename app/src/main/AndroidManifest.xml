@@ -16,7 +16,7 @@
         android:theme="@style/Theme.Khizana_User"
         tools:targetApi="31">
         <activity
-            android:name=".SplashScreen"
+            android:name=".presentation.splash.view.SplashScreen"
             android:exported="true"
             android:label="@string/title_activity_splash_screen"
             android:theme="@style/Theme.Khizana_User" >

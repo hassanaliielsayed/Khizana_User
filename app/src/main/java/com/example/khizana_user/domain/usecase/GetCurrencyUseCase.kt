@@ -7,5 +7,5 @@ import javax.inject.Inject
 class GetCurrencyUseCase @Inject constructor(
     private val repository: CustomerPreferencesRepository
 ) {
-    operator fun invoke(): Flow<String?> = repository.getCurrency()
+    operator fun invoke() = repository.getCurrency()
 }
