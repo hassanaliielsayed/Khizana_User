@@ -41,6 +41,7 @@ import com.example.khizana_user.presentation.setting.viewmodel.SettingViewModel
 @Composable
 fun SettingScreen(
     navController: NavHostController,
+    modifier: Modifier = Modifier,
     onContactUsClick: () -> Unit = {},
     onAboutUsClick: () -> Unit = {},
     viewModel: SettingViewModel = hiltViewModel()
