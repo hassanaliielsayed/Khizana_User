@@ -102,6 +102,7 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    paddingValues: PaddingValues = PaddingValues(),
     navController: NavHostController
 ) {
     val brands by viewModel.brands.collectAsState()

@@ -1,6 +1,10 @@
 package com.example.khizana_user.presentation.nav
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -43,7 +47,42 @@ fun AppNavGraph(navController: NavHostController) {
         }
 
         composable(ScreenRoute.Home.route) {
-            HomeScreen(navController = navController)
+            Scaffold(
+                bottomBar = { BottomNavigationBar(navController) }
+            ) { innerPadding ->
+                HomeScreen(navController = navController, paddingValues = innerPadding)
+            }
+        }
+
+        composable(ScreenRoute.Favorites.route) {
+            Scaffold(
+                bottomBar = { BottomNavigationBar(navController) }
+            ) { innerPadding ->
+                // TODO: Replace with your FavoritesScreen
+                Text("Favorites", modifier = Modifier.padding(innerPadding))
+            }
+        }
+
+        composable(ScreenRoute.Cart.route) {
+            Scaffold(
+                bottomBar = { BottomNavigationBar(navController) }
+            ) { innerPadding ->
+                // TODO: Replace with your CartScreen
+                Text("Cart", modifier = Modifier.padding(innerPadding))
+            }
+        }
+
+        composable(ScreenRoute.Settings.route) {
+            Scaffold(
+                bottomBar = { BottomNavigationBar(navController) }
+            ) { innerPadding ->
+                SettingScreen(
+                    navController = navController,
+                    modifier = Modifier.padding(innerPadding),
+                    onContactUsClick = { navController.navigate("contact") },
+                    onAboutUsClick = { navController.navigate("about") }
+                )
+            }
         }
 
         composable(ScreenRoute.ProductDetails.route) { backStackEntry ->
@@ -51,14 +90,6 @@ fun AppNavGraph(navController: NavHostController) {
             id?.let {
                 ProductDetailsScreen(productId = it)
             }
-        }
-
-        composable(ScreenRoute.Settings.route) {
-            SettingScreen(
-                navController = navController,
-                onContactUsClick = { navController.navigate("contact") },
-                onAboutUsClick = { navController.navigate("about") }
-            )
         }
 
         composable("contact") {
