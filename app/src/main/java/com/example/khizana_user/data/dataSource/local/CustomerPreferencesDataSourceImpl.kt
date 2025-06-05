@@ -49,4 +49,18 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
     override suspend fun clearCustomer() {
         context.dataStore.edit { it.clear() }
     }
+
+    override suspend fun saveCurrency(currency: String) {
+        context.dataStore.edit { prefs ->
+            prefs[CUSTOMER_CURRENCY] = currency
+        }
+    }
+
+    override fun getCurrency(): Flow<String?> {
+        return context.dataStore.data.map { prefs ->
+            prefs[CUSTOMER_CURRENCY]
+        }
+    }
+
+
 }
