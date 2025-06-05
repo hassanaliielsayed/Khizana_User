@@ -17,4 +17,10 @@ class CustomerPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun clearCustomer() =
         localDataSource.clearCustomer()
+
+    override suspend fun saveCurrency(currency: String) = localDataSource.saveCurrency(currency)
+
+
+    override fun getCurrency(): Flow<String?> = localDataSource.getCurrency()
+
 }
