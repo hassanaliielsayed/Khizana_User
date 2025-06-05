@@ -178,7 +178,7 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(paddingValues)
-                            .padding(8.dp)
+                            .padding(16.dp)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.person),
@@ -190,7 +190,7 @@ fun HomeScreen(
                                 .border(1.dp, Color.Gray, CircleShape)
                                 .padding(4.dp)
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "Welcome ${currentCustomer?.name ?: ""}",
                             fontSize = 22.sp,
@@ -199,7 +199,7 @@ fun HomeScreen(
                             color = Color.Black
                         )
 
-                        Spacer(modifier = Modifier.height(1.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Box {
                             OutlinedTextField(
