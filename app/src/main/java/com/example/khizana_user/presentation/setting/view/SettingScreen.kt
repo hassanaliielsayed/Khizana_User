@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.khizana_user.presentation.setting.viewmodel.SettingViewModel
 
@@ -49,7 +50,11 @@ fun SettingScreen(
     val context = LocalContext.current
     var showCurrencyDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var selectedCurrency by remember { mutableStateOf("EGP") }
+    //var selectedCurrency by remember { mutableStateOf("EGP") }
+
+    //var selectedCurrency by remember { mutableStateOf("EGP") }
+    val selectedCurrency by viewModel.state.collectAsStateWithLifecycle()
+
 
     Column(
         modifier = Modifier
@@ -123,7 +128,8 @@ fun SettingScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedCurrency = currency
+                                    viewModel.updateCurrency(currency)
+                                    viewModel.saveCurrency(currency)
                                     viewModel.getExchangeRate("EGP", selectedCurrency)
                                     showCurrencyDialog = false
                                     Toast.makeText(context, "Currency Updated", Toast.LENGTH_SHORT).show()

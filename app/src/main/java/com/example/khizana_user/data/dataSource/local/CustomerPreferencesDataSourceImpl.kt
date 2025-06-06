@@ -55,4 +55,18 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
         Log.d(TAG, "Clearing all customer data from DataStore")
         context.dataStore.edit { it.clear() }
     }
+
+    override suspend fun saveCurrency(currency: String) {
+        context.dataStore.edit { prefs ->
+            prefs[CUSTOMER_CURRENCY] = currency
+        }
+    }
+
+    override fun getCurrency(): Flow<String?> {
+        return context.dataStore.data.map { prefs ->
+            prefs[CUSTOMER_CURRENCY]
+        }
+    }
+
+
 }
