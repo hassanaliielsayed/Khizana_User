@@ -1,4 +1,4 @@
-package com.example.khizana_user.domain.usecase
+package com.example.khizana_user.domain.usecase.sharedperfernceusecase
 
 import com.example.khizana_user.domain.repository.CustomerPreferencesRepository
 import javax.inject.Inject

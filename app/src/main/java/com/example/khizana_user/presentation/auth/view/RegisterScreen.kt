@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.khizana_user.utils.AuthState
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
+import com.example.khizana_user.utils.AuthState
 
 @Composable
 fun RegisterScreen(
@@ -43,17 +43,12 @@ fun RegisterScreen(
     val state by viewModel.authState.collectAsStateWithLifecycle()
     val shopifyResult by viewModel.shopifyRegisterResult.collectAsStateWithLifecycle()
 
+    // Only show error toast from shopify registration
     LaunchedEffect(shopifyResult) {
-        shopifyResult?.let { result ->
-            result.onSuccess { customer ->
-                Toast.makeText(context, "Welcome, ${customer.name}", Toast.LENGTH_SHORT).show()
-                viewModel.saveCustomer(customer)
-            }.onFailure { error ->
-                Toast.makeText(context, "Shopify Error: ${error.message}", Toast.LENGTH_LONG).show()
-            }
+        shopifyResult?.onFailure { error ->
+            Toast.makeText(context, "Shopify Error: ${error.message}", Toast.LENGTH_LONG).show()
         }
     }
-
 
     Column(
         modifier = Modifier

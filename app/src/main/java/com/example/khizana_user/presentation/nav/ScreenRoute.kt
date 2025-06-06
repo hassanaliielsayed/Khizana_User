@@ -24,7 +24,13 @@ sealed class ScreenRoute(
     @Serializable object Settings : ScreenRoute("settings", Icons.Default.Settings, "Settings")
 
     @Serializable
-    object ProductDetails : ScreenRoute("productDetails/{productId}") {
-        fun createRoute(productId: Long) = "productDetails/$productId"
+    object ProductDetails : ScreenRoute("productDetails?productId={productId}&variantId={variantId}") {
+        fun createRoute(productId: Long? = null, variantId: Long? = null): String {
+            val params = mutableListOf<String>()
+            productId?.let { params.add("productId=$it") }
+            variantId?.let { params.add("variantId=$it") }
+            return "productDetails?${params.joinToString("&")}"
+        }
     }
+
 }

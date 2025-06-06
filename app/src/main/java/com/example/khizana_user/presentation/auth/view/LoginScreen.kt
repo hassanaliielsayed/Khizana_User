@@ -40,13 +40,13 @@ fun LoginScreen(
     val context = LocalContext.current
 
     LaunchedEffect(state, customer) {
-        if (state is AuthState.Success && customer != null) {
-            Log.d("LoginScreen", "Navigating with customer: ${customer!!.name}")
-            viewModel.saveCustomer(customer!!)
+        val current = customer
+        if (state is AuthState.Success && current != null) {
+            Log.d("LoginScreen", "Login success with customer: ${current.name} (${current.email})")
             viewModel.resetState()
             onLoginSuccess()
         } else {
-            Log.d("LoginScreen", "⏳ Waiting for login + customer data. State=$state, Customer=${customer?.name}")
+            Log.d("LoginScreen", "Waiting for login + customer data. State=$state, Customer=${current?.email}")
         }
     }
 
