@@ -29,7 +29,9 @@ fun AppNavGraph(
 ) {
     val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
 
-    NavHost(navController = navController, startDestination = ScreenRoute.Login.route) {
+    val startDestination = if (customer != null) ScreenRoute.Home.route else ScreenRoute.Login.route
+
+    NavHost(navController = navController, startDestination = startDestination) {
 
         composable(ScreenRoute.Login.route) {
             LoginScreen(

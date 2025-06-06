@@ -19,49 +19,42 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun addToFavorites(customerId: Long, variantId: Long): Result<Unit> {
         return try {
-            Log.d(TAG, "Fetching draft orders for customer $customerId")
-            val draftOrders = service.getDraftOrders(customerId).body()?.draftOrders.orEmpty()
-            val favoriteDraft = draftOrders.find { it.note == "FAVORITES" }
+            val favoriteDraft = getCustomerFavoritesDraft(customerId)
 
             if (favoriteDraft != null) {
-                Log.d(TAG, "FAVORITES draft found: ${favoriteDraft.id}")
+                Log.d(TAG, "Updating existing FAVORITES draft: ${favoriteDraft.id}")
                 val updatedItems = favoriteDraft.lineItems.toMutableList()
                 if (updatedItems.none { it.variantId == variantId }) {
-                    Log.d(TAG, "Adding variantId $variantId to FAVORITES draft")
                     updatedItems.add(DraftOrderItemDto(null, variantId, "Fav Item", 1))
-                } else {
-                    Log.d(TAG, "VariantId $variantId already exists in FAVORITES")
                 }
 
                 val request = DraftOrderRequest(
                     draft_order = DraftOrderData(
                         line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
                         customer = CustomerData(customerId),
-                        note = "FAVORITES"
+                        note = favoritesNote(customerId)
                     )
                 )
 
-                val response = service.updateDraftOrder(favoriteDraft.id, request)
-                Log.d(TAG, "Update draft response: ${response.code()} ${response.message()}")
+                service.updateDraftOrder(favoriteDraft.id, request)
             } else {
-                Log.d(TAG, "No FAVORITES draft found. Creating new with variantId $variantId")
-
+                Log.d(TAG, "Creating new FAVORITES draft for $customerId")
                 val request = DraftOrderRequest(
                     draft_order = DraftOrderData(
                         line_items = listOf(DraftOrderItem(variantId, 1)),
                         customer = CustomerData(customerId),
-                        note = "FAVORITES"
+                        note = favoritesNote(customerId)
                     )
                 )
 
                 val response = service.createDraftOrder(request)
-                Log.d(TAG, "Create draft response: ${response.code()} ${response.message()}")
                 if (!response.isSuccessful) {
                     val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "Create draft failed. Code: ${response.code()}, Body: $errorBody")
+                    Log.e(TAG, "Create draft failed: ${response.code()} $errorBody")
                     return Result.failure(Exception("Shopify draft creation failed: $errorBody"))
                 }
             }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Error in addToFavorites: ${e.message}", e)
@@ -69,40 +62,31 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun removeFromFavorites(customerId: Long, variantId: Long): Result<Unit> = try {
-        Log.d(TAG, "Removing variantId $variantId for customer $customerId")
+    override suspend fun removeFromFavorites(customerId: Long, variantId: Long): Result<Unit> {
+        return try {
+            val favoriteDraft = getCustomerFavoritesDraft(customerId) ?: return Result.success(Unit)
 
-        val draftOrders = service.getDraftOrders(customerId).body()?.draftOrders.orEmpty()
-        val favoriteDraft = draftOrders.find { it.note == "FAVORITES" } ?: run {
-            Log.d(TAG, "No FAVORITES draft found to remove from")
-            return Result.success(Unit)
-        }
+            val updatedItems = favoriteDraft.lineItems.filter { it.variantId != variantId }
 
-        val updatedItems = favoriteDraft.lineItems.filter { it.variantId != variantId }
-
-        val request = DraftOrderRequest(
-            draft_order = DraftOrderData(
-                line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
-                customer = CustomerData(customerId),
-                note = "FAVORITES"
+            val request = DraftOrderRequest(
+                draft_order = DraftOrderData(
+                    line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
+                    customer = CustomerData(customerId),
+                    note = favoritesNote(customerId)
+                )
             )
-        )
 
-        val response = service.updateDraftOrder(favoriteDraft.id, request)
-        Log.d(TAG, "Remove from favorites response: ${response.code()} ${response.message()}")
-
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Log.e(TAG, "Error in removeFromFavorites: ${e.message}", e)
-        Result.failure(e)
+            service.updateDraftOrder(favoriteDraft.id, request)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in removeFromFavorites: ${e.message}", e)
+            Result.failure(e)
+        }
     }
 
     override suspend fun getFavorites(customerId: Long): Result<FavoriteList> {
         return try {
-            Log.d(TAG, "Fetching favorites for customerId: $customerId")
-
-            val draftOrders = service.getDraftOrders(customerId).body()?.draftOrders.orEmpty()
-            val favoriteDraft = draftOrders.find { it.note == "FAVORITES" }
+            val favoriteDraft = getCustomerFavoritesDraft(customerId)
                 ?: return Result.failure(Exception("No favorites found"))
 
             val enrichedItems = coroutineScope {
@@ -119,7 +103,6 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
                 }.awaitAll()
             }
 
-            Log.d(TAG, "Loaded ${enrichedItems.size} favorite items")
             Result.success(
                 FavoriteList(
                     draftOrderId = favoriteDraft.id,
@@ -133,37 +116,43 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteFavoritesDraft(customerId: Long): Result<Unit> = try {
-        Log.d(TAG, "Deleting FAVORITES draft for customerId: $customerId")
+    override suspend fun deleteFavoritesDraft(customerId: Long): Result<Unit> {
+        return try {
+            val favoriteDraft = getCustomerFavoritesDraft(customerId) ?: return Result.success(Unit)
 
-        val draftOrders = service.getDraftOrders(customerId).body()?.draftOrders.orEmpty()
-        val favoriteDraft = draftOrders.find { it.note == "FAVORITES" } ?: run {
-            Log.d(TAG, "No FAVORITES draft found to delete")
-            return Result.success(Unit)
+            service.deleteDraftOrder(favoriteDraft.id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in deleteFavoritesDraft: ${e.message}", e)
+            Result.failure(e)
         }
-
-        val response = service.deleteDraftOrder(favoriteDraft.id)
-        Log.d(TAG, "Delete draft response: ${response.code()} ${response.message()}")
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Log.e(TAG, "Error in deleteFavoritesDraft: ${e.message}", e)
-        Result.failure(e)
     }
 
-    private suspend fun resolveImageUrl(variantId: Long): String = try {
-        Log.d(TAG, "Resolving image for variantId: $variantId")
+    //  DRY: Helper to find a specific customer's favorites draft order
+    private suspend fun getCustomerFavoritesDraft(customerId: Long): DraftOrderDto? {
+        return try {
+            val allDrafts = service.getDraftOrders().body()?.draftOrders.orEmpty()
+            allDrafts.find {
+                it.note == favoritesNote(customerId) && it.customer.id == customerId
+            }.also {
+                Log.d(TAG, "Fetched draft for $customerId: ${it?.id}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get customer draft: ${e.message}", e)
+            null
+        }
+    }
 
+    // Strictly bind favorite draft to the customer by encoding in the note
+    private fun favoritesNote(customerId: Long): String = "FAVORITES-$customerId"
+
+    private suspend fun resolveImageUrl(variantId: Long): String = try {
         val variantResponse = service.getVariantById(variantId).body()
         val productId = variantResponse?.variant?.product_id
 
         if (productId != null) {
-            val imageUrl = service.getProductImages(productId).body()?.images?.firstOrNull()?.src
-            Log.d(TAG, "Resolved image: $imageUrl")
-            imageUrl ?: ""
-        } else {
-            Log.d(TAG, "Product ID not found for variantId: $variantId")
-            ""
-        }
+            service.getProductImages(productId).body()?.images?.firstOrNull()?.src ?: ""
+        } else ""
     } catch (e: Exception) {
         Log.e(TAG, "Failed to resolve image for variantId $variantId: ${e.message}", e)
         ""

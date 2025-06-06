@@ -48,6 +48,7 @@ fun SettingScreen(
 ) {
     val context = LocalContext.current
     var showCurrencyDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     var selectedCurrency by remember { mutableStateOf("EGP") }
 
     Column(
@@ -66,16 +67,13 @@ fun SettingScreen(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    top = 32.dp,
-                    bottom = 16.dp
-                )
+                .padding(top = 32.dp, bottom = 16.dp)
         )
 
         SettingItem(
             title = "Address",
             value = "7znnnnnnnnnnnnn",
-            onClick = { /* TODO: handle address click */ }
+            onClick = { /* TODO */ }
         )
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -88,19 +86,19 @@ fun SettingScreen(
 
         SettingItem(
             title = "Contact us",
-            onClick = { onContactUsClick() }
+            onClick = onContactUsClick
         )
         Spacer(modifier = Modifier.height(32.dp))
 
         SettingItem(
             title = "About us",
-            onClick = { onAboutUsClick() }
+            onClick = onAboutUsClick
         )
 
         Spacer(modifier = Modifier.height(144.dp))
 
         Button(
-            onClick = { /* TODO: handle logout click */ },
+            onClick = { showLogoutDialog = true },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
@@ -117,7 +115,7 @@ fun SettingScreen(
     if (showCurrencyDialog) {
         AlertDialog(
             onDismissRequest = { showCurrencyDialog = false },
-            title = { Text(text = "Select Currency") },
+            title = { Text("Select Currency") },
             text = {
                 Column {
                     listOf("EGP", "USD").forEach { currency ->
@@ -128,7 +126,7 @@ fun SettingScreen(
                                     selectedCurrency = currency
                                     viewModel.getExchangeRate("EGP", selectedCurrency)
                                     showCurrencyDialog = false
-                                    Toast.makeText( context, "Currency Updated",  Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Currency Updated", Toast.LENGTH_SHORT).show()
                                 }
                                 .padding(vertical = 8.dp)
                         ) {
@@ -146,6 +144,29 @@ fun SettingScreen(
         )
     }
 
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Confirm Logout") },
+            text = { Text("Are you sure you want to logout?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.logout()
+                    showLogoutDialog = false
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true } // Clears backstack
+                    }
+                }) {
+                    Text("Logout")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable

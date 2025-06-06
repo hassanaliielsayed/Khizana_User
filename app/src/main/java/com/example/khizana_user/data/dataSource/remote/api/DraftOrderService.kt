@@ -9,7 +9,7 @@ import retrofit2.http.*
 
 interface ShopifyDraftOrderService {
     @GET("draft_orders.json")
-    suspend fun getDraftOrders(@Query("customer_id") customerId: Long): Response<DraftOrderResponse>
+    suspend fun getDraftOrders(): Response<DraftOrderResponse>
 
     @POST("draft_orders.json")
     suspend fun createDraftOrder(@Body body: DraftOrderRequest): Response<DraftOrderResponse>
@@ -32,6 +32,4 @@ interface ShopifyDraftOrderService {
     suspend fun getProductImages(
         @Path("product_id") productId: Long
     ): Response<ProductImagesResponse>
-
-
 }
