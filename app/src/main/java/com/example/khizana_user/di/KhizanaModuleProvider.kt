@@ -6,6 +6,7 @@ import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthData
 import com.example.khizana_user.data.repository.AuthDataSource
 import com.example.khizana_user.data.repository.AuthRepositoryImp
 import com.example.khizana_user.domain.repository.AuthRepository
+import com.example.khizana_user.domain.repository.CartRepository
 import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.repository.WishlistRepository
@@ -14,6 +15,10 @@ import com.example.khizana_user.domain.usecase.GetShopifyCustomerByEmailUseCase
 import com.example.khizana_user.domain.usecase.LoginUseCase
 import com.example.khizana_user.domain.usecase.RegisterShopifyCustomerUseCase
 import com.example.khizana_user.domain.usecase.RegisterUseCase
+import com.example.khizana_user.domain.usecase.cartusecase.AddToCartUseCase
+import com.example.khizana_user.domain.usecase.cartusecase.ClearCartUseCase
+import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseCase
+import com.example.khizana_user.domain.usecase.cartusecase.GetCartUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
@@ -99,6 +104,26 @@ class KhizanaModuleProvider {
     @Provides
     fun provideDeleteFavoritesUseCase(repo: WishlistRepository): DeleteFavoritesUseCase =
         DeleteFavoritesUseCase(repo)
+
+    @Provides
+    fun provideAddToCartUseCase(repository: CartRepository): AddToCartUseCase {
+        return AddToCartUseCase(repository)
+    }
+
+    @Provides
+    fun provideDecrementFromCartUseCase(repository: CartRepository): DecrementFromCartUseCase {
+        return DecrementFromCartUseCase(repository)
+    }
+
+    @Provides
+    fun provideGetCartUseCase(repository: CartRepository): GetCartUseCase {
+        return GetCartUseCase(repository)
+    }
+
+    @Provides
+    fun provideClearCartUseCase(repository: CartRepository): ClearCartUseCase {
+        return ClearCartUseCase(repository)
+    }
 
     @Provides
     fun provideDraftOrderService(

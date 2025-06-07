@@ -92,11 +92,12 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             val enrichedItems = coroutineScope {
                 favoriteDraft.lineItems.map { item ->
                     async {
-                        val imageUrl = resolveImageUrl(item.variantId)
+                        val (imageUrl, price) = resolveProductDetails(item.variantId)
                         FavoriteItem(
                             variantId = item.variantId,
                             title = item.title,
                             quantity = item.quantity,
+                            price = price,  // Now including the price
                             imageUrl = imageUrl
                         )
                     }
@@ -115,6 +116,38 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             Result.failure(e)
         }
     }
+//    override suspend fun getFavorites(customerId: Long): Result<FavoriteList> {
+//        return try {
+//            val favoriteDraft = getCustomerFavoritesDraft(customerId)
+//                ?: return Result.failure(Exception("No favorites found"))
+//
+//            val enrichedItems = coroutineScope {
+//                favoriteDraft.lineItems.map { item ->
+//                    async {
+//                        val imageUrl = resolveImageUrl(item.variantId)
+//                        FavoriteItem(
+//                            variantId = item.variantId,
+//                            title = item.title,
+//                            quantity = item.quantity,
+//                            price = item.price,
+//                            imageUrl = imageUrl
+//                        )
+//                    }
+//                }.awaitAll()
+//            }
+//
+//            Result.success(
+//                FavoriteList(
+//                    draftOrderId = favoriteDraft.id,
+//                    customerId = favoriteDraft.customer.id,
+//                    items = enrichedItems
+//                )
+//            )
+//        } catch (e: Exception) {
+//            Log.e(TAG, "Error in getFavorites: ${e.message}", e)
+//            Result.failure(e)
+//        }
+//    }
 
     override suspend fun deleteFavoritesDraft(customerId: Long): Result<Unit> {
         return try {
@@ -146,15 +179,30 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
     // Strictly bind favorite draft to the customer by encoding in the note
     private fun favoritesNote(customerId: Long): String = "FAVORITES-$customerId"
 
-    private suspend fun resolveImageUrl(variantId: Long): String = try {
+//    private suspend fun resolveImageUrl(variantId: Long): String = try {
+//        val variantResponse = service.getVariantById(variantId).body()
+//        val productId = variantResponse?.variant?.product_id
+//
+//        if (productId != null) {
+//            service.getProductImages(productId).body()?.images?.firstOrNull()?.src ?: ""
+//        } else ""
+//    } catch (e: Exception) {
+//        Log.e(TAG, "Failed to resolve image for variantId $variantId: ${e.message}", e)
+//        ""
+//    }
+
+    private suspend fun resolveProductDetails(variantId: Long): Pair<String, Double> = try {
         val variantResponse = service.getVariantById(variantId).body()
         val productId = variantResponse?.variant?.product_id
+        val price = variantResponse?.variant?.price?.toDoubleOrNull() ?: 0.0
 
-        if (productId != null) {
+        val imageUrl = if (productId != null) {
             service.getProductImages(productId).body()?.images?.firstOrNull()?.src ?: ""
         } else ""
+
+        Pair(imageUrl, price)
     } catch (e: Exception) {
-        Log.e(TAG, "Failed to resolve image for variantId $variantId: ${e.message}", e)
-        ""
+        Log.e(TAG, "Failed to resolve product details for variantId $variantId: ${e.message}", e)
+        Pair("", 0.0)
     }
 }

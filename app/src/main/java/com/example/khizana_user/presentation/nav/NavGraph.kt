@@ -15,6 +15,7 @@ import androidx.navigation.navArgument
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
+import com.example.khizana_user.presentation.cart.view.CartScreen
 import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
@@ -80,7 +81,16 @@ fun AppNavGraph(
 
         composable(ScreenRoute.Cart.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
-                Text("Cart Screen Placeholder", modifier = Modifier.padding(innerPadding))
+                val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+                if (customer != null) {
+                    CartScreen(
+                        customerId = customer.id,
+                        viewModel = hiltViewModel(),
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                } else {
+                    Text("Please log in to access your cart", modifier = Modifier.padding(innerPadding))
+                }
             }
         }
 
@@ -121,6 +131,8 @@ fun AppNavGraph(
                 Text("User not logged in")
             }
         }
+
+
 
         composable("contact") {
             ContactsScreen()

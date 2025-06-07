@@ -1,8 +1,11 @@
 package com.example.khizana_user.di
 
 import com.example.khizana_user.data.dataSource.local.CustomerPreferencesDataSourceImpl
+import com.example.khizana_user.data.dataSource.remote.CartRemoteDataSourceImpl
 import com.example.khizana_user.data.dataSource.remote.RemoteDataSourceImp
 import com.example.khizana_user.data.dataSource.remote.WishlistRemoteDataSourceImpl
+import com.example.khizana_user.data.repository.CartRemoteDataSource
+import com.example.khizana_user.data.repository.CartRepositoryImpl
 import com.example.khizana_user.data.repository.CustomerPreferencesDataSource
 import com.example.khizana_user.data.repository.CustomerPreferencesRepositoryImpl
 import com.example.khizana_user.data.repository.RemoteDataSource
@@ -12,6 +15,7 @@ import com.example.khizana_user.data.repository.SettingRepositoryImpl
 import com.example.khizana_user.data.repository.ShopifyRepositoryImpl
 import com.example.khizana_user.data.repository.WishlistRemoteDataSource
 import com.example.khizana_user.data.repository.WishlistRepositoryImpl
+import com.example.khizana_user.domain.repository.CartRepository
 import com.example.khizana_user.domain.repository.CustomerPreferencesRepository
 import com.example.khizana_user.domain.repository.HomeRepository
 import com.example.khizana_user.domain.repository.ProductRepository
@@ -69,6 +73,29 @@ abstract class KhizanaModule {
     abstract fun bindWishlistRemoteDataSource(
         impl: WishlistRemoteDataSourceImpl
     ): WishlistRemoteDataSource
+
+//    @Binds
+//    abstract fun bindCartRepository(
+//        impl: CartRepositoryImpl
+//    ): CartRepository
+//
+//    @Binds
+//    @Singleton
+//    abstract fun bindCartRemoteDataSource(
+//        impl: CartRemoteDataSourceImpl
+//    ): CartRemoteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindCartRemoteDataSource(
+        impl: CartRemoteDataSourceImpl
+    ): CartRemoteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindCartRepository(
+        impl: CartRepositoryImpl
+    ): CartRepository
 
 
 //    @Provides
