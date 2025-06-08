@@ -14,6 +14,15 @@ fun String.toCurrentCurrency(): String {
     }
 }
 
+fun Double.toCurrentCurrency(): String {
+    return try {
+        val convertedValue = this * CurrencyHelper.exchangeRates
+        "${CurrencyHelper.currencyUnit} %.2f".format(convertedValue)
+    } catch (e: Exception) {
+        "${CurrencyHelper.currencyUnit} 0.00"
+    }
+}
+
 object CurrencyHelper {
 
     var exchangeRates: Double = 1.0

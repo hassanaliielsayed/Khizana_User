@@ -1,3 +1,5 @@
+@file:Suppress("UNREACHABLE_CODE")
+
 package com.example.khizana_user.presentation.nav
 
 import androidx.compose.foundation.layout.padding
@@ -11,11 +13,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.cart.view.CartScreen
+import com.example.khizana_user.presentation.cart.view.CheckoutScreen
 import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
@@ -86,7 +90,9 @@ fun AppNavGraph(
                     CartScreen(
                         customerId = customer.id,
                         viewModel = hiltViewModel(),
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        onCheckoutClick = { totalPrice ->
+                            navController.navigate("checkout/$totalPrice") }
                     )
                 } else {
                     Text("Please log in to access your cart", modifier = Modifier.padding(innerPadding))
@@ -140,6 +146,17 @@ fun AppNavGraph(
 
         composable("about") {
             AboutUs()
+        }
+
+        composable("checkout/{totalPrice}") { backStackEntry ->
+            val totalPrice = backStackEntry.arguments?.getString("totalPrice")?.toDoubleOrNull() ?: 0.0
+            CheckoutScreen(
+                totalPrice = totalPrice,
+                onBackClick = { navController.popBackStack() },
+                onPlaceOrderClick = {},
+                onAddressClick = {  },
+                onPaymentMethodClick = { },
+            )
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.cart.view
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,13 +22,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,15 +38,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
+import com.example.khizana_user.utils.toCurrentCurrency
 
 @Composable
 fun CartScreen(
     customerId: Long,
+    onCheckoutClick: (Double) -> Unit,
     viewModel: CartViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -62,10 +66,26 @@ fun CartScreen(
             .fillMaxSize()
             .padding(top = 32.dp, start = 16.dp, end = 16.dp)
     ) {
-        Text(
-            "🛒 Your Cart",
-            style = MaterialTheme.typography.titleLarge
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "🛒 Your Cart",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            // Moved Clear Cart button here
+            Button(
+                onClick = { showClearCartDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = "Clear cart")
+                Spacer(Modifier.width(8.dp))
+                Text("Clear Cart")
+            }
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -100,14 +120,51 @@ fun CartScreen(
 
                         Spacer(Modifier.height(16.dp))
 
-                        Button(
-                            onClick = { showClearCartDialog = true },
-                            modifier = Modifier.align(Alignment.End),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
                         ) {
-                            Icon(Icons.Default.Delete, contentDescription = "Clear cart")
-                            Spacer(Modifier.width(8.dp))
-                            Text("Clear Cart")
+                            Divider(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                thickness = 1.dp
+                            )
+                            Spacer(Modifier.height(8.dp))
+
+                            val totalPrice = cart.items.sumOf {
+                                (it?.price ?: 0.00) * (it?.quantity ?: 0)
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    "Total:",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = totalPrice.toCurrentCurrency(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            Spacer(Modifier.height(16.dp))
+
+                            Button(
+                                onClick = { onCheckoutClick(totalPrice) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text("Proceed to Checkout", fontSize = 16.sp)
+                            }
                         }
                     }
                 }
@@ -166,9 +223,9 @@ fun CartItemRow(
                 Text(item.title, style = MaterialTheme.typography.titleMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Quantity: ${item.quantity}")
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(32.dp))
                     Text(
-                        text = "${(item.price * item.quantity)}",
+                        text = "Price   ${(item.price * item.quantity).toCurrentCurrency()}",
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
