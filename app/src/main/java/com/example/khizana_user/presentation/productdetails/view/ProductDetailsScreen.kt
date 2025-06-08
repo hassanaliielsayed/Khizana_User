@@ -1,6 +1,7 @@
 package com.example.khizana_user.presentation.productdetails.view
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -17,7 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.ProductDetails
+import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.productdetails.viewmodel.ProductDetailsViewModel
 import com.example.khizana_user.utils.toCurrentCurrency
@@ -37,10 +39,12 @@ fun ProductDetailsScreen(
     variantId: Long? = null,
     customerId: Long,
     viewModel: ProductDetailsViewModel = hiltViewModel(),
-    wishlistViewModel: WishlistViewModel = hiltViewModel()
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
+    cartViewModel: CartViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val favorites by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(customerId) {
         Log.d("ProductDetails", "Loading favorites for customerId: $customerId")
@@ -49,7 +53,7 @@ fun ProductDetailsScreen(
 
     val isInitiallyFavorite = remember(favorites, variantId, productId) {
         val id = variantId ?: productId
-        val fav = favorites?.items?.any { it.variantId == id } ?: false
+        val fav = favorites?.items?.any { it!!.variantId == id } ?: false
         Log.d("ProductDetails", "Initial favorite check for ID $id: $fav")
         fav
     }
@@ -82,7 +86,7 @@ fun ProductDetailsScreen(
                         Log.e("ProductDetails", "VariantId is null. Cannot toggle favorite.")
                         return@ProductDetailsContent
                     }
-                    val alreadyInFavorites = favorites?.items?.any { it.variantId == id } ?: false
+                    val alreadyInFavorites = favorites?.items?.any { it!!.variantId == id } ?: false
                     if (!isFavorite && !alreadyInFavorites) {
                         isFavorite = true
                         wishlistViewModel.addToFavorites(customerId, id)
@@ -90,6 +94,15 @@ fun ProductDetailsScreen(
                         isFavorite = false
                         wishlistViewModel.removeFromFavorites(customerId, id)
                     }
+                },
+                onAddToCart = {
+                    val id = result.data.variantId
+                    if (id == null) {
+                        Log.e("ProductDetails", "VariantId is null. Cannot add to cart.")
+                        return@ProductDetailsContent
+                    }
+                    cartViewModel.addToCart(customerId, id)
+                    Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
                 }
             )
         }
@@ -100,7 +113,8 @@ fun ProductDetailsScreen(
 fun ProductDetailsContent(
     product: ProductDetails,
     isFavorite: Boolean,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
+    onAddToCart: () -> Unit
 ) {
     var selectedSize by remember { mutableStateOf<String?>(null) }
     var selectedColor by remember { mutableStateOf<String?>(null) }
@@ -201,12 +215,10 @@ fun ProductDetailsContent(
                             .clickable {
                                 selectedColor = colorName
                                 Log.d("ProductDetails", "Selected color: $colorName")
-                                // TODO: Update selected variantId here based on color and size combination
                             }
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         }
 
@@ -227,7 +239,6 @@ fun ProductDetailsContent(
                             .clickable {
                                 selectedSize = size
                                 Log.d("ProductDetails", "Selected size: $size")
-                                // TODO: Update selected variantId here based on size and color
                             }
                             .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
@@ -235,13 +246,25 @@ fun ProductDetailsContent(
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         Text("Description", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(4.dp))
         Text(product.description, fontSize = 14.sp, lineHeight = 20.sp)
-        Spacer(modifier = Modifier.height(100.dp))
+
+        Spacer(modifier = Modifier.height(32.dp))
+        Button(
+            onClick = onAddToCart,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+        ) {
+            Text("Add to Cart", color = Color.White, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

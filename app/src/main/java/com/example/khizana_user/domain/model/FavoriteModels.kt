@@ -4,6 +4,7 @@ data class FavoriteItem(
     val variantId: Long,
     val title: String,
     val quantity: Int,
+    val price: Double,
     val imageUrl: String
 )
 
@@ -11,5 +12,5 @@ data class FavoriteItem(
 data class FavoriteList(
     val draftOrderId: Long,
     val customerId: Long,
-    val items: List<FavoriteItem>
+    val items: List<FavoriteItem?>
 )

@@ -63,15 +63,17 @@ fun WishlistScreen(
                 else -> {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(favorites!!.items) { item ->
-                            FavoriteItemCard(
-                                item = item,
-                                onRemoveClick = {
-                                    viewModel.removeFromFavorites(customerId, item.variantId)
-                                },
-                                onItemClick = {
-                                    navController.navigate("productDetails/${item.variantId}")
-                                }
-                            )
+                            if (item != null) {
+                                FavoriteItemCard(
+                                    item = item,
+                                    onRemoveClick = {
+                                        viewModel.removeFromFavorites(customerId, item.variantId)
+                                    },
+                                    onItemClick = {
+                                        navController.navigate("productDetails/${item.variantId}")
+                                    }
+                                )
+                            }
                         }
                     }
                 }

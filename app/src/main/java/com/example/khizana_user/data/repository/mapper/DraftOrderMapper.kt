@@ -9,12 +9,15 @@ fun DraftOrderDto.toDomain(): FavoriteList {
         draftOrderId = this.id,
         customerId = this.customer.id,
         items = this.lineItems.map {
-            FavoriteItem(
-                variantId = it.variantId,
-                title = it.title,
-                quantity = it.quantity,
-                imageUrl = it.imageUrl ?: ""
-            )
+            it.price?.let { it1 ->
+                FavoriteItem(
+                    variantId = it.variantId,
+                    title = it.title,
+                    quantity = it.quantity,
+                    price = it1.toDouble(),
+                    imageUrl = it.imageUrl ?: ""
+                )
+            }
         }
     )
 }

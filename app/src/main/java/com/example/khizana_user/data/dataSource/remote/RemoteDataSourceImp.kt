@@ -128,6 +128,8 @@ class RemoteDataSourceImp @Inject constructor(
         return productBody.product
     }
 
+    override suspend fun fetchCoupon(code: String): CouponsResponseDto = apiService.getCoupon(code)
+
 
     override suspend fun registerShopifyCustomer(request: ShopifyCreateCustomerRequest): Response<ShopifyCustomerCreatedResponse> {
         return apiService.registerCustomer(request)
