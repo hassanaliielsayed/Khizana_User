@@ -27,4 +27,6 @@ interface RemoteDataSource {
 
     suspend fun searchShopifyCustomerByEmail(query: String): Response<ShopifyCustomerSearchResponseDto>
 
+    suspend fun fetchAllProducts(): List<ProductDto>
+
 }

@@ -10,7 +10,9 @@ data class ProductDto(
     val title: String,
     val body_html: String?,
     val vendor: String?,
+    val tags: String,
     val product_type: String?,
+    val variants: List<ProductVariantDto>,
     val created_at: String?,
     val image: ProductImageDto?
 )
@@ -18,4 +20,9 @@ data class ProductDto(
 data class ProductImageDto(
     val id: Long,
     val src: String
+)
+
+data class ProductVariantDto(
+    val id: Long,
+    val price: String
 )

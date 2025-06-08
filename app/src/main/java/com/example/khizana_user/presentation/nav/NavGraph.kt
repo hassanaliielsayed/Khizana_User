@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
+import com.example.khizana_user.presentation.category.view.CategoryScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
 import com.example.khizana_user.presentation.setting.view.AboutUs
@@ -53,6 +54,18 @@ fun AppNavGraph(navController: NavHostController) {
                 HomeScreen(navController = navController, paddingValues = innerPadding)
             }
         }
+
+        composable(ScreenRoute.Category.route) {
+            Scaffold(
+                bottomBar = { BottomNavigationBar(navController) }
+            ) { innerPadding ->
+                CategoryScreen(
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+        }
+
+
 
         composable(ScreenRoute.Favorites.route) {
             Scaffold(
