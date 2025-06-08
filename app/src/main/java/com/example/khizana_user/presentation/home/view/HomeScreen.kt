@@ -511,7 +511,7 @@ fun CouponCarousel(copuons: List<Coupon>) {
                         .fillMaxSize()
                         .clip(RoundedCornerShape(16.dp))
                         .border(
-                            BorderStroke(2.dp, Color.Red),
+                            BorderStroke(2.dp, Color.White),
                             RoundedCornerShape(16.dp)
                         )
 

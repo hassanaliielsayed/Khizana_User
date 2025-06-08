@@ -160,7 +160,7 @@ fun ProductDetailsContent(
                 onClick = onToggleFavorite,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(12.dp)
+                    .padding(30.dp)
                     .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
             ) {
                 Icon(
