@@ -18,13 +18,13 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingViewModel @Inject constructor(
     private val getExchangeRateUseCase: GetExchangeRateUseCase,
-    private val clearCustomerUseCase: ClearCustomerUseCase
+    private val clearCustomerUseCase: ClearCustomerUseCase,
     private val saveCurrencyUseCase: SaveCurrencyUseCase,
     private val getCurrencyUseCase: GetCurrencyUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow("EGP")
-    val state =  _state.asStateFlow()
+    val state = _state.asStateFlow()
 
     init {
 
@@ -58,7 +58,7 @@ class SettingViewModel @Inject constructor(
             Log.d("SettingViewModel", "User logged out and DataStore cleared.")
         }
     }
-}
+
     fun saveCurrency(currency: String) {
         viewModelScope.launch {
             saveCurrencyUseCase(currency)

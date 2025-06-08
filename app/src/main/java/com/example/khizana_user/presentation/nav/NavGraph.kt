@@ -62,7 +62,14 @@ fun AppNavGraph(
 
         composable(ScreenRoute.Home.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
-                HomeScreen(navController = navController, paddingValues = innerPadding)
+                HomeScreen(navController = navController,
+                    paddingValues = innerPadding,
+                    onNavigateToFavorites = {
+                        navController.navigate(ScreenRoute.Favorites.route)
+                    },
+                    onNavigateToCart = {
+                        navController.navigate(ScreenRoute.Cart.route)
+                    })
             }
         }
 
