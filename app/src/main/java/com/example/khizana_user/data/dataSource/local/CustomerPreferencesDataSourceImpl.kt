@@ -1,6 +1,7 @@
 package com.example.khizana_user.data.dataSource.local
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.khizana_user.data.repository.CustomerPreferencesDataSource
@@ -10,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-// DataStore extension on context
 private val Context.dataStore by preferencesDataStore(name = "customer_prefs")
 
 class CustomerPreferencesDataSourceImpl @Inject constructor(
@@ -23,9 +23,12 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
         private val CUSTOMER_EMAIL = stringPreferencesKey("customer_email")
         private val CUSTOMER_VERIFIED = booleanPreferencesKey("customer_verified")
         private val CUSTOMER_CURRENCY = stringPreferencesKey("customer_currency")
+
+        private const val TAG = "CustomerPrefs"
     }
 
     override suspend fun saveCustomer(customer: Customer) {
+        Log.d(TAG, "Saving customer: $customer")
         context.dataStore.edit { prefs ->
             prefs[CUSTOMER_ID] = customer.id
             prefs[CUSTOMER_NAME] = customer.name
@@ -42,11 +45,28 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
             val email = prefs[CUSTOMER_EMAIL] ?: return@map null
             val verified = prefs[CUSTOMER_VERIFIED] ?: false
             val currency = prefs[CUSTOMER_CURRENCY] ?: "USD"
-            Customer(id, name, email, verified, currency)
+            val customer = Customer(id, name, email, verified, currency)
+            Log.d(TAG, "Loaded customer from DataStore: $customer")
+            customer
         }
     }
 
     override suspend fun clearCustomer() {
+        Log.d(TAG, "Clearing all customer data from DataStore")
         context.dataStore.edit { it.clear() }
     }
+
+    override suspend fun saveCurrency(currency: String) {
+        context.dataStore.edit { prefs ->
+            prefs[CUSTOMER_CURRENCY] = currency
+        }
+    }
+
+    override fun getCurrency(): Flow<String?> {
+        return context.dataStore.data.map { prefs ->
+            prefs[CUSTOMER_CURRENCY]
+        }
+    }
+
+
 }

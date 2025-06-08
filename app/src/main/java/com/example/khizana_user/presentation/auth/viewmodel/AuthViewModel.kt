@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Customer
 import com.example.khizana_user.domain.usecase.*
+import com.example.khizana_user.domain.usecase.sharedperfernceusecase.GetCustomerUseCase
+import com.example.khizana_user.domain.usecase.sharedperfernceusecase.SaveCustomerUseCase
 import com.example.khizana_user.utils.AuthState
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -28,15 +31,27 @@ class AuthViewModel @Inject constructor(
     val shopifyRegisterResult: StateFlow<Result<Customer>?> = _shopifyRegisterResult
 
     val currentCustomer: StateFlow<Customer?> = getCustomerUseCase()
+        .onEach { Log.d("AuthViewModel", "currentCustomer loaded: $it") }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    init {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null && currentUser.email != null) {
+            Log.d("AuthViewModel", "App init: re-fetching Shopify customer for ${currentUser.email}")
+            fetchShopifyCustomer(currentUser.email!!)
+        }
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Logging in with Firebase: $email")
             _authState.value = AuthState.Loading
             val result = loginUseCase(email, password)
             if (result.isSuccess) {
+                Log.d("AuthViewModel", "Firebase login success")
                 fetchShopifyCustomer(email)
             } else {
+                Log.e("AuthViewModel", "Firebase login failed: ${result.exceptionOrNull()?.message}")
                 _authState.value = AuthState.Error(result.exceptionOrNull()?.message)
             }
         }
@@ -44,12 +59,14 @@ class AuthViewModel @Inject constructor(
 
     fun register(email: String, password: String, name: String) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Registering Firebase user: $email")
             _authState.value = AuthState.Loading
             val result = registerUseCase(email, password)
             if (result.isSuccess) {
-                Log.d("AuthViewModel", "Registering to Shopify with: $name, $email")
+                Log.d("AuthViewModel", "Firebase registration success")
                 registerWithShopify(name, email)
             } else {
+                Log.e("AuthViewModel", "Firebase registration failed: ${result.exceptionOrNull()?.message}")
                 _authState.value = AuthState.Error(result.exceptionOrNull()?.message)
             }
         }
@@ -57,13 +74,14 @@ class AuthViewModel @Inject constructor(
 
     private fun registerWithShopify(name: String, email: String) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Registering Shopify customer: $name <$email>")
             _shopifyRegisterResult.value = null
             val result = registerShopifyCustomerUseCase(name, email)
             _shopifyRegisterResult.value = result
 
             if (result.isSuccess) {
                 val customer = result.getOrNull()
-                Log.d("AuthViewModel", "Customer registered successfully: $customer")
+                Log.d("AuthViewModel", "Shopify registration success: $customer")
                 customer?.let {
                     saveCustomer(it)
                     _authState.value = AuthState.Success
@@ -77,16 +95,20 @@ class AuthViewModel @Inject constructor(
 
     private fun fetchShopifyCustomer(email: String) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Fetching Shopify customer by email: $email")
             val result = getShopifyCustomerByEmailUseCase(email)
             if (result.isSuccess) {
                 val customer = result.getOrNull()
                 if (customer != null) {
+                    Log.d("AuthViewModel", "Shopify customer found: $customer")
                     saveCustomer(customer)
                     _authState.value = AuthState.Success
                 } else {
+                    Log.e("AuthViewModel", "No customer found in Shopify for $email")
                     _authState.value = AuthState.Error("Customer not found in Shopify")
                 }
             } else {
+                Log.e("AuthViewModel", "Shopify fetch failed: ${result.exceptionOrNull()?.message}")
                 _authState.value = AuthState.Error(result.exceptionOrNull()?.message)
             }
         }
@@ -94,11 +116,14 @@ class AuthViewModel @Inject constructor(
 
     fun saveCustomer(customer: Customer) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Saving customer to DataStore: $customer")
             saveCustomerUseCase(customer)
         }
     }
 
+
     fun resetState() {
+        Log.d("AuthViewModel", "Resetting auth state")
         _authState.value = AuthState.Idle
         _shopifyRegisterResult.value = null
     }

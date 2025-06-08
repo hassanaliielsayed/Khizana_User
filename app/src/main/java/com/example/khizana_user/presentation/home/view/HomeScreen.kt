@@ -102,7 +102,9 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
     paddingValues: PaddingValues = PaddingValues(),
-    navController: NavHostController
+    navController: NavHostController,
+    onNavigateToFavorites: () -> Unit,
+    onNavigateToCart: () -> Unit
 ) {
     val brands by viewModel.brands.collectAsState()
     val error by viewModel.error.collectAsState()
@@ -150,10 +152,10 @@ fun HomeScreen(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onNavigateToFavorites) {
                         Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.Black)
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onNavigateToCart) {
                         Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.Black)
                     }
                 }

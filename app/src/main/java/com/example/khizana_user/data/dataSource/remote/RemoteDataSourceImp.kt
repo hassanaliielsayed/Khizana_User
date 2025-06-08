@@ -108,6 +108,27 @@ class RemoteDataSourceImp @Inject constructor(
         }
     }
 
+    override suspend fun getProductByVariantId(variantId: Long): ProductDetailsDto {
+        val variantResponse = apiService.getVariantById(variantId)
+        val variantBody = variantResponse.body()
+
+        if (!variantResponse.isSuccessful || variantBody == null) {
+            throw Exception("Error fetching variant: ${variantResponse.message()}")
+        }
+
+        val productId = variantBody.variant.product_id
+
+        val productResponse = apiService.getProductById(productId)
+        val productBody = productResponse.body()
+
+        if (!productResponse.isSuccessful || productBody == null) {
+            throw Exception("Error fetching product: ${productResponse.message()}")
+        }
+
+        return productBody.product
+    }
+
+
     override suspend fun registerShopifyCustomer(request: ShopifyCreateCustomerRequest): Response<ShopifyCustomerCreatedResponse> {
         return apiService.registerCustomer(request)
     }
