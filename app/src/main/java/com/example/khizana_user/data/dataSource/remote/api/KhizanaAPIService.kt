@@ -30,6 +30,9 @@ interface KhizanaAPIService {
         @Query("vendor") vendor: String
     ): Response<ProductResponseDto>
 
+    @GET("products.json")
+    suspend fun getAllProducts(): Response<ProductResponseDto>
+
     @GET("products/{id}.json")
     suspend fun getProductById(@Path("id") id: Long): Response<ProductDetailsResponseDto>
 
