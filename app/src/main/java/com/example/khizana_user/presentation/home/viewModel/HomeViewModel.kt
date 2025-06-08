@@ -9,6 +9,9 @@ import com.example.khizana_user.domain.model.Product
 import com.example.khizana_user.domain.usecase.GetAllBrandsUseCase
 import com.example.khizana_user.domain.usecase.GetAllCouponsUseCase
 import com.example.khizana_user.domain.usecase.GetAllProductsUseCase
+import com.example.khizana_user.domain.usecase.GetCurrencyUseCase
+import com.example.khizana_user.domain.usecase.GetExchangeRateUseCase
+import com.example.khizana_user.utils.CurrencyHelper
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -21,7 +24,9 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val getAllBrandsUseCase: GetAllBrandsUseCase,
     private val getAllCouponsUseCase: GetAllCouponsUseCase,
-    private val getAllProductsUseCase: GetAllProductsUseCase
+    private val getAllProductsUseCase: GetAllProductsUseCase,
+    private val getExchangeRateUseCase: GetExchangeRateUseCase,
+    private val getCurrencyUseCase: GetCurrencyUseCase
 ) : ViewModel() {
 
     private val _brands = MutableStateFlow<List<Brand>>(emptyList())
@@ -63,6 +68,19 @@ class HomeViewModel @Inject constructor(
                 .collect { query ->
                     handleSmartSearch(query)
                 }
+        }
+
+        viewModelScope.launch {
+
+            getCurrencyUseCase().collect { savedCurrency ->
+                CurrencyHelper.currencyUnit = savedCurrency ?: "EGP"
+                Log.i("taag", ": ${CurrencyHelper.currencyUnit} ")
+                if (CurrencyHelper.currencyUnit != "EGP") {
+                    CurrencyHelper.exchangeRates = getExchangeRateUseCase("EGP", CurrencyHelper.currencyUnit).rate
+                } else {
+                    CurrencyHelper.exchangeRates = 1.0
+                }
+            }
         }
     }
 

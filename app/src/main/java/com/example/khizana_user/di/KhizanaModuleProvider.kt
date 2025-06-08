@@ -1,17 +1,23 @@
 package com.example.khizana_user.di
 
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
+import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
 import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
 import com.example.khizana_user.data.repository.AuthDataSource
 import com.example.khizana_user.data.repository.AuthRepositoryImp
 import com.example.khizana_user.domain.repository.AuthRepository
 import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
+import com.example.khizana_user.domain.repository.WishlistRepository
 import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
 import com.example.khizana_user.domain.usecase.GetShopifyCustomerByEmailUseCase
 import com.example.khizana_user.domain.usecase.LoginUseCase
 import com.example.khizana_user.domain.usecase.RegisterShopifyCustomerUseCase
 import com.example.khizana_user.domain.usecase.RegisterUseCase
+import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavoritesUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -78,5 +84,27 @@ class KhizanaModuleProvider {
     fun provideGetShopifyCustomerByEmailUseCase(repo: ShopifyRepository): GetShopifyCustomerByEmailUseCase =
         GetShopifyCustomerByEmailUseCase(repo)
 
+    @Provides
+    fun provideAddToFavoritesUseCase(repo: WishlistRepository): AddToFavoritesUseCase =
+        AddToFavoritesUseCase(repo)
+
+    @Provides
+    fun provideRemoveFromFavoritesUseCase(repo: WishlistRepository): RemoveFromFavoritesUseCase =
+        RemoveFromFavoritesUseCase(repo)
+
+    @Provides
+    fun provideGetFavoritesUseCase(repo: WishlistRepository): GetFavoritesUseCase =
+        GetFavoritesUseCase(repo)
+
+    @Provides
+    fun provideDeleteFavoritesUseCase(repo: WishlistRepository): DeleteFavoritesUseCase =
+        DeleteFavoritesUseCase(repo)
+
+    @Provides
+    fun provideDraftOrderService(
+        @ShopifyApi retrofit: Retrofit
+    ): ShopifyDraftOrderService {
+        return retrofit.create(ShopifyDraftOrderService::class.java)
+    }
 
 }

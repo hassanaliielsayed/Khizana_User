@@ -7,4 +7,7 @@ interface CustomerPreferencesDataSource {
     suspend fun saveCustomer(customer: Customer)
     fun getCustomer(): Flow<Customer?>
     suspend fun clearCustomer()
+
+    suspend fun saveCurrency(currency: String)
+    fun getCurrency(): Flow<String?>
 }

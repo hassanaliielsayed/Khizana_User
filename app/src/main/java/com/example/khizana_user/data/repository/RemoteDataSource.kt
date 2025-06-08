@@ -29,4 +29,6 @@ interface RemoteDataSource {
 
     suspend fun fetchAllProducts(): List<ProductDto>
 
+    suspend fun getProductByVariantId(variantId: Long): ProductDetailsDto
+
 }
