@@ -63,11 +63,12 @@ import com.example.khizana_user.utils.customFontFamily
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true , showSystemUi = true)
 @Composable
 fun CategoryScreen(
     modifier: Modifier = Modifier,
-    viewModel: CategoryViewModel = hiltViewModel()
+    viewModel: CategoryViewModel = hiltViewModel(),
+    onNavigateToFavorites: () -> Unit,
+    onNavigateToCart: () -> Unit
 ) {
 
     val mainCategory = listOf("All", "Women", "Men", "Kid")
@@ -96,10 +97,10 @@ fun CategoryScreen(
                     IconButton(onClick = {}) {
                         Icon(Icons.Default.Search, contentDescription = null, tint = Color.Black)
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onNavigateToFavorites) {
                         Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.Black)
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onNavigateToCart) {
                         Icon(
                             Icons.Default.ShoppingCart,
                             contentDescription = null,

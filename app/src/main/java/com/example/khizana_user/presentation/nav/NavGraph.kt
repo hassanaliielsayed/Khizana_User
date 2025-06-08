@@ -61,11 +61,15 @@ fun AppNavGraph(navController: NavHostController) {
             ) { innerPadding ->
                 CategoryScreen(
                     modifier = Modifier.padding(innerPadding),
+                    onNavigateToFavorites = {
+                        navController.navigate(ScreenRoute.Favorites.route)
+                    },
+                    onNavigateToCart = {
+                        navController.navigate(ScreenRoute.Cart.route)
+                    }
                 )
             }
         }
-
-
 
         composable(ScreenRoute.Favorites.route) {
             Scaffold(
