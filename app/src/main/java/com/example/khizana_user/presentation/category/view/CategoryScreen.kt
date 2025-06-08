@@ -103,8 +103,8 @@ fun CategoryScreen(
                     IconButton(onClick = onNavigateToCart) {
                         Icon(
                             Icons.Default.ShoppingCart,
+                            tint = Color.Black,
                             contentDescription = null,
-                            tint = Color.Black
                         )
                     }
                 }
