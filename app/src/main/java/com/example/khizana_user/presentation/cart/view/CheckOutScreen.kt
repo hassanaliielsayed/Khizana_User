@@ -43,14 +43,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 import com.example.khizana_user.utils.toCurrentCurrency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: CartViewModel = hiltViewModel(),
     totalPrice: Double,
     onBackClick: () -> Unit,
     onPlaceOrderClick: () -> Unit,
@@ -59,7 +61,16 @@ fun CheckoutScreen(
 ) {
 
     var couponCode by remember { mutableStateOf("") }
-    var isCouponValid by remember { mutableStateOf(false) }
+
+    //val couponState by viewModel.couponState.collectAsStateWithLifecycle()
+
+    val discountAmount = remember(totalPrice) {
+        totalPrice * 0.85
+    }
+
+    val grandTotal = remember(totalPrice, discountAmount) {
+        totalPrice - discountAmount
+    }
 
     Column(
         modifier = Modifier
@@ -289,10 +300,7 @@ fun CheckoutScreen(
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Button(
-                        onClick = { },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Green
-                        ),
+                        onClick = { viewModel.validateCoupon(couponCode) },
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text("Validate")
@@ -331,7 +339,7 @@ fun CheckoutScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "509.55 EGP",
+                        text = discountAmount.toCurrentCurrency(),
                         color = Color(0xFF929292)
                     )
                 }
@@ -367,7 +375,7 @@ fun CheckoutScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "509.55 EGP",
+                        text = grandTotal.toCurrentCurrency(),
                         color = Color(0xFF929292)
                     )
                 }
