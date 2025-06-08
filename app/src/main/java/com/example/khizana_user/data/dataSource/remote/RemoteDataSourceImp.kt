@@ -66,6 +66,39 @@ class RemoteDataSourceImp @Inject constructor(
         }
     }
 
+    override suspend fun fetchAllProducts(): List<ProductDto> {
+
+        val response = apiService.getAllProducts()
+        val body = response.body()
+
+        Log.d("AllProductsByCategoryDebug", "code: ${response.code()}")
+        Log.d("AllProductsByCategoryDebug", "All Product body: ${response.body()?.products}")
+
+        Log.d("tag", "Tag of product 1 : ${response.body()?.products?.get(0)?.tags}")
+        Log.d("ProductType", "ProductType of product 1: ${response.body()?.products?.get(0)?.tags}")
+
+        if (body != null) {
+            for (product in body.products) {
+
+//                val tags = product.tags
+//                Log.d("ProductTags", "Product Tag: ${product.id}, Tags: $tags")
+
+                val productType = product.product_type
+                Log.d("ProductType", "Product Type: ${product.id}, Tags: $productType")
+            }
+        }
+
+        return if (response.isSuccessful && body != null) {
+
+            body.products
+
+        } else {
+
+            throw Exception("Error fetching products: ${response.message()}")
+
+        }
+    }
+
     override suspend fun getProductById(id: Long): ProductDetailsDto {
         val response = apiService.getProductById(id)
         if (response.isSuccessful && response.body() != null) {
@@ -74,6 +107,29 @@ class RemoteDataSourceImp @Inject constructor(
             throw Exception("Error fetching product: ${response.message()}")
         }
     }
+
+    override suspend fun getProductByVariantId(variantId: Long): ProductDetailsDto {
+        val variantResponse = apiService.getVariantById(variantId)
+        val variantBody = variantResponse.body()
+
+        if (!variantResponse.isSuccessful || variantBody == null) {
+            throw Exception("Error fetching variant: ${variantResponse.message()}")
+        }
+
+        val productId = variantBody.variant.product_id
+
+        val productResponse = apiService.getProductById(productId)
+        val productBody = productResponse.body()
+
+        if (!productResponse.isSuccessful || productBody == null) {
+            throw Exception("Error fetching product: ${productResponse.message()}")
+        }
+
+        return productBody.product
+    }
+
+    override suspend fun fetchCoupon(code: String): CouponsResponseDto = apiService.getCoupon(code)
+
 
     override suspend fun registerShopifyCustomer(request: ShopifyCreateCustomerRequest): Response<ShopifyCustomerCreatedResponse> {
         return apiService.registerCustomer(request)

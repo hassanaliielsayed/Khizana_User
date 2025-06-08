@@ -1,6 +1,7 @@
 package com.example.khizana_user.presentation.nav
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Login
@@ -22,9 +23,16 @@ sealed class ScreenRoute(
     @Serializable object Favorites : ScreenRoute("favorites", Icons.Default.Favorite, "Favorites")
     @Serializable object Cart : ScreenRoute("cart", Icons.Default.ShoppingCart, "Cart")
     @Serializable object Settings : ScreenRoute("settings", Icons.Default.Settings, "Settings")
+    @Serializable object Category : ScreenRoute("category", Icons.Default.Category, "Category")
 
     @Serializable
-    object ProductDetails : ScreenRoute("productDetails/{productId}") {
-        fun createRoute(productId: Long) = "productDetails/$productId"
+    object ProductDetails : ScreenRoute("productDetails?productId={productId}&variantId={variantId}") {
+        fun createRoute(productId: Long? = null, variantId: Long? = null): String {
+            val params = mutableListOf<String>()
+            productId?.let { params.add("productId=$it") }
+            variantId?.let { params.add("variantId=$it") }
+            return "productDetails?${params.joinToString("&")}"
+        }
     }
+
 }

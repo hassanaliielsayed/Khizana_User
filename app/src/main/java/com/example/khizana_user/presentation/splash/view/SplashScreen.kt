@@ -1,4 +1,4 @@
-package com.example.khizana_user
+package com.example.khizana_user.presentation.splash.view
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -27,11 +27,18 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.khizana_user.ui.theme.Khizana_UserTheme
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieConstants
+import com.example.khizana_user.MainActivity
+import com.example.khizana_user.R
 import com.example.khizana_user.utils.customFontFamily
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.firstOrNull
 
 
+@AndroidEntryPoint
 @SuppressLint("CustomSplashScreen")
 class SplashScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +46,7 @@ class SplashScreen : ComponentActivity() {
 
         val sharedPreferences = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val isFirstTime = sharedPreferences.getBoolean("isFirstTime", true)
+
 
         if (isFirstTime) {
             setContent {
@@ -61,7 +69,9 @@ class SplashScreen : ComponentActivity() {
 
 
 @Composable
-fun SplashContent(onFinish: () -> Unit) {
+fun SplashContent(
+    onFinish: () -> Unit,
+) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.spalsh_lottie_animation))
 
     LaunchedEffect(Unit) {

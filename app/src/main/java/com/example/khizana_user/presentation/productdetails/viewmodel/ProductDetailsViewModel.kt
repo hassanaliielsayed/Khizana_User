@@ -18,11 +18,24 @@ class ProductDetailsViewModel @Inject constructor(
     private val _state = MutableStateFlow<Result>(Result.Loading)
     val state: StateFlow<Result> = _state
 
-    fun loadProduct(id: Long) {
+    fun loadProduct(productId: Long) {
         viewModelScope.launch {
+            _state.value = Result.Loading
             try {
-                val data = useCase(id)
-                _state.value = Result.Success(data)
+                val product = useCase.byProductId(productId)
+                _state.value = Result.Success(product)
+            } catch (e: Exception) {
+                _state.value = Result.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun loadProductByVariant(variantId: Long) {
+        viewModelScope.launch {
+            _state.value = Result.Loading
+            try {
+                val product = useCase.byVariantId(variantId)
+                _state.value = Result.Success(product)
             } catch (e: Exception) {
                 _state.value = Result.Error(e.message ?: "Unknown error")
             }

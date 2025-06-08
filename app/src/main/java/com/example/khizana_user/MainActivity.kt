@@ -18,6 +18,7 @@ class MainActivity : ComponentActivity() {
             Khizana_UserTheme {
                 val navController = rememberNavController()
                 AppNavGraph(navController)
+
             }
         }
     }

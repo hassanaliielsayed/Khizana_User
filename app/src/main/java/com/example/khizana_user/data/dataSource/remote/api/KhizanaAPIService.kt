@@ -7,6 +7,7 @@ import com.example.khizana_user.data.dto.ProductResponseDto
 import com.example.khizana_user.data.dto.ShopifyCreateCustomerRequest
 import com.example.khizana_user.data.dto.ShopifyCustomerCreatedResponse
 import com.example.khizana_user.data.dto.ShopifyCustomerSearchResponseDto
+import com.example.khizana_user.data.dto.draftorderDto.VariantResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -29,6 +30,9 @@ interface KhizanaAPIService {
         @Query("vendor") vendor: String
     ): Response<ProductResponseDto>
 
+    @GET("products.json")
+    suspend fun getAllProducts(): Response<ProductResponseDto>
+
     @GET("products/{id}.json")
     suspend fun getProductById(@Path("id") id: Long): Response<ProductDetailsResponseDto>
 
@@ -41,6 +45,14 @@ interface KhizanaAPIService {
     suspend fun searchCustomerByEmail(
         @Query("query") query: String
     ): Response<ShopifyCustomerSearchResponseDto>
+
+    @GET("variants/{variant_id}.json")
+    suspend fun getVariantById(
+        @Path("variant_id") variantId: Long
+    ): Response<VariantResponse>
+
+    @GET("price_rules.json/{code}")
+    suspend fun getCoupon(@Path("code") code: String): CouponsResponseDto
 
 }
 
