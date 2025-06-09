@@ -91,6 +91,34 @@ class CartRemoteDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun removeFromCart(customerId: Long, variantId: Long): Result<Unit> {
+        return try {
+
+            val cartDraft = getCustomerCartDraft(customerId)
+                ?: return Result.failure(Exception("Cart draft not found"))
+
+            val updatedItems = cartDraft.lineItems.filterNot { it.variantId == variantId }
+
+            val request = DraftOrderRequest(
+                draft_order = DraftOrderData(
+                    line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
+                    customer = CustomerData(customerId),
+                    note = cartNote(customerId)
+                )
+            )
+
+            val response = service.updateDraftOrder(cartDraft.id, request)
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to remove item from cart"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getCart(customerId: Long): FavoriteList {
         Log.d(TAG, "Getting cart for customerId: $customerId")
         val cartDraft = getCustomerCartDraft(customerId)

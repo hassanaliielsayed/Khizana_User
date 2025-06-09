@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -58,7 +60,6 @@ fun CartScreen(
 ) {
     val cartResult by viewModel.cartState.collectAsStateWithLifecycle()
     var showClearCartDialog by remember { mutableStateOf(false) }
-
 
     LaunchedEffect(customerId) {
         viewModel.loadCart(customerId)
@@ -121,7 +122,8 @@ fun CartScreen(
                                                 customerId,
                                                 item.variantId
                                             )
-                                        }
+                                        },
+                                        onDelete = { viewModel.removeFromCart(customerId, item.variantId) }
                                     )
                                 }
                             }
@@ -212,13 +214,14 @@ fun CartScreen(
 fun CartItemColumn(
     item: FavoriteItem,
     onAdd: () -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Color.Gray,
+                color = Color.LightGray,
                 shape = RoundedCornerShape(size = 12.dp)
             )
             .padding(8.dp)
@@ -254,6 +257,9 @@ fun CartItemColumn(
                         }
                         IconButton(onClick = onAdd) {
                             Icon(Icons.Default.Add, contentDescription = "Increase quantity")
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete item")
                         }
                     }
 

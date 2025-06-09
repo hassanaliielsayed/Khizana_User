@@ -17,6 +17,11 @@ class CartRepositoryImpl @Inject constructor(
 
     override suspend fun decrementFromCart(customerId: Long, variantId: Long): Result<Unit> {
         return remote.decrementFromCart(customerId, variantId)
+
+    }
+
+    override suspend fun removeFromCart(customerId: Long, variantId: Long): Result<Unit> {
+        return remote.removeFromCart(customerId, variantId)
     }
 
     override suspend fun getCart(customerId: Long): FavoriteList {

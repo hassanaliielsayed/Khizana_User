@@ -9,6 +9,7 @@ import com.example.khizana_user.domain.usecase.cartusecase.AddToCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.ClearCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.GetCartUseCase
+import com.example.khizana_user.domain.usecase.cartusecase.RemoveFromCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.ValidateCouponUseCase
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +25,8 @@ class CartViewModel @Inject constructor(
     private val getCartUseCase: GetCartUseCase,
     private val clearCartUseCase: ClearCartUseCase,
     private val validateCouponUseCase: ValidateCouponUseCase,
-    ) : ViewModel() {
+    private val removeFromCartUseCase: RemoveFromCartUseCase,
+) : ViewModel() {
 
     private val _cartState = MutableStateFlow<Result<FavoriteList>>(Result.Loading)
     val cartState = _cartState.asStateFlow()
@@ -34,7 +36,7 @@ class CartViewModel @Inject constructor(
 
 
     fun loadCart(customerId: Long) {
-        viewModelScope.launch{
+        viewModelScope.launch {
             try {
                 val cart = getCartUseCase(customerId)
                 _cartState.value = Result.Success(cart)
@@ -77,6 +79,16 @@ class CartViewModel @Inject constructor(
         }
     }
 
+    fun removeFromCart(customerId: Long, variantId: Long) {
+        viewModelScope.launch {
+            removeFromCartUseCase(customerId, variantId).onSuccess {
+                loadCart(customerId)
+            }.onFailure {
+                Log.e("CartViewModel", "Decrement failed: ${it.message}")
+            }
+        }
+    }
+
     fun clearCart(customerId: Long) {
         viewModelScope.launch {
             clearCartUseCase(customerId).onSuccess {
@@ -86,4 +98,6 @@ class CartViewModel @Inject constructor(
             }
         }
     }
+
+
 }
