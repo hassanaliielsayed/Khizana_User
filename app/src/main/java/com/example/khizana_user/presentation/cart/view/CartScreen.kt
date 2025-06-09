@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.cart.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,8 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import com.example.khizana_user.utils.Result
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
@@ -35,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
+import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.toCurrentCurrency
 
 @Composable
@@ -76,7 +79,6 @@ fun CartScreen(
                 style = MaterialTheme.typography.titleLarge
             )
 
-            // Moved Clear Cart button here
             Button(
                 onClick = { showClearCartDialog = true },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
@@ -93,6 +95,7 @@ fun CartScreen(
             Result.Loading -> {
                 CircularProgressIndicator()
             }
+
             is Result.Error -> {
                 Text(
                     text = "Failed to load cart: ${result.message}",
@@ -100,6 +103,7 @@ fun CartScreen(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }
+
             is Result.Success -> {
                 val cart = result.data
                 if (cart.items.isEmpty()) {
@@ -109,10 +113,15 @@ fun CartScreen(
                         LazyColumn {
                             items(cart.items) { item ->
                                 item?.let {
-                                    CartItemRow(
+                                    CartItemColumn(
                                         item = it,
                                         onAdd = { viewModel.addToCart(customerId, item.variantId) },
-                                        onRemove = { viewModel.decrementFromCart(customerId, item.variantId) }
+                                        onRemove = {
+                                            viewModel.decrementFromCart(
+                                                customerId,
+                                                item.variantId
+                                            )
+                                        }
                                     )
                                 }
                             }
@@ -172,7 +181,6 @@ fun CartScreen(
         }
     }
 
-    // Confirmation Dialog
     if (showClearCartDialog) {
         AlertDialog(
             onDismissRequest = { showClearCartDialog = false },
@@ -201,43 +209,62 @@ fun CartScreen(
 }
 
 @Composable
-fun CartItemRow(
+fun CartItemColumn(
     item: FavoriteItem,
     onAdd: () -> Unit,
     onRemove: () -> Unit
 ) {
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 8.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = Color.Gray,
+                shape = RoundedCornerShape(size = 12.dp)
+            )
+            .padding(8.dp)
+
+    ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AsyncImage(
                 model = item.imageUrl,
                 contentDescription = item.title,
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier
+                    .size(75.dp)
+                    .clip(RoundedCornerShape(size = 8.dp))
             )
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(item.title, style = MaterialTheme.typography.titleMedium)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Quantity: ${item.quantity}")
-                    Spacer(Modifier.width(32.dp))
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ){
                     Text(
-                        text = "Price   ${(item.price * item.quantity).toCurrentCurrency()}",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        "Quantity: ${item.quantity}",
+                        style = MaterialTheme.typography.titleLarge
                     )
+                    Row {
+                        IconButton(onClick = onRemove) {
+                            Icon(Icons.Default.Remove, contentDescription = "Decrease quantity")
+                        }
+                        IconButton(onClick = onAdd) {
+                            Icon(Icons.Default.Add, contentDescription = "Increase quantity")
+                        }
+                    }
+
                 }
-            }
-            Row {
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Default.Remove, contentDescription = "Decrease quantity")
-                }
-                IconButton(onClick = onAdd) {
-                    Icon(Icons.Default.Add, contentDescription = "Increase quantity")
-                }
+
+                Text(
+                    text = "Price   ${(item.price * item.quantity).toCurrentCurrency()}",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+
             }
         }
     }

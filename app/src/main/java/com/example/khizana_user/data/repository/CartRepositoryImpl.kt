@@ -29,7 +29,4 @@ class CartRepositoryImpl @Inject constructor(
 
     override suspend fun fetchCoupon(code: String): List<Coupon> = remoteSource.fetchCoupon(code).toDomain()
 
-//    override suspend fun validateCoupon(code: String): List<Coupon> {
-//        return remote.validateCoupon(code).toDomain()
-//    }
 }

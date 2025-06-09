@@ -28,7 +28,6 @@ fun WishlistScreen(
 ) {
     val favorites by viewModel.favoritesState.collectAsState()
 
-    // Load favorites on screen open
     LaunchedEffect(customerId) {
         viewModel.loadFavorites(customerId)
     }

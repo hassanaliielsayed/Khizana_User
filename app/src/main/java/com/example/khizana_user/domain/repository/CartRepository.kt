@@ -12,7 +12,6 @@ interface CartRepository {
 
     suspend fun clearCart(customerId: Long): Result<Unit>
 
-//    suspend fun validateCoupon(code: String): List<Coupon>
     suspend fun fetchCoupon(code: String): List<Coupon>
 
 }

@@ -123,39 +123,6 @@ class CartRemoteDataSourceImpl @Inject constructor(
         )
     }
 
-//    override suspend fun getCart(customerId: Long): Result<FavoriteList> {
-//        return try {
-//            Log.d(TAG, "Getting cart for customerId: $customerId")
-//            val cartDraft = getCustomerCartDraft(customerId)
-//                ?: return Result.failure(Exception("Cart not found"))
-//
-//            val enrichedItems = coroutineScope {
-//                cartDraft.lineItems.map { item ->
-//                    async {
-//                        val imageUrl = resolveImageUrl(item.variantId)
-//                        FavoriteItem(
-//                            variantId = item.variantId,
-//                            title = item.title,
-//                            quantity = item.quantity,
-//                            imageUrl = imageUrl
-//                        )
-//                    }
-//                }.awaitAll()
-//            }
-//
-//            Result.success(
-//                FavoriteList(
-//                    draftOrderId = cartDraft.id,
-//                    customerId = cartDraft.customer.id,
-//                    items = enrichedItems
-//                )
-//            )
-//        } catch (e: Exception) {
-//            Log.e(TAG, "Error in getCart: ${e.message}", e)
-//            Result.failure(e)
-//        }
-//    }
-
     override suspend fun clearCart(customerId: Long): Result<Unit> {
         return try {
             Log.d(TAG, "Clearing cart for customerId: $customerId")

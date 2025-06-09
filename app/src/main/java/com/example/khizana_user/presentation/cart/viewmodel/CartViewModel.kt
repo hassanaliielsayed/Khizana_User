@@ -36,7 +36,7 @@ class CartViewModel @Inject constructor(
     fun loadCart(customerId: Long) {
         viewModelScope.launch{
             try {
-                val cart = getCartUseCase(customerId) // Will now return empty cart if not found
+                val cart = getCartUseCase(customerId)
                 _cartState.value = Result.Success(cart)
             } catch (e: Exception) {
                 _cartState.value = Result.Error(e.message ?: "Unknown error")
@@ -46,14 +46,12 @@ class CartViewModel @Inject constructor(
 
     fun validateCoupon(code: String) {
         viewModelScope.launch {
-            Log.i("aaaa", "validateCoupon: $code")
             try {
                 val coupons = validateCouponUseCase(code)
                 _couponState.value = Result.Success(coupons)
-                Log.i("aaaa", "validateCoupon: + ${coupons.discount}")
             } catch (e: Exception) {
                 _couponState.value = Result.Error(e.message ?: "Unknown error")
-                Log.i("aaaa", "validateCoupon: ${e.message}")
+
             }
         }
 
@@ -61,7 +59,6 @@ class CartViewModel @Inject constructor(
 
     fun addToCart(customerId: Long, variantId: Long) {
         viewModelScope.launch {
-            Log.d("CartViewModel", "Adding variantId $variantId to cart")
             addToCartUseCase(customerId, variantId).onSuccess {
                 loadCart(customerId)
             }.onFailure {
@@ -72,7 +69,6 @@ class CartViewModel @Inject constructor(
 
     fun decrementFromCart(customerId: Long, variantId: Long) {
         viewModelScope.launch {
-            Log.d("CartViewModel", "Decrementing variantId $variantId from cart")
             decrementFromCartUseCase(customerId, variantId).onSuccess {
                 loadCart(customerId)
             }.onFailure {
@@ -83,7 +79,6 @@ class CartViewModel @Inject constructor(
 
     fun clearCart(customerId: Long) {
         viewModelScope.launch {
-            Log.d("CartViewModel", "Clearing cart for customerId: $customerId")
             clearCartUseCase(customerId).onSuccess {
                 loadCart(customerId)
             }.onFailure {
