@@ -116,38 +116,6 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             Result.failure(e)
         }
     }
-//    override suspend fun getFavorites(customerId: Long): Result<FavoriteList> {
-//        return try {
-//            val favoriteDraft = getCustomerFavoritesDraft(customerId)
-//                ?: return Result.failure(Exception("No favorites found"))
-//
-//            val enrichedItems = coroutineScope {
-//                favoriteDraft.lineItems.map { item ->
-//                    async {
-//                        val imageUrl = resolveImageUrl(item.variantId)
-//                        FavoriteItem(
-//                            variantId = item.variantId,
-//                            title = item.title,
-//                            quantity = item.quantity,
-//                            price = item.price,
-//                            imageUrl = imageUrl
-//                        )
-//                    }
-//                }.awaitAll()
-//            }
-//
-//            Result.success(
-//                FavoriteList(
-//                    draftOrderId = favoriteDraft.id,
-//                    customerId = favoriteDraft.customer.id,
-//                    items = enrichedItems
-//                )
-//            )
-//        } catch (e: Exception) {
-//            Log.e(TAG, "Error in getFavorites: ${e.message}", e)
-//            Result.failure(e)
-//        }
-//    }
 
     override suspend fun deleteFavoritesDraft(customerId: Long): Result<Unit> {
         return try {
@@ -176,20 +144,7 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
         }
     }
 
-    // Strictly bind favorite draft to the customer by encoding in the note
     private fun favoritesNote(customerId: Long): String = "FAVORITES-$customerId"
-
-//    private suspend fun resolveImageUrl(variantId: Long): String = try {
-//        val variantResponse = service.getVariantById(variantId).body()
-//        val productId = variantResponse?.variant?.product_id
-//
-//        if (productId != null) {
-//            service.getProductImages(productId).body()?.images?.firstOrNull()?.src ?: ""
-//        } else ""
-//    } catch (e: Exception) {
-//        Log.e(TAG, "Failed to resolve image for variantId $variantId: ${e.message}", e)
-//        ""
-//    }
 
     private suspend fun resolveProductDetails(variantId: Long): Pair<String, Double> = try {
         val variantResponse = service.getVariantById(variantId).body()

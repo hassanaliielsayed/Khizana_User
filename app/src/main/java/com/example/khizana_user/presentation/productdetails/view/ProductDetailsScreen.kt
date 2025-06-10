@@ -47,14 +47,12 @@ fun ProductDetailsScreen(
     val context = LocalContext.current
 
     LaunchedEffect(customerId) {
-        Log.d("ProductDetails", "Loading favorites for customerId: $customerId")
         wishlistViewModel.loadFavorites(customerId)
     }
 
     val isInitiallyFavorite = remember(favorites, variantId, productId) {
         val id = variantId ?: productId
         val fav = favorites?.items?.any { it!!.variantId == id } ?: false
-        Log.d("ProductDetails", "Initial favorite check for ID $id: $fav")
         fav
     }
 
@@ -63,11 +61,9 @@ fun ProductDetailsScreen(
     LaunchedEffect(productId, variantId) {
         when {
             productId != null -> {
-                Log.d("ProductDetails", "Loading product by productId: $productId")
                 viewModel.loadProduct(productId)
             }
             variantId != null -> {
-                Log.d("ProductDetails", "Loading product by variantId: $variantId")
                 viewModel.loadProductByVariant(variantId)
             }
         }
@@ -83,7 +79,6 @@ fun ProductDetailsScreen(
                 onToggleFavorite = {
                     val id = result.data.variantId
                     if (id == null) {
-                        Log.e("ProductDetails", "VariantId is null. Cannot toggle favorite.")
                         return@ProductDetailsContent
                     }
                     val alreadyInFavorites = favorites?.items?.any { it!!.variantId == id } ?: false
@@ -98,7 +93,6 @@ fun ProductDetailsScreen(
                 onAddToCart = {
                     val id = result.data.variantId
                     if (id == null) {
-                        Log.e("ProductDetails", "VariantId is null. Cannot add to cart.")
                         return@ProductDetailsContent
                     }
                     cartViewModel.addToCart(customerId, id)

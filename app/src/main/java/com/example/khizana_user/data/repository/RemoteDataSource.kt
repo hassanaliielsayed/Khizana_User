@@ -31,9 +31,6 @@ interface RemoteDataSource {
 
     suspend fun getProductByVariantId(variantId: Long): ProductDetailsDto
 
-    // buy
-    //suspend fun validateCoupon(code: String): CouponsResponseDto
-
     suspend fun fetchCoupon(code: String): CouponsResponseDto
 
 }

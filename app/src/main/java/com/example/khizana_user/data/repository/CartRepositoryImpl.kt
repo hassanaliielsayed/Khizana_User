@@ -17,6 +17,11 @@ class CartRepositoryImpl @Inject constructor(
 
     override suspend fun decrementFromCart(customerId: Long, variantId: Long): Result<Unit> {
         return remote.decrementFromCart(customerId, variantId)
+
+    }
+
+    override suspend fun removeFromCart(customerId: Long, variantId: Long): Result<Unit> {
+        return remote.removeFromCart(customerId, variantId)
     }
 
     override suspend fun getCart(customerId: Long): FavoriteList {
@@ -29,7 +34,4 @@ class CartRepositoryImpl @Inject constructor(
 
     override suspend fun fetchCoupon(code: String): List<Coupon> = remoteSource.fetchCoupon(code).toDomain()
 
-//    override suspend fun validateCoupon(code: String): List<Coupon> {
-//        return remote.validateCoupon(code).toDomain()
-//    }
 }
