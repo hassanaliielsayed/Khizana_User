@@ -46,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
+import com.example.khizana_user.utils.ConfirmationDialog
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.toCurrentCurrency
 
@@ -56,15 +57,17 @@ fun CheckoutScreen(
     totalPrice: Double,
     onBackClick: () -> Unit,
     onPlaceOrderClick: () -> Unit,
+    onNavigateToOrderSuccess: () -> Unit,
     onAddressClick: () -> Unit,
     onPaymentMethodClick: () -> Unit
 ) {
 
     var couponCode by remember { mutableStateOf("") }
-
+    var showConfirmationDialog by remember { mutableStateOf(false) }
     val couponState by viewModel.couponState.collectAsStateWithLifecycle()
 
     val coupon = (couponState as? Result.Success)?.data
+
 
     val totalDiscount = if (coupon != null) {
 
@@ -93,7 +96,6 @@ fun CheckoutScreen(
             }
         )
 
-        // Shipping Address Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -390,7 +392,7 @@ fun CheckoutScreen(
 
         // Place Order Button
         Button(
-            onClick = onPlaceOrderClick,
+            onClick = { showConfirmationDialog = true },
             modifier = Modifier
                 .padding(16.dp)
                 .align(Alignment.End),
@@ -408,4 +410,21 @@ fun CheckoutScreen(
             )
         }
     }
+
+
+    ConfirmationDialog(
+        showDialog = showConfirmationDialog,
+        onDismiss = { showConfirmationDialog = false },
+        onConfirm = {
+            onPlaceOrderClick()
+            onNavigateToOrderSuccess()
+        },
+        title = "Confirm Order",
+        text = "Please confirm your order:\n\n" +
+                "Shipping Address: Cairo, Ain Shams\n" +
+                "Total Amount: ${grandTotal.toCurrentCurrency()}",
+        confirmText = "Place Order",
+        dismissText = "Cancel",
+        confirmButtonColor = Color(0xFF6200EE) // Using your app's primary color
+    )
 }
