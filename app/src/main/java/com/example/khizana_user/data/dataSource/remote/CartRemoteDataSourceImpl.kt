@@ -91,6 +91,43 @@ class CartRemoteDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun removeFromCart(customerId: Long, variantId: Long): Result<Unit> {
+        return try {
+
+            val cartDraft = getCustomerCartDraft(customerId)
+                ?: return Result.failure(Exception("Cart draft not found"))
+
+            val updatedItems = cartDraft.lineItems.filterNot { it.variantId == variantId }
+
+            if (updatedItems.isEmpty()) {
+                val deleteResponse = service.deleteDraftOrder(cartDraft.id)
+                return if (deleteResponse.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception("Failed to delete empty cart"))
+                }
+            }
+
+            val request = DraftOrderRequest(
+                draft_order = DraftOrderData(
+                    line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
+                    customer = CustomerData(customerId),
+                    note = cartNote(customerId)
+                )
+            )
+
+            val response = service.updateDraftOrder(cartDraft.id, request)
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to remove item from cart"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getCart(customerId: Long): FavoriteList {
         Log.d(TAG, "Getting cart for customerId: $customerId")
         val cartDraft = getCustomerCartDraft(customerId)
@@ -122,39 +159,6 @@ class CartRemoteDataSourceImpl @Inject constructor(
             items = enrichedItems
         )
     }
-
-//    override suspend fun getCart(customerId: Long): Result<FavoriteList> {
-//        return try {
-//            Log.d(TAG, "Getting cart for customerId: $customerId")
-//            val cartDraft = getCustomerCartDraft(customerId)
-//                ?: return Result.failure(Exception("Cart not found"))
-//
-//            val enrichedItems = coroutineScope {
-//                cartDraft.lineItems.map { item ->
-//                    async {
-//                        val imageUrl = resolveImageUrl(item.variantId)
-//                        FavoriteItem(
-//                            variantId = item.variantId,
-//                            title = item.title,
-//                            quantity = item.quantity,
-//                            imageUrl = imageUrl
-//                        )
-//                    }
-//                }.awaitAll()
-//            }
-//
-//            Result.success(
-//                FavoriteList(
-//                    draftOrderId = cartDraft.id,
-//                    customerId = cartDraft.customer.id,
-//                    items = enrichedItems
-//                )
-//            )
-//        } catch (e: Exception) {
-//            Log.e(TAG, "Error in getCart: ${e.message}", e)
-//            Result.failure(e)
-//        }
-//    }
 
     override suspend fun clearCart(customerId: Long): Result<Unit> {
         return try {

@@ -9,6 +9,7 @@ import com.example.khizana_user.domain.usecase.cartusecase.AddToCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.ClearCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.GetCartUseCase
+import com.example.khizana_user.domain.usecase.cartusecase.RemoveFromCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.ValidateCouponUseCase
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,7 +25,8 @@ class CartViewModel @Inject constructor(
     private val getCartUseCase: GetCartUseCase,
     private val clearCartUseCase: ClearCartUseCase,
     private val validateCouponUseCase: ValidateCouponUseCase,
-    ) : ViewModel() {
+    private val removeFromCartUseCase: RemoveFromCartUseCase,
+) : ViewModel() {
 
     private val _cartState = MutableStateFlow<Result<FavoriteList>>(Result.Loading)
     val cartState = _cartState.asStateFlow()
@@ -34,9 +36,9 @@ class CartViewModel @Inject constructor(
 
 
     fun loadCart(customerId: Long) {
-        viewModelScope.launch{
+        viewModelScope.launch {
             try {
-                val cart = getCartUseCase(customerId) // Will now return empty cart if not found
+                val cart = getCartUseCase(customerId)
                 _cartState.value = Result.Success(cart)
             } catch (e: Exception) {
                 _cartState.value = Result.Error(e.message ?: "Unknown error")
@@ -46,14 +48,12 @@ class CartViewModel @Inject constructor(
 
     fun validateCoupon(code: String) {
         viewModelScope.launch {
-            Log.i("aaaa", "validateCoupon: $code")
             try {
                 val coupons = validateCouponUseCase(code)
                 _couponState.value = Result.Success(coupons)
-                Log.i("aaaa", "validateCoupon: + ${coupons.discount}")
             } catch (e: Exception) {
                 _couponState.value = Result.Error(e.message ?: "Unknown error")
-                Log.i("aaaa", "validateCoupon: ${e.message}")
+
             }
         }
 
@@ -61,7 +61,6 @@ class CartViewModel @Inject constructor(
 
     fun addToCart(customerId: Long, variantId: Long) {
         viewModelScope.launch {
-            Log.d("CartViewModel", "Adding variantId $variantId to cart")
             addToCartUseCase(customerId, variantId).onSuccess {
                 loadCart(customerId)
             }.onFailure {
@@ -72,8 +71,17 @@ class CartViewModel @Inject constructor(
 
     fun decrementFromCart(customerId: Long, variantId: Long) {
         viewModelScope.launch {
-            Log.d("CartViewModel", "Decrementing variantId $variantId from cart")
             decrementFromCartUseCase(customerId, variantId).onSuccess {
+                loadCart(customerId)
+            }.onFailure {
+                Log.e("CartViewModel", "Decrement failed: ${it.message}")
+            }
+        }
+    }
+
+    fun removeFromCart(customerId: Long, variantId: Long) {
+        viewModelScope.launch {
+            removeFromCartUseCase(customerId, variantId).onSuccess {
                 loadCart(customerId)
             }.onFailure {
                 Log.e("CartViewModel", "Decrement failed: ${it.message}")
@@ -83,7 +91,6 @@ class CartViewModel @Inject constructor(
 
     fun clearCart(customerId: Long) {
         viewModelScope.launch {
-            Log.d("CartViewModel", "Clearing cart for customerId: $customerId")
             clearCartUseCase(customerId).onSuccess {
                 loadCart(customerId)
             }.onFailure {
@@ -91,4 +98,6 @@ class CartViewModel @Inject constructor(
             }
         }
     }
+
+
 }

@@ -43,7 +43,6 @@ fun RegisterScreen(
     val state by viewModel.authState.collectAsStateWithLifecycle()
     val shopifyResult by viewModel.shopifyRegisterResult.collectAsStateWithLifecycle()
 
-    // Only show error toast from shopify registration
     LaunchedEffect(shopifyResult) {
         shopifyResult?.onFailure { error ->
             Toast.makeText(context, "Shopify Error: ${error.message}", Toast.LENGTH_LONG).show()

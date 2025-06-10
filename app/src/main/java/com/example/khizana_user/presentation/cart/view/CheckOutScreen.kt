@@ -46,7 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
-import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
+import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.toCurrentCurrency
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,14 +62,20 @@ fun CheckoutScreen(
 
     var couponCode by remember { mutableStateOf("") }
 
-    //val couponState by viewModel.couponState.collectAsStateWithLifecycle()
+    val couponState by viewModel.couponState.collectAsStateWithLifecycle()
 
-    val discountAmount = remember(totalPrice) {
-        totalPrice * 0.85
-    }
+    val coupon = (couponState as? Result.Success)?.data
 
-    val grandTotal = remember(totalPrice, discountAmount) {
-        totalPrice - discountAmount
+    val totalDiscount = if (coupon != null) {
+
+            totalPrice * (coupon.discount / 100.0)
+        } else {
+            0.0
+        }
+
+
+    val grandTotal = remember(totalPrice, totalDiscount) {
+        totalPrice - totalDiscount
     }
 
     Column(
@@ -339,7 +345,7 @@ fun CheckoutScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = discountAmount.toCurrentCurrency(),
+                        text = totalDiscount.toCurrentCurrency(),
                         color = Color(0xFF929292)
                     )
                 }

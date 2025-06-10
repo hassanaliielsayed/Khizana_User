@@ -19,6 +19,7 @@ import com.example.khizana_user.domain.usecase.cartusecase.AddToCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.ClearCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.GetCartUseCase
+import com.example.khizana_user.domain.usecase.cartusecase.RemoveFromCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.ValidateCouponUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
@@ -131,6 +132,10 @@ class KhizanaModuleProvider {
         return ValidateCouponUseCase(repository)
     }
 
+    @Provides
+    fun provideRemoveFromCartUseCase(repository: CartRepository): RemoveFromCartUseCase {
+        return RemoveFromCartUseCase(repository)
+    }
 
     @Provides
     fun provideDraftOrderService(

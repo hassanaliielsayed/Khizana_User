@@ -81,17 +81,6 @@ abstract class KhizanaModule {
         impl: WishlistRemoteDataSourceImpl
     ): WishlistRemoteDataSource
 
-//    @Binds
-//    abstract fun bindCartRepository(
-//        impl: CartRepositoryImpl
-//    ): CartRepository
-//
-//    @Binds
-//    @Singleton
-//    abstract fun bindCartRemoteDataSource(
-//        impl: CartRemoteDataSourceImpl
-//    ): CartRemoteDataSource
-
     @Binds
     @Singleton
     abstract fun bindCartRemoteDataSource(
@@ -103,13 +92,4 @@ abstract class KhizanaModule {
     abstract fun bindCartRepository(
         impl: CartRepositoryImpl
     ): CartRepository
-
-
-//    @Provides
-//    fun provideGetAllBrandsUseCase(
-//        repository: HomeRepositoryIn
-//    ): GetAllBrandsUseCase {
-//        return GetAllBrandsUseCase(repository)
-//    }
-
 }
