@@ -99,6 +99,15 @@ class CartRemoteDataSourceImpl @Inject constructor(
 
             val updatedItems = cartDraft.lineItems.filterNot { it.variantId == variantId }
 
+            if (updatedItems.isEmpty()) {
+                val deleteResponse = service.deleteDraftOrder(cartDraft.id)
+                return if (deleteResponse.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception("Failed to delete empty cart"))
+                }
+            }
+
             val request = DraftOrderRequest(
                 draft_order = DraftOrderData(
                     line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
