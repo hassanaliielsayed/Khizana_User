@@ -1,6 +1,5 @@
 package com.example.khizana_user.presentation.favorites.view
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,13 +10,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
+import com.example.khizana_user.presentation.nav.ScreenRoute
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +27,7 @@ fun WishlistScreen(
     viewModel: WishlistViewModel = hiltViewModel()
 ) {
     val favorites by viewModel.favoritesState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(customerId) {
         viewModel.loadFavorites(customerId)
@@ -37,7 +38,8 @@ fun WishlistScreen(
             TopAppBar(
                 title = { Text("My Favorites") },
                 actions = {
-                    if (!favorites?.items.isNullOrEmpty()) {
+                    val items = favorites?.items.orEmpty().filterNotNull()
+                    if (items.isNotEmpty()) {
                         TextButton(onClick = { viewModel.clearFavorites(customerId) }) {
                             Text("Clear All")
                         }
@@ -46,33 +48,42 @@ fun WishlistScreen(
             )
         }
     ) { padding ->
-        Box(modifier = Modifier
-            .padding(padding)
-            .fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
+            val items = favorites?.items.orEmpty().filterNotNull()
 
             when {
                 favorites == null -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
-                favorites!!.items.isEmpty() -> {
+                items.isEmpty() -> {
                     Text("No favorites found.", modifier = Modifier.align(Alignment.Center))
                 }
 
                 else -> {
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(favorites!!.items) { item ->
-                            if (item != null) {
-                                FavoriteItemCard(
-                                    item = item,
-                                    onRemoveClick = {
-                                        viewModel.removeFromFavorites(customerId, item.variantId)
-                                    },
-                                    onItemClick = {
-                                        navController.navigate("productDetails/${item.variantId}")
+                        items(items) { item ->
+                            FavoriteItemCard(
+                                item = item,
+                                onRemoveClick = {
+                                    coroutineScope.launch {
+                                        viewModel.toggleFavorite(
+                                            customerId = customerId,
+                                            variantId = item.variantId,
+                                            isCurrentlyFavorite = true
+                                        )
                                     }
-                                )
-                            }
+                                },
+                                onItemClick = {
+                                    navController.navigate(
+                                        ScreenRoute.ProductDetails.createRoute(variantId = item.variantId)
+                                    )
+                                }
+                            )
                         }
                     }
                 }
