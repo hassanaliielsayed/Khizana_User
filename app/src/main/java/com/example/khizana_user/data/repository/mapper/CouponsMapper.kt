@@ -11,9 +11,17 @@ fun CouponsResponseDto.toDomain(): List<Coupon> {
 }
 
 fun Price_rulesItemEntity.toDomain(): Coupon {
+
+    val discount = value
+        .replace("%", "")
+        .replace("-", "")      // Shopify might send discount as "-15.0"
+        .trim()
+        .toDoubleOrNull() ?: 0.0
+
     return Coupon(
         title = title,
         id = id,
+        discount = discount,
         img = R.drawable.test_add
     )
 }

@@ -1,6 +1,7 @@
 package com.example.khizana_user.presentation.productdetails.view
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -17,7 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,8 +26,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.ProductDetails
+import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.productdetails.viewmodel.ProductDetailsViewModel
+import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.toCurrentCurrency
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -37,61 +40,60 @@ fun ProductDetailsScreen(
     variantId: Long? = null,
     customerId: Long,
     viewModel: ProductDetailsViewModel = hiltViewModel(),
-    wishlistViewModel: WishlistViewModel = hiltViewModel()
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
+    cartViewModel: CartViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val productState by viewModel.state.collectAsStateWithLifecycle()
     val favorites by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
+    val favoriteStatus by wishlistViewModel.toggleFavoriteState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(customerId) {
-        Log.d("ProductDetails", "Loading favorites for customerId: $customerId")
         wishlistViewModel.loadFavorites(customerId)
     }
 
-    val isInitiallyFavorite = remember(favorites, variantId, productId) {
-        val id = variantId ?: productId
-        val fav = favorites?.items?.any { it.variantId == id } ?: false
-        Log.d("ProductDetails", "Initial favorite check for ID $id: $fav")
-        fav
+    LaunchedEffect(favorites, productId, variantId) {
+        val id = variantId ?: productId ?: return@LaunchedEffect
+        val isFav = favorites?.items?.any { it?.variantId == id } ?: false
+        wishlistViewModel.setInitialFavoriteStatus(isFav)
     }
-
-    var isFavorite by remember { mutableStateOf(isInitiallyFavorite) }
 
     LaunchedEffect(productId, variantId) {
         when {
-            productId != null -> {
-                Log.d("ProductDetails", "Loading product by productId: $productId")
-                viewModel.loadProduct(productId)
-            }
-            variantId != null -> {
-                Log.d("ProductDetails", "Loading product by variantId: $variantId")
-                viewModel.loadProductByVariant(variantId)
-            }
+            productId != null -> viewModel.loadProduct(productId)
+            variantId != null -> viewModel.loadProductByVariant(variantId)
         }
     }
 
-    when (val result = state) {
-        is ProductDetailsViewModel.Result.Loading -> CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        is ProductDetailsViewModel.Result.Error -> Text("Error: ${result.message}", color = Color.Red)
-        is ProductDetailsViewModel.Result.Success -> {
-            ProductDetailsContent(
-                product = result.data,
-                isFavorite = isFavorite,
-                onToggleFavorite = {
-                    val id = result.data.variantId
-                    if (id == null) {
-                        Log.e("ProductDetails", "VariantId is null. Cannot toggle favorite.")
-                        return@ProductDetailsContent
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val result = productState) {
+            is ProductDetailsViewModel.Result.Loading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+
+            is ProductDetailsViewModel.Result.Error -> {
+                Text("Error: ${result.message}", color = Color.Red, modifier = Modifier.align(Alignment.Center))
+            }
+
+            is ProductDetailsViewModel.Result.Success -> {
+                val product = result.data
+                ProductDetailsContent(
+                    product = product,
+                    favoriteStatus = favoriteStatus,
+                    onToggleFavorite = {
+                        val id = product.variantId ?: return@ProductDetailsContent
+                        val current = (favoriteStatus as? Result.Success)?.data ?: false
+                        if (favoriteStatus !is Result.Loading) {
+                            wishlistViewModel.toggleFavorite(customerId, id, current)
+                        }
+                    },
+                    onAddToCart = {
+                        val id = product.variantId ?: return@ProductDetailsContent
+                        cartViewModel.addToCart(customerId, id)
+                        Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
                     }
-                    val alreadyInFavorites = favorites?.items?.any { it.variantId == id } ?: false
-                    if (!isFavorite && !alreadyInFavorites) {
-                        isFavorite = true
-                        wishlistViewModel.addToFavorites(customerId, id)
-                    } else if (isFavorite && alreadyInFavorites) {
-                        isFavorite = false
-                        wishlistViewModel.removeFromFavorites(customerId, id)
-                    }
-                }
-            )
+                )
+            }
         }
     }
 }
@@ -99,20 +101,17 @@ fun ProductDetailsScreen(
 @Composable
 fun ProductDetailsContent(
     product: ProductDetails,
-    isFavorite: Boolean,
-    onToggleFavorite: () -> Unit
+    favoriteStatus: Result<Boolean>,
+    onToggleFavorite: () -> Unit,
+    onAddToCart: () -> Unit
 ) {
     var selectedSize by remember { mutableStateOf<String?>(null) }
     var selectedColor by remember { mutableStateOf<String?>(null) }
 
     val colorMap = mapOf(
-        "black" to Color(0xFF000000),
-        "white" to Color(0xFFFFFFFF),
-        "blue" to Color(0xFF2196F3),
-        "red" to Color(0xFFF44336),
-        "orange" to Color(0xFFFF9800),
-        "green" to Color(0xFF4CAF50),
-        "magenta" to Color(0xFFFF00FF)
+        "black" to Color.Black, "white" to Color.White, "blue" to Color(0xFF2196F3),
+        "red" to Color(0xFFF44336), "orange" to Color(0xFFFF9800),
+        "green" to Color(0xFF4CAF50), "magenta" to Color(0xFFFF00FF)
     )
 
     val pagerState = rememberPagerState(initialPage = 0)
@@ -138,36 +137,34 @@ fun ProductDetailsContent(
                 )
             }
 
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                repeat(product.images.size) { index ->
-                    val selected = pagerState.currentPage == index
-                    Box(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .size(if (selected) 10.dp else 8.dp)
-                            .clip(CircleShape)
-                            .background(if (selected) Color.Black else Color.LightGray)
-                    )
-                }
-            }
-
             IconButton(
                 onClick = onToggleFavorite,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(30.dp)
+                    .padding(12.dp)
                     .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
             ) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorite",
-                    tint = if (isFavorite) Color.Red else Color.Black
-                )
+                when (favoriteStatus) {
+                    is Result.Loading -> CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+
+                    is Result.Success -> {
+                        val isFav = favoriteStatus.data
+                        Icon(
+                            imageVector = if (isFav) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = if (isFav) "Unfavorite" else "Favorite",
+                            tint = if (isFav) Color.Red else Color.Black
+                        )
+                    }
+
+                    is Result.Error -> Icon(
+                        imageVector = Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = Color.Gray
+                    )
+                }
             }
         }
 
@@ -180,12 +177,16 @@ fun ProductDetailsContent(
                 val filled = i < product.rating.toInt()
                 Icon(Icons.Default.Star, contentDescription = null, tint = if (filled) Color(0xFFFFC107) else Color.LightGray)
             }
-            Text("  (${product.rating})", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text("  (${product.rating})", fontSize = 14.sp)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text("$${product.price.toCurrentCurrency()}", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1E88E5))
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            "$${product.price.toCurrentCurrency()}",
+            fontSize = 20.sp,
+            color = Color(0xFF1E88E5),
+            fontWeight = FontWeight.SemiBold
+        )
 
         if (product.colors.isNotEmpty()) {
             Text("Color", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
@@ -197,16 +198,15 @@ fun ProductDetailsContent(
                             .size(32.dp)
                             .clip(CircleShape)
                             .background(colorHex)
-                            .border(2.dp, if (selectedColor == colorName) Color.Black else Color.Transparent, CircleShape)
-                            .clickable {
-                                selectedColor = colorName
-                                Log.d("ProductDetails", "Selected color: $colorName")
-                                // TODO: Update selected variantId here based on color and size combination
-                            }
+                            .border(
+                                2.dp,
+                                if (selectedColor == colorName) Color.Black else Color.Transparent,
+                                CircleShape
+                            )
+                            .clickable { selectedColor = colorName }
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         }
 
@@ -224,24 +224,33 @@ fun ProductDetailsContent(
                                 RoundedCornerShape(12.dp)
                             )
                             .background(if (size == selectedSize) Color(0xFF1E88E5) else Color.White)
-                            .clickable {
-                                selectedSize = size
-                                Log.d("ProductDetails", "Selected size: $size")
-                                // TODO: Update selected variantId here based on size and color
-                            }
+                            .clickable { selectedSize = size }
                             .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Text(size, color = if (size == selectedSize) Color.White else Color.Black)
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         Text("Description", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(4.dp))
         Text(product.description, fontSize = 14.sp, lineHeight = 20.sp)
-        Spacer(modifier = Modifier.height(100.dp))
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = onAddToCart,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+        ) {
+            Text("Add to Cart", color = Color.White, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

@@ -21,21 +21,17 @@ class ShopifyRepositoryImpl @Inject constructor(
                 )
             )
 
-            Log.d("ShopifyRepo", "Sending request to Shopify with payload: $request")
             val response = remoteDataSource.registerShopifyCustomer(request)
 
             val customerDto = response.body()?.customer
             return if (response.isSuccessful && customerDto != null) {
-                Log.d("ShopifyRepo", "Customer created: $customerDto")
                 Result.success(customerDto.toDomain())
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e("ShopifyRepo", "Register failed: ${response.code()} - $errorBody")
                 Result.failure(Exception("Shopify error: ${response.code()} - $errorBody"))
             }
 
         } catch (e: Exception) {
-            Log.e("ShopifyRepo", "Exception in registerCustomerInShopify", e)
             Result.failure(e)
         }
     }
@@ -47,16 +43,13 @@ class ShopifyRepositoryImpl @Inject constructor(
 
             if (response.isSuccessful) {
                 val customerDto = response.body()?.customers?.firstOrNull()
-                Log.d("ShopifyRepo", "Found customer: $customerDto")
                 Result.success(customerDto?.toDomain())
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e("ShopifyRepo", "Search failed: ${response.code()} - $errorBody")
                 Result.failure(Exception("Search failed: ${response.code()} - $errorBody"))
             }
 
         } catch (e: Exception) {
-            Log.e("ShopifyRepo", "Exception in searchCustomerByEmail", e)
             Result.failure(e)
         }
     }

@@ -8,7 +8,6 @@ import javax.inject.Inject
 class GetAllProductsByCategoryUseCase @Inject constructor(private val repository: CategoryRepository) {
     suspend operator fun invoke(): List<ProductByCategory> {
         val response = repository.getAllProducts()
-        Log.d("useCase", "getAllProducts: ${response.size}")
         return response
     }
 }

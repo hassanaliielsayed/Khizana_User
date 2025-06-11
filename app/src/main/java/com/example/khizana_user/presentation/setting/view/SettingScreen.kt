@@ -50,9 +50,7 @@ fun SettingScreen(
     val context = LocalContext.current
     var showCurrencyDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
-    //var selectedCurrency by remember { mutableStateOf("EGP") }
 
-    //var selectedCurrency by remember { mutableStateOf("EGP") }
     val selectedCurrency by viewModel.state.collectAsStateWithLifecycle()
 
 

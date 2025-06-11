@@ -8,6 +8,7 @@ import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesU
 import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavoritesUseCase
+import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,14 +26,23 @@ class WishlistViewModel @Inject constructor(
     private val _favoritesState = MutableStateFlow<FavoriteList?>(null)
     val favoritesState: StateFlow<FavoriteList?> = _favoritesState
 
+    private val _toggleFavoriteState = MutableStateFlow<Result<Boolean>>(Result.Success(false))
+    val toggleFavoriteState: StateFlow<Result<Boolean>> = _toggleFavoriteState
+
+    /**
+     * Initialize favorite status manually when screen loads.
+     */
+    fun setInitialFavoriteStatus(isFavorite: Boolean) {
+        _toggleFavoriteState.value = Result.Success(isFavorite)
+    }
+
+    /**
+     * Load the current list of favorites for a customer.
+     */
     fun loadFavorites(customerId: Long) {
         viewModelScope.launch {
-            Log.d("WishlistViewModel", "Loading favorites for customerId: $customerId")
             getFavoritesUseCase(customerId)
-                .onSuccess {
-                    Log.d("WishlistViewModel", "Favorites loaded successfully: ${it.items.size} items")
-                    _favoritesState.value = it
-                }
+                .onSuccess { _favoritesState.value = it }
                 .onFailure {
                     Log.e("WishlistViewModel", "Failed to load favorites: ${it.message}")
                     _favoritesState.value = null
@@ -40,32 +50,32 @@ class WishlistViewModel @Inject constructor(
         }
     }
 
-    fun addToFavorites(customerId: Long, variantId: Long) {
+    /**
+     * Toggle between adding and removing favorite based on current state.
+     */
+    fun toggleFavorite(customerId: Long, variantId: Long, isCurrentlyFavorite: Boolean) {
         viewModelScope.launch {
-            Log.d("WishlistViewModel", "Adding to favorites - customerId: $customerId, variantId: $variantId")
-            val result = addToFavoritesUseCase(customerId, variantId)
-            if (result.isSuccess) {
-                Log.d("WishlistViewModel", "Successfully added to favorites")
+            _toggleFavoriteState.value = Result.Loading
+
+            val result = if (isCurrentlyFavorite) {
+                removeFromFavoritesUseCase(customerId, variantId)
             } else {
-                Log.e("WishlistViewModel", "Failed to add to favorites: ${result.exceptionOrNull()?.message}")
+                addToFavoritesUseCase(customerId, variantId)
             }
+
             loadFavorites(customerId)
+
+            _toggleFavoriteState.value = if (result.isSuccess) {
+                Result.Success(!isCurrentlyFavorite)
+            } else {
+                Result.Error(result.exceptionOrNull()?.message ?: "Favorite toggle failed")
+            }
         }
     }
 
-    fun removeFromFavorites(customerId: Long, variantId: Long) {
-        viewModelScope.launch {
-            Log.d("WishlistViewModel", "Removing from favorites - customerId: $customerId, variantId: $variantId")
-            val result = removeFromFavoritesUseCase(customerId, variantId)
-            if (result.isSuccess) {
-                Log.d("WishlistViewModel", "Successfully removed from favorites")
-            } else {
-                Log.e("WishlistViewModel", "Failed to remove from favorites: ${result.exceptionOrNull()?.message}")
-            }
-            loadFavorites(customerId)
-        }
-    }
-
+    /**
+     * Remove all favorites for the current user.
+     */
     fun clearFavorites(customerId: Long) {
         viewModelScope.launch {
             Log.d("WishlistViewModel", "Clearing all favorites for customerId: $customerId")

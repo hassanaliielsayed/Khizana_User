@@ -23,9 +23,12 @@ data class DraftOrderItemDto(
     @SerializedName("variant_id")
     val variantId: Long,
     val title: String,
-    val quantity: Int,
+    var quantity: Int,
+    val price: String? = null,
     val imageUrl: String? = null
-)
+) {
+
+}
 
 data class CustomerData(
     val id: Long

@@ -6,5 +6,6 @@ data class VariantResponse(
 
 data class VariantData(
     val id: Long,
-    val product_id: Long
+    val product_id: Long,
+    val price: String
 )

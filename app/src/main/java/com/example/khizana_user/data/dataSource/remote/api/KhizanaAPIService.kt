@@ -51,6 +51,9 @@ interface KhizanaAPIService {
         @Path("variant_id") variantId: Long
     ): Response<VariantResponse>
 
+    @GET("price_rules.json")
+    suspend fun getCoupon(@Query("code") code: String): CouponsResponseDto
+
 }
 
 

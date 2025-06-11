@@ -12,9 +12,6 @@ class CategoryRepositoryImp @Inject constructor(private val remoteDateSource: Re
 
         val response =  remoteDateSource.fetchAllProducts()
             .map { it.toProductByCategoryModel() }
-           // .distinctBy { it.productTitle }
-
-        Log.d("repository", "getAllProducts: ${response.size}")
 
         return response
     }
