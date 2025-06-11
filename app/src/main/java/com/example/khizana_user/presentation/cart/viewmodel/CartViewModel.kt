@@ -49,14 +49,14 @@ class CartViewModel @Inject constructor(
     fun validateCoupon(code: String) {
         viewModelScope.launch {
             try {
-                val coupons = validateCouponUseCase(code)
-                _couponState.value = Result.Success(coupons)
+                val coupon = validateCouponUseCase(code)
+                _couponState.value = Result.Success(coupon)
+                Log.i("asdf", "validateCoupon: ${coupon.discount}")
             } catch (e: Exception) {
                 _couponState.value = Result.Error(e.message ?: "Unknown error")
 
             }
         }
-
     }
 
     fun addToCart(customerId: Long, variantId: Long) {
