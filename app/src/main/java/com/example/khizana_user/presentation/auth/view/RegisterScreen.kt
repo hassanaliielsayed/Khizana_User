@@ -28,7 +28,7 @@ import com.example.khizana_user.utils.AuthState
 @Composable
 fun RegisterScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onRegisterSuccess: () -> Unit = {},
+    onRegisterSuccess: () -> Unit = {},        // Navigate to VerifyEmailScreen
     onNavigateToLogin: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -43,9 +43,19 @@ fun RegisterScreen(
     val state by viewModel.authState.collectAsStateWithLifecycle()
     val shopifyResult by viewModel.shopifyRegisterResult.collectAsStateWithLifecycle()
 
+    // Handle Shopify error if any
     LaunchedEffect(shopifyResult) {
         shopifyResult?.onFailure { error ->
             Toast.makeText(context, "Shopify Error: ${error.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Handle navigation after email is sent
+    LaunchedEffect(state) {
+        if (state is AuthState.VerificationEmailSent) {
+            Toast.makeText(context, "Verification email sent. Please check your inbox.", Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+            onRegisterSuccess()
         }
     }
 
@@ -126,6 +136,8 @@ fun RegisterScreen(
             onClick = {
                 if (agreeChecked) {
                     viewModel.register(email, password, name)
+                } else {
+                    Toast.makeText(context, "You must agree to the policy to continue.", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier
@@ -156,13 +168,7 @@ fun RegisterScreen(
                 Spacer(Modifier.height(16.dp))
                 Text("Error: ${(state as AuthState.Error).message}", color = Color.Red)
             }
-            is AuthState.Success -> {
-                LaunchedEffect(Unit) {
-                    viewModel.resetState()
-                    onRegisterSuccess()
-                }
-            }
-            AuthState.Idle -> {}
+            else -> Unit // Idle, Success, VerificationEmailSent handled separately
         }
     }
 }

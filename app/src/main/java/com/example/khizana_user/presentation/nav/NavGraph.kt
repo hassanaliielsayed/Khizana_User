@@ -2,10 +2,12 @@
 
 package com.example.khizana_user.presentation.nav
 
+import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -17,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
+import com.example.khizana_user.presentation.auth.view.VerifyEmailScreen
 import com.example.khizana_user.presentation.category.view.CategoryScreen
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.cart.view.CartScreen
@@ -27,6 +30,7 @@ import com.example.khizana_user.presentation.productdetails.view.ProductDetailsS
 import com.example.khizana_user.presentation.setting.view.AboutUs
 import com.example.khizana_user.presentation.setting.view.ContactsScreen
 import com.example.khizana_user.presentation.setting.view.SettingScreen
+import com.example.khizana_user.utils.isGuestUser
 
 @Composable
 fun AppNavGraph(
@@ -55,7 +59,7 @@ fun AppNavGraph(
         composable(ScreenRoute.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = {
-                    navController.navigate(ScreenRoute.Home.route) {
+                    navController.navigate("verify_email") {
                         popUpTo(ScreenRoute.Login.route) { inclusive = true }
                     }
                 },
@@ -64,6 +68,7 @@ fun AppNavGraph(
                 }
             )
         }
+
 
         composable(ScreenRoute.Home.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
@@ -96,33 +101,47 @@ fun AppNavGraph(
 
         composable(ScreenRoute.Favorites.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
-                if (customer != null) {
+                if (customer != null && !isGuestUser()) {
                     WishlistScreen(
                         customerId = customer.id,
                         navController = navController
                     )
                 } else {
-                    Text("Please log in to view favorites", modifier = Modifier.padding(innerPadding))
+                    LaunchedEffect(Unit) {
+                        navController.navigate(ScreenRoute.Login.route) {
+                            popUpTo(ScreenRoute.Favorites.route) { inclusive = true }
+                        }
+                    }
+                    Text("Redirecting to login...", modifier = Modifier.padding(innerPadding))
                 }
             }
         }
 
+
         composable(ScreenRoute.Cart.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
                 val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
-                if (customer != null) {
+
+                if (customer != null && !isGuestUser()) {
                     CartScreen(
                         customerId = customer.id,
                         viewModel = hiltViewModel(),
                         modifier = Modifier.padding(innerPadding),
                         onCheckoutClick = { totalPrice ->
-                            navController.navigate("checkout/$totalPrice") }
+                            navController.navigate("checkout/$totalPrice")
+                        }
                     )
                 } else {
-                    Text("Please log in to access your cart", modifier = Modifier.padding(innerPadding))
+                    LaunchedEffect(Unit) {
+                        navController.navigate(ScreenRoute.Login.route) {
+                            popUpTo(ScreenRoute.Cart.route) { inclusive = true }
+                        }
+                    }
+                    Text("Redirecting to login...", modifier = Modifier.padding(innerPadding))
                 }
             }
         }
+
 
         composable(ScreenRoute.Settings.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
@@ -180,6 +199,21 @@ fun AppNavGraph(
                 onPlaceOrderClick = {},
                 onAddressClick = {  },
                 onPaymentMethodClick = { },
+            )
+        }
+        composable("verify_email") {
+            VerifyEmailScreen(
+                onLoginComplete = {
+                    Log.d("AppNavGraph", "Email verified. Navigating to Home.")
+                    navController.navigate(ScreenRoute.Home.route) {
+                        popUpTo("verify_email") { inclusive = true }
+                    }
+                },
+                onBackToLogin = {
+                    navController.navigate(ScreenRoute.Login.route) {
+                        popUpTo("verify_email") { inclusive = true }
+                    }
+                }
             )
         }
     }
