@@ -8,6 +8,7 @@ import com.example.khizana_user.data.repository.AuthDataSource
 import com.example.khizana_user.data.repository.AuthRepositoryImp
 import com.example.khizana_user.domain.repository.AuthRepository
 import com.example.khizana_user.domain.repository.CartRepository
+import com.example.khizana_user.domain.repository.OrderRepository
 import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.repository.WishlistRepository
@@ -26,6 +27,9 @@ import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesU
 import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavoritesUseCase
+import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -142,6 +146,24 @@ class KhizanaModuleProvider {
     fun provideRemoveFromCartUseCase(repository: CartRepository): RemoveFromCartUseCase {
         return RemoveFromCartUseCase(repository)
     }
+
+    @Provides
+    fun provideCompleteDraftOrderUseCase(repo: OrderRepository): CompleteDraftOrderUseCase {
+        return CompleteDraftOrderUseCase(repo)
+    }
+
+    @Provides
+    fun provideGetDraftOrderUseCase(repo: OrderRepository): GetDraftOrderUseCase {
+        return GetDraftOrderUseCase(repo)
+    }
+
+    @Provides
+    fun provideSendInvoiceUseCase(repo: OrderRepository): SendInvoiceUseCase {
+        return SendInvoiceUseCase(repo)
+    }
+
+
+
 
     @Provides
     fun provideDraftOrderService(
