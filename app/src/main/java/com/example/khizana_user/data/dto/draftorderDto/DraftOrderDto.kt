@@ -26,9 +26,7 @@ data class DraftOrderItemDto(
     var quantity: Int,
     val price: String? = null,
     val imageUrl: String? = null
-) {
-
-}
+)
 
 data class CustomerData(
     val id: Long

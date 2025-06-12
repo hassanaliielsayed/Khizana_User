@@ -18,5 +18,4 @@ class ValidateCouponUseCase @Inject constructor(
 
         return validCoupon
     }
-
 }

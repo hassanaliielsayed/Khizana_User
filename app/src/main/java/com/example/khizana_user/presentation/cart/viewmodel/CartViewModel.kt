@@ -1,6 +1,7 @@
 package com.example.khizana_user.presentation.cart.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Coupon
@@ -15,6 +16,7 @@ import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.compose.runtime.State
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,7 +27,7 @@ class CartViewModel @Inject constructor(
     private val getCartUseCase: GetCartUseCase,
     private val clearCartUseCase: ClearCartUseCase,
     private val validateCouponUseCase: ValidateCouponUseCase,
-    private val removeFromCartUseCase: RemoveFromCartUseCase,
+    private val removeFromCartUseCase: RemoveFromCartUseCase
 ) : ViewModel() {
 
     private val _cartState = MutableStateFlow<Result<FavoriteList>>(Result.Loading)
@@ -33,7 +35,6 @@ class CartViewModel @Inject constructor(
 
     private val _couponState = MutableStateFlow<Result<Coupon>>(Result.Loading)
     val couponState = _couponState.asStateFlow()
-
 
     fun loadCart(customerId: Long) {
         viewModelScope.launch {

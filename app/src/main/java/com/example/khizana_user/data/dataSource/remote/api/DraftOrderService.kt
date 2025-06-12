@@ -1,5 +1,6 @@
 package com.example.khizana_user.data.dataSource.remote.api
 
+import com.example.khizana_user.data.dto.OrdersResponse
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderRequest
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderResponse
 import com.example.khizana_user.data.dto.draftorderDto.ProductImagesResponse
@@ -32,4 +33,7 @@ interface ShopifyDraftOrderService {
     suspend fun getProductImages(
         @Path("product_id") productId: Long
     ): Response<ProductImagesResponse>
+
+    @GET("orders.json")
+    suspend fun getOrdersByCustomerId(@Query("customer_id") customerId: Long): OrdersResponse
 }

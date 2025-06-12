@@ -14,4 +14,5 @@ interface CartRemoteDataSource {
     suspend fun getCart(customerId: Long): FavoriteList
 
     suspend fun clearCart(customerId: Long): Result<Unit>
+
 }

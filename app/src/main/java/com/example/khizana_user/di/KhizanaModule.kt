@@ -92,4 +92,5 @@ abstract class KhizanaModule {
     abstract fun bindCartRepository(
         impl: CartRepositoryImpl
     ): CartRepository
+
 }

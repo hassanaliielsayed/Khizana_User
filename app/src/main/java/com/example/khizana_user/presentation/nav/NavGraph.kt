@@ -25,6 +25,7 @@ import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.map.MapScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
+import com.example.khizana_user.presentation.profile.view.ProfileScreen
 import com.example.khizana_user.presentation.setting.view.AboutUs
 import com.example.khizana_user.presentation.setting.view.ContactsScreen
 import com.example.khizana_user.presentation.setting.view.SettingScreen
@@ -136,6 +137,12 @@ fun AppNavGraph(
             }
         }
 
+        composable(ScreenRoute.Profile.route) {
+            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
+                ProfileScreen(modifier = Modifier.padding(innerPadding))
+            }
+        }
+
         composable(
             route = ScreenRoute.ProductDetails.route,
             arguments = listOf(
@@ -186,6 +193,7 @@ fun AppNavGraph(
 
         composable("checkout/{totalPrice}") { backStackEntry ->
             val totalPrice = backStackEntry.arguments?.getString("totalPrice")?.toDoubleOrNull() ?: 0.0
+            val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
             CheckoutScreen(
                 totalPrice = totalPrice,
                 onBackClick = { navController.popBackStack() },

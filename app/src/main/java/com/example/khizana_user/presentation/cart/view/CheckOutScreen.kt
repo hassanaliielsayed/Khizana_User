@@ -2,6 +2,7 @@ package com.example.khizana_user.presentation.cart.view
 
 
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,6 +91,7 @@ fun CheckoutScreen(
         val latLng = place.latLng ?: LatLng(30.0, 31.0)
         locationViewModel.updateAddress(address, latLng)
     }
+
 
     Column(
         modifier = Modifier
@@ -290,7 +293,8 @@ fun CheckoutScreen(
 
         // Place Order Button
         Button(
-            onClick = { showConfirmationDialog = true },
+            onClick = {
+                showConfirmationDialog = true },
             modifier = Modifier.padding(16.dp).align(Alignment.End),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE)),
             elevation = ButtonDefaults.buttonElevation(8.dp),
