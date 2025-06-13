@@ -4,10 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.example.khizana_user.presentation.nav.AppNavGraph
+import com.example.khizana_user.presentation.order.view.OrdersScreen
 import com.example.khizana_user.ui.theme.Khizana_UserTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -16,9 +20,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Khizana_UserTheme {
-                val navController = rememberNavController()
-                AppNavGraph(navController)
-
+//                val navController = rememberNavController()
+//                AppNavGraph(navController)
+//                https://mad45-sv-and4.myshopify.com/admin/api/2024-01/orders.json?customer_id=7858653888625&status=any
+                val authViewModel = hiltViewModel<AuthViewModel>()
+                val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+                if (customer != null)
+                    OrdersScreen(customerId = 7858653888625)
             }
         }
     }

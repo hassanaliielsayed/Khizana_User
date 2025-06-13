@@ -2,6 +2,7 @@ package com.example.khizana_user.di
 
 import com.example.khizana_user.data.dataSource.local.CustomerPreferencesDataSourceImpl
 import com.example.khizana_user.data.dataSource.remote.CartRemoteDataSourceImpl
+import com.example.khizana_user.data.dataSource.remote.OrderRemoteDataSourceImpl
 import com.example.khizana_user.data.dataSource.remote.RemoteDataSourceImp
 import com.example.khizana_user.data.repository.CategoryRepositoryImp
 import com.example.khizana_user.data.dataSource.remote.WishlistRemoteDataSourceImpl
@@ -11,6 +12,8 @@ import com.example.khizana_user.data.repository.CustomerPreferencesDataSource
 import com.example.khizana_user.data.repository.CustomerPreferencesRepositoryImpl
 import com.example.khizana_user.data.repository.RemoteDataSource
 import com.example.khizana_user.data.repository.HomeRepositoryImp
+import com.example.khizana_user.data.repository.OrderRemoteDataSource
+import com.example.khizana_user.data.repository.OrderRepositoryImpl
 import com.example.khizana_user.data.repository.ProductRepositoryImp
 import com.example.khizana_user.data.repository.SettingRepositoryImpl
 import com.example.khizana_user.data.repository.ShopifyRepositoryImpl
@@ -20,6 +23,7 @@ import com.example.khizana_user.data.repository.WishlistRepositoryImpl
 import com.example.khizana_user.domain.repository.CartRepository
 import com.example.khizana_user.domain.repository.CustomerPreferencesRepository
 import com.example.khizana_user.domain.repository.HomeRepository
+import com.example.khizana_user.domain.repository.OrderRepository
 import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.SettingRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
@@ -93,4 +97,16 @@ abstract class KhizanaModule {
         impl: CartRepositoryImpl
     ): CartRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindOrderRemoteDataSource(
+        impl: OrderRemoteDataSourceImpl
+
+    ): OrderRemoteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindOrderRepository(
+        impl: OrderRepositoryImpl
+    ): OrderRepository
 }

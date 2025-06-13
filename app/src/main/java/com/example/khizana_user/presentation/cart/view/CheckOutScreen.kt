@@ -1,8 +1,8 @@
 package com.example.khizana_user.presentation.cart.view
 
-
-
-import android.widget.Toast
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,7 +53,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
+import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
 import com.example.khizana_user.utils.ConfirmationDialog
+import com.example.khizana_user.utils.PaymentMethod
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.toCurrentCurrency
 import com.google.android.gms.maps.model.CameraPosition
@@ -67,6 +69,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @Composable
 fun CheckoutScreen(
     viewModel: CartViewModel = hiltViewModel(),
+    orderViewModel: OrderViewModel = hiltViewModel(),
     locationViewModel: LocationViewModel = hiltViewModel(),
     totalPrice: Double,
     onBackClick: () -> Unit,
@@ -77,8 +80,13 @@ fun CheckoutScreen(
 ) {
     var couponCode by remember { mutableStateOf("") }
     var showConfirmationDialog by remember { mutableStateOf(false) }
+    var selectedPaymentMethod by remember { mutableStateOf(PaymentMethod.COD) }
 
     val couponState by viewModel.couponState.collectAsStateWithLifecycle()
+    val cartState by viewModel.cartState.collectAsState()
+    val orderState by orderViewModel.orderState.collectAsState()
+    val invoiceUrlState by orderViewModel.invoiceUrl.collectAsState()
+
     val coupon = (couponState as? Result.Success)?.data
     val totalDiscount = if (coupon != null) totalPrice * (coupon.discount / 100.0) else 0.0
     val grandTotal = remember(totalPrice, totalDiscount) { totalPrice - totalDiscount }
@@ -92,6 +100,16 @@ fun CheckoutScreen(
         locationViewModel.updateAddress(address, latLng)
     }
 
+    LaunchedEffect(orderState) {
+        if (orderState is Result.Success) onNavigateToOrderSuccess()
+    }
+
+    LaunchedEffect(invoiceUrlState) {
+        if (invoiceUrlState is Result.Success) {
+            val url = (invoiceUrlState as Result.Success).data
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -173,13 +191,21 @@ fun CheckoutScreen(
                         modifier = Modifier.size(50.dp)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text("Cash on Delivery (COD)", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        if (selectedPaymentMethod == PaymentMethod.COD) "Cash on Delivery (COD)" else "Online Payment",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     Spacer(modifier = Modifier.weight(1f))
                     Box(
                         modifier = Modifier
                             .padding(15.dp)
                             .background(Color(0xFFE3E5E8), RoundedCornerShape(10.dp))
-                            .clickable(onClick = onPaymentMethodClick),
+                            .clickable {
+                                selectedPaymentMethod =
+                                    if (selectedPaymentMethod == PaymentMethod.COD)
+                                        PaymentMethod.ONLINE else PaymentMethod.COD
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -204,14 +230,18 @@ fun CheckoutScreen(
             Column(modifier = Modifier.padding(10.dp)) {
                 Text("Fees", color = Color(0xFFA1A6B0), fontSize = 14.sp)
                 Row(
-                    Modifier.fillMaxWidth().padding(top = 16.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Sub Total", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     Text(totalPrice.toCurrentCurrency(), color = Color(0xFF929292))
                 }
                 Row(
-                    Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Shipping Fees", fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -232,7 +262,9 @@ fun CheckoutScreen(
             Column(modifier = Modifier.padding(10.dp)) {
                 Text("Coupon", color = Color(0xFFA1A6B0), fontSize = 14.sp)
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
@@ -262,7 +294,9 @@ fun CheckoutScreen(
             Column(modifier = Modifier.padding(10.dp)) {
                 Text("Discount", color = Color(0xFFA1A6B0), fontSize = 14.sp)
                 Row(
-                    Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Discount", fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -282,7 +316,9 @@ fun CheckoutScreen(
             Column(modifier = Modifier.padding(10.dp)) {
                 Text("Grand Total", color = Color(0xFFA1A6B0), fontSize = 14.sp)
                 Row(
-                    Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Total Amount", fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -293,9 +329,10 @@ fun CheckoutScreen(
 
         // Place Order Button
         Button(
-            onClick = {
-                showConfirmationDialog = true },
-            modifier = Modifier.padding(16.dp).align(Alignment.End),
+            onClick = { showConfirmationDialog = true },
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.End),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE)),
             elevation = ButtonDefaults.buttonElevation(8.dp),
             shape = RoundedCornerShape(8.dp)
@@ -304,14 +341,27 @@ fun CheckoutScreen(
             Spacer(modifier = Modifier.width(8.dp))
             Icon(painter = painterResource(R.drawable.ic_group_right_arrow), contentDescription = "Place Order")
         }
+
     }
 
     ConfirmationDialog(
         showDialog = showConfirmationDialog,
         onDismiss = { showConfirmationDialog = false },
         onConfirm = {
-            onPlaceOrderClick()
-            onNavigateToOrderSuccess()
+            Log.i("CheckoutScreen", "🧾 Cart State: $cartState")
+            val draftOrderId = (cartState as? Result.Success)?.data?.draftOrderId
+            Log.i("OrderVM", "CheckoutScreen: ")
+            if (draftOrderId != null) {
+                Log.i("OrderVM", "CheckoutScreen: $draftOrderId")
+                when (selectedPaymentMethod) {
+                    PaymentMethod.COD -> {
+                        Log.i("OrderVM", "CheckoutScreen: ")
+                        orderViewModel.completeCODOrder(draftOrderId)
+                    }
+                    PaymentMethod.ONLINE -> orderViewModel.initiateOnlinePayment(draftOrderId)
+
+                }
+            }
         },
         title = "Confirm Order",
         text = "Please confirm your order:\n\nShipping Address: $selectedAddress\nTotal Amount: ${grandTotal.toCurrentCurrency()}",
