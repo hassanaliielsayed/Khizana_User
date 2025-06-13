@@ -5,19 +5,22 @@ import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.domain.model.FavoriteList
 
 fun DraftOrderDto.toDomain(): FavoriteList {
+    val nonNullItems = this.lineItems.mapNotNull { item ->
+        val price = item.price?.toDoubleOrNull()
+        if (price != null) {
+            FavoriteItem(
+                variantId = item.variantId,
+                title = item.title,
+                quantity = item.quantity,
+                price = price,
+                imageUrl = item.imageUrl ?: ""
+            )
+        } else null
+    }
+
     return FavoriteList(
         draftOrderId = this.id,
         customerId = this.customer.id,
-        items = this.lineItems.map {
-            it.price?.let { it1 ->
-                FavoriteItem(
-                    variantId = it.variantId,
-                    title = it.title,
-                    quantity = it.quantity,
-                    price = it1.toDouble(),
-                    imageUrl = it.imageUrl ?: ""
-                )
-            }
-        }
+        items = nonNullItems
     )
 }

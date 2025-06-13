@@ -21,7 +21,15 @@ class CartRemoteDataSourceImpl @Inject constructor(
     private suspend fun getCustomerCartDraft(customerId: Long): DraftOrderDto? {
         val draftOrders = service.getDraftOrders().body()?.draftOrders.orEmpty()
         return draftOrders.find {
-            it.note == cartNote(customerId) && it.customer.id == customerId
+            val match = it.note == cartNote(customerId) &&
+                    it.customer.id == customerId &&
+                    it.completedAt == null
+            if (match) {
+                Log.d(TAG, "Active draft found: ID=${it.id}")
+            } else {
+                Log.d(TAG, "Ignored draft: ID=${it.id}, note=${it.note}, completedAt=${it.completedAt}")
+            }
+            match
         }
     }
 
@@ -39,10 +47,14 @@ class CartRemoteDataSourceImpl @Inject constructor(
         }
 
         val request = DraftOrderRequest(
-            draft_order = DraftOrderData(
+            draftOrder = DraftOrderData(
                 line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
                 customer = CustomerData(customerId),
-                note = cartNote(customerId)
+                note = cartNote(customerId),
+                email = cartDraft?.email,
+                shipping_address = cartDraft?.shippingAddress,
+                applied_discount = cartDraft?.appliedDiscount,
+                use_customer_default_address = false
             )
         )
 
@@ -69,16 +81,20 @@ class CartRemoteDataSourceImpl @Inject constructor(
             val updatedItems = cartDraft.lineItems.mapNotNull {
                 when {
                     it.variantId == variantId && it.quantity > 1 -> it.copy(quantity = it.quantity - 1)
-                    it.variantId == variantId && it.quantity == 1 -> null // Remove if reaching 0
+                    it.variantId == variantId && it.quantity == 1 -> null
                     else -> it
                 }
             }
 
             val request = DraftOrderRequest(
-                draft_order = DraftOrderData(
+                draftOrder = DraftOrderData(
                     line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
                     customer = CustomerData(customerId),
-                    note = cartNote(customerId)
+                    note = cartNote(customerId),
+                    email = cartDraft.email,
+                    shipping_address = cartDraft.shippingAddress,
+                    applied_discount = cartDraft.appliedDiscount,
+                    use_customer_default_address = false
                 )
             )
 
@@ -93,7 +109,6 @@ class CartRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun removeFromCart(customerId: Long, variantId: Long): Result<Unit> {
         return try {
-
             val cartDraft = getCustomerCartDraft(customerId)
                 ?: return Result.failure(Exception("Cart draft not found"))
 
@@ -109,10 +124,14 @@ class CartRemoteDataSourceImpl @Inject constructor(
             }
 
             val request = DraftOrderRequest(
-                draft_order = DraftOrderData(
+                draftOrder = DraftOrderData(
                     line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
                     customer = CustomerData(customerId),
-                    note = cartNote(customerId)
+                    note = cartNote(customerId),
+                    email = cartDraft.email,
+                    shipping_address = cartDraft.shippingAddress,
+                    applied_discount = cartDraft.appliedDiscount,
+                    use_customer_default_address = false
                 )
             )
 
@@ -131,7 +150,7 @@ class CartRemoteDataSourceImpl @Inject constructor(
     override suspend fun getCart(customerId: Long): FavoriteList {
         Log.d(TAG, "Getting cart for customerId: $customerId")
         val cartDraft = getCustomerCartDraft(customerId)
-            ?: return FavoriteList( // Return empty cart if not found
+            ?: return FavoriteList(
                 draftOrderId = -1,
                 customerId = customerId,
                 items = emptyList()

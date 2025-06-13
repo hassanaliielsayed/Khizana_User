@@ -6,40 +6,15 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +26,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.khizana_user.R
+import com.example.khizana_user.data.dto.draftorderDto.AppliedDiscountDto
+import com.example.khizana_user.data.dto.draftorderDto.CustomerData
+import com.example.khizana_user.data.dto.draftorderDto.DraftOrderData
+import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItem
+import com.example.khizana_user.data.dto.draftorderDto.DraftOrderRequest
+import com.example.khizana_user.data.dto.draftorderDto.ShippingAddressDto
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
@@ -64,10 +45,12 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
+    customerId: Long,
     viewModel: CartViewModel = hiltViewModel(),
     orderViewModel: OrderViewModel = hiltViewModel(),
     locationViewModel: LocationViewModel = hiltViewModel(),
@@ -100,6 +83,10 @@ fun CheckoutScreen(
         locationViewModel.updateAddress(address, latLng)
     }
 
+    LaunchedEffect(customerId) {
+        viewModel.loadCart(customerId)
+    }
+
     LaunchedEffect(orderState) {
         if (orderState is Result.Success) onNavigateToOrderSuccess()
     }
@@ -110,7 +97,6 @@ fun CheckoutScreen(
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -344,22 +330,90 @@ fun CheckoutScreen(
 
     }
 
+    val coroutineScope = rememberCoroutineScope()
+
     ConfirmationDialog(
         showDialog = showConfirmationDialog,
         onDismiss = { showConfirmationDialog = false },
         onConfirm = {
-            Log.i("CheckoutScreen", "🧾 Cart State: $cartState")
-            val draftOrderId = (cartState as? Result.Success)?.data?.draftOrderId
-            Log.i("OrderVM", "CheckoutScreen: ")
-            if (draftOrderId != null) {
-                Log.i("OrderVM", "CheckoutScreen: $draftOrderId")
-                when (selectedPaymentMethod) {
-                    PaymentMethod.COD -> {
-                        Log.i("OrderVM", "CheckoutScreen: ")
-                        orderViewModel.completeCODOrder(draftOrderId)
-                    }
-                    PaymentMethod.ONLINE -> orderViewModel.initiateOnlinePayment(draftOrderId)
+            coroutineScope.launch {
+                Log.i("CheckoutScreen", "Cart State: $cartState")
+                val draftOrder = (cartState as? Result.Success)?.data
+                val draftOrderId = draftOrder?.draftOrderId
 
+                if (draftOrderId != null) {
+                    Log.i("CheckoutScreen", "Draft ID: $draftOrderId")
+                    Log.i("CheckoutScreen", "Customer ID: $customerId")
+                    Log.i("CheckoutScreen", "Selected Payment Method: $selectedPaymentMethod")
+                    Log.i("CheckoutScreen", "Address: $selectedAddress")
+                    Log.i("CheckoutScreen", "atLng: $selectedLatLng")
+
+                    val cityCountry = getCityAndCountryFromLatLng(context, selectedLatLng)
+                    val city = cityCountry?.first ?: "Unknown"
+                    val country = cityCountry?.second ?: "Unknown"
+
+                    Log.i("CheckoutScreen", "City: $city, Country: $country")
+
+                    val shippingAddressDto = ShippingAddressDto(
+                        address1 = selectedAddress,
+                        city = city,
+                        country = country,
+                        zip = "00000"
+                    )
+
+                    val discountAmount = totalPrice * (coupon?.discount?.toDouble() ?: 0.0) / 100.0
+                    Log.i("CheckoutScreen", "Discount: ${coupon?.discount}% (${discountAmount.toCurrentCurrency()})")
+
+                    val appliedDiscount = coupon?.let {
+                        AppliedDiscountDto(
+                            title = it.title,
+                            value = it.discount.toString(),
+                            valueType = "percentage",
+                            amount = (totalPrice * (it.discount / 100.0)).toString()
+                        )
+                    }
+
+                    val draftLineItems = draftOrder.items.filterNotNull().map {
+                        DraftOrderItem(variantId = it.variantId, quantity = it.quantity)
+                    }
+
+
+                    val draftRequest = DraftOrderRequest(
+                        draftOrder = DraftOrderData(
+                            line_items = draftLineItems,
+                            customer = CustomerData(customerId),
+                            note = "CART-$customerId",
+                            shipping_address = shippingAddressDto,
+                            applied_discount = appliedDiscount,
+                            use_customer_default_address = false
+                        )
+                    )
+
+
+                    Log.i("CheckoutScreen", "DraftOrderRequest Body:\n$draftRequest")
+
+                    orderViewModel.updateDraftOrderBeforeCheckout(
+                        draftOrderId = draftOrderId,
+                        customerId = customerId,
+                        shippingAddress = shippingAddressDto,
+                        appliedDiscount = appliedDiscount,
+                        lineItems = draftLineItems
+                    )
+
+
+
+                    when (selectedPaymentMethod) {
+                        PaymentMethod.COD -> {
+                            Log.i("CheckoutScreen", "placing COD order...")
+                            orderViewModel.completeCODOrder(draftOrderId)
+                        }
+                        PaymentMethod.ONLINE -> {
+                            Log.i("CheckoutScreen", "Initiating online payment...")
+                            orderViewModel.initiateOnlinePayment(draftOrderId)
+                        }
+                    }
+                } else {
+                    Log.e("CheckoutScreen", "Draft order ID is null.")
                 }
             }
         },

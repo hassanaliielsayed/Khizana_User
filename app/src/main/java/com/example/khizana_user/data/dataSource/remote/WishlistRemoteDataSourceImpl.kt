@@ -29,7 +29,7 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
                 }
 
                 val request = DraftOrderRequest(
-                    draft_order = DraftOrderData(
+                    draftOrder = DraftOrderData(
                         line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
                         customer = CustomerData(customerId),
                         note = favoritesNote(customerId)
@@ -40,7 +40,7 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             } else {
                 Log.d(TAG, "Creating new FAVORITES draft for $customerId")
                 val request = DraftOrderRequest(
-                    draft_order = DraftOrderData(
+                    draftOrder = DraftOrderData(
                         line_items = listOf(DraftOrderItem(variantId, 1)),
                         customer = CustomerData(customerId),
                         note = favoritesNote(customerId)
@@ -69,7 +69,7 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             val updatedItems = favoriteDraft.lineItems.filter { it.variantId != variantId }
 
             val request = DraftOrderRequest(
-                draft_order = DraftOrderData(
+                draftOrder = DraftOrderData(
                     line_items = updatedItems.map { DraftOrderItem(it.variantId, it.quantity) },
                     customer = CustomerData(customerId),
                     note = favoritesNote(customerId)

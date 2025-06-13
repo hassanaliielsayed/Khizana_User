@@ -255,8 +255,19 @@ class AuthViewModel @Inject constructor(
     fun reloadUser() {
         viewModelScope.launch {
             _isEmailVerified.value = checkEmailVerifiedUseCase()
+
+            val verified = _isEmailVerified.value
+            val email = _currentUserEmail.value
+
+            if (verified && !email.isNullOrBlank() && !didRegisterShopify) {
+                Log.d("AuthViewModel", "Detected email verification for $email, registering with Shopify...")
+                didRegisterShopify = true
+                val name = getCurrentUserNameUseCase() ?: "User"
+                registerWithShopify(name, email)
+            }
         }
     }
+
 
     fun sendEmailVerification() {
         viewModelScope.launch {

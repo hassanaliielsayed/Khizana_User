@@ -69,7 +69,6 @@ fun CartScreen(
                         .fillMaxSize()
                         .padding(16.dp)
                 ) {
-                    // Top section
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -119,7 +118,6 @@ fun CartScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Fixed Checkout Footer
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -155,7 +153,6 @@ fun CartScreen(
         }
     }
 
-    // Dialogs
     ConfirmationDialog(
         showDialog = showClearCartDialog,
         onDismiss = { showClearCartDialog = false },

@@ -28,21 +28,26 @@ fun VerifyEmailScreen(
 
     var canResend by remember { mutableStateOf(false) }
     var timeLeft by remember { mutableStateOf(60) }
+    var stopPolling by remember { mutableStateOf(false) }
 
     // Countdown timer for resend
-    LaunchedEffect(Unit) {
-        for (i in 60 downTo 1) {
-            delay(1000)
-            timeLeft = i - 1
+    LaunchedEffect(key1 = canResend) {
+        if (!canResend) {
+            for (i in 60 downTo 1) {
+                delay(1000)
+                timeLeft = i - 1
+            }
+            canResend = true
         }
-        canResend = true
     }
 
     // Auto-refresh to detect verification
-    LaunchedEffect(Unit) {
-        while (state != AuthState.Success) {
-            delay(3000)
-            viewModel.reloadUser()
+    LaunchedEffect(key1 = state, key2 = stopPolling) {
+        if (!stopPolling) {
+            while (state != AuthState.Success) {
+                delay(3000)
+                viewModel.reloadUser()
+            }
         }
     }
 
@@ -50,16 +55,15 @@ fun VerifyEmailScreen(
     LaunchedEffect(state) {
         when (state) {
             is AuthState.Success -> {
+                stopPolling = true
                 Toast.makeText(context, "Email verified! Logging you in...", Toast.LENGTH_SHORT).show()
                 viewModel.resetState()
                 onLoginComplete()
             }
-
             is AuthState.Error -> {
                 val errorMsg = (state as? AuthState.Error)?.message ?: "Unknown error"
                 Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
             }
-
             else -> Unit
         }
     }
@@ -94,6 +98,11 @@ fun VerifyEmailScreen(
         }
 
         Spacer(Modifier.height(24.dp))
+
+        if (state is AuthState.Loading) {
+            CircularProgressIndicator()
+            Spacer(Modifier.height(16.dp))
+        }
 
         TextButton(onClick = onBackToLogin) {
             Text("Back to Login")

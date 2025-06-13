@@ -71,7 +71,6 @@ fun AppNavGraph(
             )
         }
 
-
         composable(ScreenRoute.Home.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
                 HomeScreen(navController = navController,
@@ -119,7 +118,6 @@ fun AppNavGraph(
             }
         }
 
-
         composable(ScreenRoute.Cart.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
                 val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
@@ -130,7 +128,7 @@ fun AppNavGraph(
                         viewModel = hiltViewModel(),
                         modifier = Modifier.padding(innerPadding),
                         onCheckoutClick = { totalPrice ->
-                            navController.navigate("checkout/$totalPrice")
+                            navController.navigate("checkout/${customer.id}/$totalPrice")
                         }
                     )
                 } else {
@@ -143,7 +141,6 @@ fun AppNavGraph(
                 }
             }
         }
-
 
         composable(ScreenRoute.Settings.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
@@ -183,8 +180,6 @@ fun AppNavGraph(
             }
         }
 
-
-
         composable("contact") {
             ContactsScreen()
         }
@@ -204,16 +199,24 @@ fun AppNavGraph(
             )
         }
 
-        composable("checkout/{totalPrice}") { backStackEntry ->
+        composable("checkout/{customerId}/{totalPrice}",
+            arguments = listOf(
+                navArgument("customerId") { type = NavType.LongType },
+                navArgument("totalPrice") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val customerId = backStackEntry.arguments?.getLong("customerId") ?: return@composable
             val totalPrice = backStackEntry.arguments?.getString("totalPrice")?.toDoubleOrNull() ?: 0.0
+
             CheckoutScreen(
+                customerId = customerId,
                 totalPrice = totalPrice,
                 onBackClick = { navController.popBackStack() },
                 onPlaceOrderClick = {},
-                onAddressClick = {  },
+                onAddressClick = { },
                 onPaymentMethodClick = { },
                 onNavigateToOrderSuccess = {
-                   navController.navigate("order_success")
+                    navController.navigate("order_success")
                 }
             )
         }
@@ -225,6 +228,7 @@ fun AppNavGraph(
                 }
             )
         }
+
         composable("verify_email") {
             VerifyEmailScreen(
                 onLoginComplete = {
