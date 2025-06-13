@@ -1,5 +1,6 @@
 package com.example.khizana_user.di
 
+import android.content.Context
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
 import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
@@ -29,9 +30,11 @@ import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavor
 import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
+import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -154,6 +157,13 @@ class KhizanaModuleProvider {
     @Provides
     fun provideSendInvoiceUseCase(repo: OrderRepository): SendInvoiceUseCase {
         return SendInvoiceUseCase(repo)
+    }
+
+    @Provides
+    fun provideConnectionLiveData(
+        @ApplicationContext context: Context
+    ): ConnectionLiveData {
+        return ConnectionLiveData(context)
     }
 
 

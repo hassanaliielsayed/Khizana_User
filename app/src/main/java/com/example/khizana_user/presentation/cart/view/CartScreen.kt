@@ -23,9 +23,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.ConfirmationDialog
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.toCurrentCurrency
+
 @Composable
 fun CartScreen(
     customerId: Long,
@@ -37,118 +39,125 @@ fun CartScreen(
     var showClearCartDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<FavoriteItem?>(null) }
     var totalPrice by remember { mutableStateOf(0.0) }
+    val connectionState by viewModel.networkState.collectAsState()
 
     LaunchedEffect(customerId) {
-        viewModel.loadCart(customerId)
+        if (connectionState) {
+            viewModel.loadCart(customerId)
+        }
     }
 
-    when (val result = cartResult) {
-        Result.Loading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-
-        is Result.Error -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Failed to load cart: ${result.message}", color = Color.Red)
-            }
-        }
-
-        is Result.Success -> {
-            val cart = result.data
-            totalPrice = cart.items.sumOf { (it?.price ?: 0.0) * (it?.quantity ?: 0) }
-
-            if (cart.items.isEmpty()) {
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
+        when (val result = cartResult) {
+            Result.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Your cart is empty.")
+                    CircularProgressIndicator()
                 }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                ) {
-                    // Top section
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("🛒 Your Cart", style = MaterialTheme.typography.titleLarge)
-                        Button(
-                            onClick = { showClearCartDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                        ) {
-                            Icon(Icons.Default.Delete, contentDescription = "Clear cart")
-                            Spacer(Modifier.width(8.dp))
-                            Text("Clear Cart")
-                        }
+            }
+
+            is Result.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Failed to load cart: ${result.message}", color = Color.Red)
+                }
+            }
+
+            is Result.Success -> {
+                val cart = result.data
+                totalPrice = cart.items.sumOf { (it?.price ?: 0.0) * (it?.quantity ?: 0) }
+
+                if (cart.items.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Your cart is empty.")
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    LazyColumn(
+                } else {
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 200.dp, max = 400.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .fillMaxSize()
+                            .padding(16.dp)
                     ) {
-                        items(cart.items) { item ->
-                            item?.let {
-                                CartItemColumn(
-                                    item = it,
-                                    onAdd = { viewModel.addToCart(customerId, item.variantId) },
-                                    onRemove = {
-                                        viewModel.decrementFromCart(customerId, item.variantId)
-                                    },
-                                    onDelete = { itemToDelete = it }
-                                )
+                        // Top section
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("🛒 Your Cart", style = MaterialTheme.typography.titleLarge)
+                            Button(
+                                onClick = { showClearCartDialog = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Clear cart")
+                                Spacer(Modifier.width(8.dp))
+                                Text("Clear Cart")
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    Divider(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                        thickness = 1.dp
-                    )
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 200.dp, max = 400.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(cart.items) { item ->
+                                item?.let {
+                                    CartItemColumn(
+                                        item = it,
+                                        onAdd = { viewModel.addToCart(customerId, item.variantId) },
+                                        onRemove = {
+                                            viewModel.decrementFromCart(customerId, item.variantId)
+                                        },
+                                        onDelete = { itemToDelete = it }
+                                    )
+                                }
+                            }
+                        }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    // Fixed Checkout Footer
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            "Total:",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                        Divider(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                            thickness = 1.dp
                         )
-                        Text(
-                            text = totalPrice.toCurrentCurrency(),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    Button(
-                        onClick = { onCheckoutClick(totalPrice) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text("Proceed to Checkout", fontSize = 16.sp)
+                        // Fixed Checkout Footer
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "Total:",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = totalPrice.toCurrentCurrency(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = { onCheckoutClick(totalPrice) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text("Proceed to Checkout", fontSize = 16.sp)
+                        }
                     }
                 }
             }

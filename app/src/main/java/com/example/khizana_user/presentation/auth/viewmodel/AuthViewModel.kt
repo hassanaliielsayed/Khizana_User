@@ -2,12 +2,14 @@ package com.example.khizana_user.presentation.auth.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Customer
 import com.example.khizana_user.domain.usecase.*
 import com.example.khizana_user.domain.usecase.sharedperfernceusecase.GetCustomerUseCase
 import com.example.khizana_user.domain.usecase.sharedperfernceusecase.SaveCustomerUseCase
 import com.example.khizana_user.utils.AuthState
+import com.example.khizana_user.utils.ConnectionLiveData
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -21,7 +23,8 @@ class AuthViewModel @Inject constructor(
     private val registerShopifyCustomerUseCase: RegisterShopifyCustomerUseCase,
     private val getShopifyCustomerByEmailUseCase: GetShopifyCustomerByEmailUseCase,
     private val saveCustomerUseCase: SaveCustomerUseCase,
-    getCustomerUseCase: GetCustomerUseCase
+    getCustomerUseCase: GetCustomerUseCase,
+    private val connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -30,15 +33,27 @@ class AuthViewModel @Inject constructor(
     private val _shopifyRegisterResult = MutableStateFlow<Result<Customer>?>(null)
     val shopifyRegisterResult: StateFlow<Result<Customer>?> = _shopifyRegisterResult
 
+    private val _networkState = MutableStateFlow(true)
+    val networkState: StateFlow<Boolean> = _networkState
+
     val currentCustomer: StateFlow<Customer?> = getCustomerUseCase()
         .onEach { Log.d("AuthViewModel", "currentCustomer loaded: $it") }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
+        observeNetworkState()
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null && currentUser.email != null) {
             Log.d("AuthViewModel", "App init: re-fetching Shopify customer for ${currentUser.email}")
             fetchShopifyCustomer(currentUser.email!!)
+        }
+    }
+
+    private fun observeNetworkState() {
+        viewModelScope.launch {
+            connectionLiveData.asFlow().collect { isConnected ->
+                _networkState.value = isConnected
+            }
         }
     }
 
