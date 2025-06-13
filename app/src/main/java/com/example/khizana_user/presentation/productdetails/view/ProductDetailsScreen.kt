@@ -30,6 +30,7 @@ import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.productdetails.viewmodel.ProductDetailsViewModel
 import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.isGuestUser
 import com.example.khizana_user.utils.toCurrentCurrency
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -83,15 +84,24 @@ fun ProductDetailsScreen(
                     onToggleFavorite = {
                         val id = product.variantId ?: return@ProductDetailsContent
                         val current = (favoriteStatus as? Result.Success)?.data ?: false
-                        if (favoriteStatus !is Result.Loading) {
+
+                        if (isGuestUser()) {
+                            Toast.makeText(context, "Please sign in to add to favorites", Toast.LENGTH_SHORT).show()
+                        } else if (favoriteStatus !is Result.Loading) {
                             wishlistViewModel.toggleFavorite(customerId, id, current)
                         }
                     },
                     onAddToCart = {
                         val id = product.variantId ?: return@ProductDetailsContent
-                        cartViewModel.addToCart(customerId, id)
-                        Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
+
+                        if (isGuestUser()) {
+                            Toast.makeText(context, "Please sign in to add items to cart", Toast.LENGTH_SHORT).show()
+                        } else {
+                            cartViewModel.addToCart(customerId, id)
+                            Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
+                        }
                     }
+
                 )
             }
         }

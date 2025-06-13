@@ -14,9 +14,9 @@ import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.repository.WishlistRepository
 import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
 import com.example.khizana_user.domain.usecase.GetShopifyCustomerByEmailUseCase
-import com.example.khizana_user.domain.usecase.LoginUseCase
+import com.example.khizana_user.domain.usecase.authusecases.LoginUseCase
 import com.example.khizana_user.domain.usecase.RegisterShopifyCustomerUseCase
-import com.example.khizana_user.domain.usecase.RegisterUseCase
+import com.example.khizana_user.domain.usecase.authusecases.RegisterUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.AddToCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.ClearCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseCase
@@ -39,6 +39,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Singleton
 
 
 @Module
@@ -71,7 +72,10 @@ class KhizanaModuleProvider {
 
 
     @Provides
-    fun provideAuthDataSource(): AuthDataSource = FirebaseAuthDataSourceImpl()
+    @Singleton
+    fun provideAuthDataSource(
+        @ApplicationContext context: Context
+    ): AuthDataSource = FirebaseAuthDataSourceImpl(context)
 
     @Provides
     fun provideAuthRepository(authDataSource: AuthDataSource): AuthRepository =

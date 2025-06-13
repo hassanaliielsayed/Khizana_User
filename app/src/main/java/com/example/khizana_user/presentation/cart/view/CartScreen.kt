@@ -67,34 +67,33 @@ fun CartScreen(
                 val cart = result.data
                 totalPrice = cart.items.sumOf { (it?.price ?: 0.0) * (it?.quantity ?: 0) }
 
-                if (cart.items.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Your cart is empty.")
-                    }
-                } else {
-                    Column(
+            if (cart.items.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Your cart is empty.")
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Top section
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Text("🛒 Your Cart", style = MaterialTheme.typography.titleLarge)
+                        Button(
+                            onClick = { showClearCartDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                         ) {
-                            Text("🛒 Your Cart", style = MaterialTheme.typography.titleLarge)
-                            Button(
-                                onClick = { showClearCartDialog = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                            ) {
-                                Icon(Icons.Default.Delete, contentDescription = "Clear cart")
-                                Spacer(Modifier.width(8.dp))
-                                Text("Clear Cart")
-                            }
+                            Icon(Icons.Default.Delete, contentDescription = "Clear cart")
+                            Spacer(Modifier.width(8.dp))
+                            Text("Clear Cart")
                         }
+                    }
 
                         Spacer(modifier = Modifier.height(12.dp))
 
@@ -127,23 +126,22 @@ fun CartScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Fixed Checkout Footer
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                "Total:",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = totalPrice.toCurrentCurrency(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Total:",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = totalPrice.toCurrentCurrency(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -164,7 +162,6 @@ fun CartScreen(
         }
     }
 
-    // Dialogs
     ConfirmationDialog(
         showDialog = showClearCartDialog,
         onDismiss = { showClearCartDialog = false },
