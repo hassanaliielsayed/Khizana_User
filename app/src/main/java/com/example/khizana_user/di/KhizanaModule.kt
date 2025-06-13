@@ -1,5 +1,6 @@
 package com.example.khizana_user.di
 
+import android.content.Context
 import com.example.khizana_user.data.dataSource.local.CustomerPreferencesDataSourceImpl
 import com.example.khizana_user.data.dataSource.remote.CartRemoteDataSourceImpl
 import com.example.khizana_user.data.dataSource.remote.OrderRemoteDataSourceImpl
@@ -28,9 +29,12 @@ import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.SettingRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.repository.WishlistRepository
+import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -109,4 +113,6 @@ abstract class KhizanaModule {
     abstract fun bindOrderRepository(
         impl: OrderRepositoryImpl
     ): OrderRepository
+
+
 }

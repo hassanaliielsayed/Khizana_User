@@ -30,6 +30,7 @@ import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavor
 import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
+import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -160,6 +161,13 @@ class KhizanaModuleProvider {
     @Provides
     fun provideSendInvoiceUseCase(repo: OrderRepository): SendInvoiceUseCase {
         return SendInvoiceUseCase(repo)
+    }
+
+    @Provides
+    fun provideConnectionLiveData(
+        @ApplicationContext context: Context
+    ): ConnectionLiveData {
+        return ConnectionLiveData(context)
     }
 
 
