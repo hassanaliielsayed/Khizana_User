@@ -13,8 +13,13 @@ class OrderRemoteDataSourceImpl @Inject constructor(
 ) : OrderRemoteDataSource {
 
     override suspend fun completeDraftOrder(id: Long) {
-        Log.i("OrderRemote", "Calling completeDraftOrder for draft ID: $id")
-        val res = api.completeDraftOrder(id)
+        Log.i("OrderRemote", "Completing draft order ID: $id with send_receipt = true")
+
+        val body = mapOf(
+            "draft_order" to mapOf("send_receipt" to true)
+        )
+
+        val res = api.completeDraftOrder(id, body)
 
         if (!res.isSuccessful) {
             val errorBody = res.errorBody()?.string()
@@ -26,10 +31,11 @@ class OrderRemoteDataSourceImpl @Inject constructor(
         Log.i("OrderRemote", "Draft completed. completedAt: ${completedDraft.completedAt}")
 
         if (completedDraft.completedAt == null) {
-            Log.e("OrderRemote", "Shopify did not mark draft as completed")
+            Log.e("OrderRemote", "❌ Shopify did not mark draft as completed")
             throw Exception("Draft not marked as completed by Shopify")
         }
     }
+
 
     override suspend fun getDraftOrder(id: Long): DraftOrderDto {
         Log.i("OrderRemote", "Fetching draft order with ID: $id")
