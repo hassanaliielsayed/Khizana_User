@@ -16,6 +16,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import kotlinx.coroutines.launch
 
@@ -29,61 +30,69 @@ fun WishlistScreen(
     val favorites by viewModel.favoritesState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
+    val connectionState by viewModel.networkState.collectAsState()
+
     LaunchedEffect(customerId) {
-        viewModel.loadFavorites(customerId)
+        if (connectionState) {
+            viewModel.loadFavorites(customerId)
+        }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("My Favorites") },
-                actions = {
-                    val items = favorites?.items.orEmpty().filterNotNull()
-                    if (items.isNotEmpty()) {
-                        TextButton(onClick = { viewModel.clearFavorites(customerId) }) {
-                            Text("Clear All")
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("My Favorites") },
+                    actions = {
+                        val items = favorites?.items.orEmpty().filterNotNull()
+                        if (items.isNotEmpty()) {
+                            TextButton(onClick = { viewModel.clearFavorites(customerId) }) {
+                                Text("Clear All")
+                            }
                         }
                     }
-                }
-            )
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
-            val items = favorites?.items.orEmpty().filterNotNull()
+                )
+            }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            ) {
+                val items = favorites?.items.orEmpty().filterNotNull()
 
-            when {
-                favorites == null -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
+                when {
+                    favorites == null -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
 
-                items.isEmpty() -> {
-                    Text("No favorites found.", modifier = Modifier.align(Alignment.Center))
-                }
+                    items.isEmpty() -> {
+                        Text("No favorites found.", modifier = Modifier.align(Alignment.Center))
+                    }
 
-                else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(items) { item ->
-                            FavoriteItemCard(
-                                item = item,
-                                onRemoveClick = {
-                                    coroutineScope.launch {
-                                        viewModel.toggleFavorite(
-                                            customerId = customerId,
-                                            variantId = item.variantId,
-                                            isCurrentlyFavorite = true
+                    else -> {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(items) { item ->
+                                FavoriteItemCard(
+                                    item = item,
+                                    onRemoveClick = {
+                                        coroutineScope.launch {
+                                            viewModel.toggleFavorite(
+                                                customerId = customerId,
+                                                variantId = item.variantId,
+                                                isCurrentlyFavorite = true
+                                            )
+                                        }
+                                    },
+                                    onItemClick = {
+                                        navController.navigate(
+                                            ScreenRoute.ProductDetails.createRoute(variantId = item.variantId)
                                         )
                                     }
-                                },
-                                onItemClick = {
-                                    navController.navigate(
-                                        ScreenRoute.ProductDetails.createRoute(variantId = item.variantId)
-                                    )
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }

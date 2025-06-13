@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.setting.viewmodel.SettingViewModel
 
 @Composable
@@ -53,65 +55,72 @@ fun SettingScreen(
 
     val selectedCurrency by viewModel.state.collectAsStateWithLifecycle()
 
+    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    listOf(Color(0xFFF0F0F0), Color(0xFFE6E6E6))
+    if (!connectionState) {
+        NoInternetConnectionView()
+        return
+    } else {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        listOf(Color(0xFFF0F0F0), Color(0xFFE6E6E6))
+                    )
                 )
-            )
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Settings",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp, bottom = 16.dp)
-        )
-
-        SettingItem(
-            title = "Address",
-            value = "7znnnnnnnnnnnnn",
-            onClick = { /* TODO */ }
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        SettingItem(
-            title = "Currency",
-            value = selectedCurrency,
-            onClick = { showCurrencyDialog = true }
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        SettingItem(
-            title = "Contact us",
-            onClick = onContactUsClick
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        SettingItem(
-            title = "About us",
-            onClick = onAboutUsClick
-        )
-
-        Spacer(modifier = Modifier.height(144.dp))
-
-        Button(
-            onClick = { showLogoutDialog = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .clip(RoundedCornerShape(24.dp)),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Gray,
-                contentColor = Color.White
-            )
+                .padding(16.dp)
         ) {
-            Text(text = "Logout")
+            Text(
+                text = "Settings",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp, bottom = 16.dp)
+            )
+
+            SettingItem(
+                title = "Address",
+                value = "7znnnnnnnnnnnnn",
+                onClick = { /* TODO */ }
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            SettingItem(
+                title = "Currency",
+                value = selectedCurrency,
+                onClick = { showCurrencyDialog = true }
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            SettingItem(
+                title = "Contact us",
+                onClick = onContactUsClick
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            SettingItem(
+                title = "About us",
+                onClick = onAboutUsClick
+            )
+
+            Spacer(modifier = Modifier.height(144.dp))
+
+            Button(
+                onClick = { showLogoutDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(24.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(text = "Logout")
+            }
         }
     }
 
@@ -130,7 +139,9 @@ fun SettingScreen(
                                     viewModel.saveCurrency(currency)
                                     viewModel.getExchangeRate("EGP", selectedCurrency)
                                     showCurrencyDialog = false
-                                    Toast.makeText(context, "Currency Updated", Toast.LENGTH_SHORT).show()
+                                    Toast
+                                        .makeText(context, "Currency Updated", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                                 .padding(vertical = 8.dp)
                         ) {

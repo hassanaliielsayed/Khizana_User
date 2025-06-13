@@ -1,6 +1,5 @@
 package com.example.khizana_user.presentation.productdetails.view
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -28,6 +27,7 @@ import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.ProductDetails
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.productdetails.viewmodel.ProductDetailsViewModel
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.isGuestUser
@@ -49,8 +49,12 @@ fun ProductDetailsScreen(
     val favoriteStatus by wishlistViewModel.toggleFavoriteState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    val connectionState by viewModel.networkState.collectAsState()
+
     LaunchedEffect(customerId) {
-        wishlistViewModel.loadFavorites(customerId)
+        if (connectionState) {
+            wishlistViewModel.loadFavorites(customerId)
+        }
     }
 
     LaunchedEffect(favorites, productId, variantId) {
@@ -60,50 +64,70 @@ fun ProductDetailsScreen(
     }
 
     LaunchedEffect(productId, variantId) {
-        when {
-            productId != null -> viewModel.loadProduct(productId)
-            variantId != null -> viewModel.loadProductByVariant(variantId)
+        if (connectionState) {
+            when {
+                productId != null -> viewModel.loadProduct(productId)
+                variantId != null -> viewModel.loadProductByVariant(variantId)
+            }
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        when (val result = productState) {
-            is ProductDetailsViewModel.Result.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
 
-            is ProductDetailsViewModel.Result.Error -> {
-                Text("Error: ${result.message}", color = Color.Red, modifier = Modifier.align(Alignment.Center))
-            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (val result = productState) {
+                is ProductDetailsViewModel.Result.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
 
-            is ProductDetailsViewModel.Result.Success -> {
-                val product = result.data
-                ProductDetailsContent(
-                    product = product,
-                    favoriteStatus = favoriteStatus,
-                    onToggleFavorite = {
-                        val id = product.variantId ?: return@ProductDetailsContent
-                        val current = (favoriteStatus as? Result.Success)?.data ?: false
+                is ProductDetailsViewModel.Result.Error -> {
+                    Text(
+                        "Error: ${result.message}",
+                        color = Color.Red,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
-                        if (isGuestUser()) {
-                            Toast.makeText(context, "Please sign in to add to favorites", Toast.LENGTH_SHORT).show()
-                        } else if (favoriteStatus !is Result.Loading) {
-                            wishlistViewModel.toggleFavorite(customerId, id, current)
+                is ProductDetailsViewModel.Result.Success -> {
+                    val product = result.data
+                    ProductDetailsContent(
+                        product = product,
+                        favoriteStatus = favoriteStatus,
+                        onToggleFavorite = {
+                            val id = product.variantId ?: return@ProductDetailsContent
+                            val current = (favoriteStatus as? Result.Success)?.data ?: false
+
+                            if (isGuestUser()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please sign in to add to favorites",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else if (favoriteStatus !is Result.Loading) {
+                                wishlistViewModel.toggleFavorite(customerId, id, current)
+                            }
+                        },
+                        onAddToCart = {
+                            val id = product.variantId ?: return@ProductDetailsContent
+
+                            if (isGuestUser()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please sign in to add items to cart",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                cartViewModel.addToCart(customerId, id)
+                                Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
+                            }
                         }
-                    },
-                    onAddToCart = {
-                        val id = product.variantId ?: return@ProductDetailsContent
 
-                        if (isGuestUser()) {
-                            Toast.makeText(context, "Please sign in to add items to cart", Toast.LENGTH_SHORT).show()
-                        } else {
-                            cartViewModel.addToCart(customerId, id)
-                            Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-
-                )
+                    )
+                }
             }
+
         }
     }
 }
@@ -185,7 +209,11 @@ fun ProductDetailsContent(
         Row(verticalAlignment = Alignment.CenterVertically) {
             repeat(5) { i ->
                 val filled = i < product.rating.toInt()
-                Icon(Icons.Default.Star, contentDescription = null, tint = if (filled) Color(0xFFFFC107) else Color.LightGray)
+                Icon(
+                    Icons.Default.Star,
+                    contentDescription = null,
+                    tint = if (filled) Color(0xFFFFC107) else Color.LightGray
+                )
             }
             Text("  (${product.rating})", fontSize = 14.sp)
         }
