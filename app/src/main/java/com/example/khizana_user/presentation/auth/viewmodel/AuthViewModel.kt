@@ -62,7 +62,7 @@ class AuthViewModel @Inject constructor(
     val currentUserEmail: StateFlow<String?> = _currentUserEmail
 
     private var didRegisterShopify = false
-    private var registeredUserName: String? = null // ✅ added
+    private var registeredUserName: String? = null
 
     private val _networkState = MutableStateFlow(true)
     val networkState: StateFlow<Boolean> = _networkState
@@ -72,7 +72,15 @@ class AuthViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
+        observeNetworkState()
         observeVerificationAndRegister()
+    }
+    private fun observeNetworkState() {
+        viewModelScope.launch {
+            connectionLiveData.asFlow().collect { isConnected ->
+                _networkState.value = isConnected
+            }
+        }
     }
 
     private fun observeVerificationAndRegister() {
