@@ -135,7 +135,11 @@ fun RegisterScreen(
         Button(
             onClick = {
                 if (agreeChecked) {
-                    viewModel.register(email, password, name)
+                    viewModel.register(
+                        email.trim(),
+                        password.trim(),
+                        name.trim()
+                    )
                 } else {
                     Toast.makeText(context, "You must agree to the policy to continue.", Toast.LENGTH_SHORT).show()
                 }

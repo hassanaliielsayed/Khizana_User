@@ -36,7 +36,7 @@ class AuthViewModel @Inject constructor(
     private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
     private val checkEmailVerifiedUseCase: CheckEmailVerifiedUseCase,
     private val getCurrentUserEmailUseCase: GetCurrentUserEmailUseCase,
-    val getCurrentUserNameUseCase: GetCurrentUserNameUseCase,
+    val getCurrentUserNameUseCase: GetCurrentUserNameUseCase, // still injected but no longer used
     getCustomerUseCase: GetCustomerUseCase
 ) : ViewModel() {
 
@@ -56,9 +56,10 @@ class AuthViewModel @Inject constructor(
     val isEmailVerified: StateFlow<Boolean> = _isEmailVerified
 
     private val _currentUserEmail = MutableStateFlow<String?>(null)
-
     val currentUserEmail: StateFlow<String?> = _currentUserEmail
+
     private var didRegisterShopify = false
+    private var registeredUserName: String? = null // ✅ added
 
     val currentCustomer: StateFlow<Customer?> = getCustomerUseCase()
         .onEach { Log.d("AuthViewModel", "currentCustomer loaded: $it") }
@@ -71,14 +72,17 @@ class AuthViewModel @Inject constructor(
     private fun observeVerificationAndRegister() {
         viewModelScope.launch {
             combine(_isEmailVerified, _currentUserEmail) { verified, email ->
+                Log.d("AuthViewModel", "observeVerificationAndRegister - verified=$verified, email=$email, didRegisterShopify=$didRegisterShopify")
                 if (verified && !email.isNullOrBlank() && !didRegisterShopify) {
+                    Log.d("AuthViewModel", "Observer triggered Shopify registration")
                     didRegisterShopify = true
-                    val name = getCurrentUserNameUseCase() ?: "User"
+                    val name = registeredUserName ?: "User" // ✅ use stored name
                     registerWithShopify(name, email)
                 }
             }.collect()
         }
     }
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             Log.d("AuthViewModel", "Logging in with Firebase: $email")
@@ -96,30 +100,40 @@ class AuthViewModel @Inject constructor(
 
     fun register(email: String, password: String, name: String) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Starting registration for: $email")
             _authState.value = AuthState.Loading
             val result = registerUseCase(email, password)
             if (result.isSuccess) {
+                Log.d("AuthViewModel", "Firebase registration success for: $email")
                 _currentUserEmail.value = email
+                registeredUserName = name // ✅ store name from input
+
                 sendEmailVerificationUseCase().onSuccess {
+                    Log.d("AuthViewModel", "Verification email sent to $email")
                     _authState.value = AuthState.VerificationEmailSent
                 }.onFailure {
+                    Log.e("AuthViewModel", "Failed to send verification email to $email: ${it.message}")
                     _authState.value = AuthState.Error("Could not send verification email")
                 }
             } else {
-                _authState.value = AuthState.Error(result.exceptionOrNull()?.message)
+                val error = result.exceptionOrNull()?.message ?: "Unknown"
+                Log.e("AuthViewModel", "Registration failed: $error")
+                _authState.value = AuthState.Error(error)
             }
         }
     }
 
-
     fun registerWithShopify(name: String, email: String) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Registering with Shopify - name=$name, email=$email")
             _authState.value = AuthState.Loading
             val result = registerShopifyCustomerUseCase(name, email)
             result.onSuccess { customer ->
+                Log.d("AuthViewModel", "Shopify registration success: $customer")
                 saveCustomerUseCase(customer)
                 _authState.value = AuthState.Success
             }.onFailure {
+                Log.e("AuthViewModel", "Shopify registration failed: ${it.message}")
                 _authState.value = AuthState.Error("Shopify registration failed: ${it.message}")
             }
         }
@@ -153,9 +167,8 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-
     fun resetState() {
-        Log.d("AuthViewModel", "Resetting auth state")
+        Log.d("AuthViewModel", "Resetting auth state (but preserving email)")
         _authState.value = AuthState.Idle
         _shopifyRegisterResult.value = null
     }
@@ -201,7 +214,6 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-
     fun loginAsGuest() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
@@ -235,6 +247,7 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
     fun checkEmailVerificationStatus(onVerified: (String) -> Unit) {
         viewModelScope.launch {
             val isVerified = checkEmailVerifiedUseCase()
@@ -254,20 +267,22 @@ class AuthViewModel @Inject constructor(
 
     fun reloadUser() {
         viewModelScope.launch {
-            _isEmailVerified.value = checkEmailVerifiedUseCase()
+            val verified = checkEmailVerifiedUseCase()
+            val email = getCurrentUserEmailUseCase()
 
-            val verified = _isEmailVerified.value
-            val email = _currentUserEmail.value
+            Log.d("AuthViewModel", "reloadUser() called - verified=$verified, email=$email, didRegisterShopify=$didRegisterShopify")
+
+            _isEmailVerified.value = verified
+            _currentUserEmail.value = email
 
             if (verified && !email.isNullOrBlank() && !didRegisterShopify) {
-                Log.d("AuthViewModel", "Detected email verification for $email, registering with Shopify...")
+                Log.d("AuthViewModel", "Detected email verification for $email, starting Shopify registration")
                 didRegisterShopify = true
-                val name = getCurrentUserNameUseCase() ?: "User"
+                val name = registeredUserName ?: "User"
                 registerWithShopify(name, email)
             }
         }
     }
-
 
     fun sendEmailVerification() {
         viewModelScope.launch {
