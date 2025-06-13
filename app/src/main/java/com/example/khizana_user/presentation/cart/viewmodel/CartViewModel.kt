@@ -2,6 +2,7 @@ package com.example.khizana_user.presentation.cart.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.model.FavoriteList
@@ -11,9 +12,11 @@ import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseC
 import com.example.khizana_user.domain.usecase.cartusecase.GetCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.RemoveFromCartUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.ValidateCouponUseCase
+import com.example.khizana_user.utils.ConnectionLiveData
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,6 +29,7 @@ class CartViewModel @Inject constructor(
     private val clearCartUseCase: ClearCartUseCase,
     private val validateCouponUseCase: ValidateCouponUseCase,
     private val removeFromCartUseCase: RemoveFromCartUseCase,
+    private val connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val _cartState = MutableStateFlow<Result<FavoriteList>>(Result.Loading)
@@ -33,6 +37,21 @@ class CartViewModel @Inject constructor(
 
     private val _couponState = MutableStateFlow<Result<Coupon>>(Result.Loading)
     val couponState = _couponState.asStateFlow()
+
+    private val _networkState = MutableStateFlow(true)
+    val networkState: StateFlow<Boolean> = _networkState
+
+    init {
+        observeNetworkState()
+    }
+
+    private fun observeNetworkState() {
+        viewModelScope.launch {
+            connectionLiveData.asFlow().collect { isConnected ->
+                _networkState.value = isConnected
+            }
+        }
+    }
 
 
     fun loadCart(customerId: Long) {
