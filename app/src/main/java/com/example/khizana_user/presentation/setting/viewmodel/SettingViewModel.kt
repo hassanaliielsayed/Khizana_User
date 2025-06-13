@@ -7,6 +7,7 @@ import com.example.khizana_user.domain.usecase.sharedperfernceusecase.ClearCusto
 import com.example.khizana_user.domain.usecase.GetCurrencyUseCase
 import com.example.khizana_user.domain.usecase.GetExchangeRateUseCase
 import com.example.khizana_user.domain.usecase.SaveCurrencyUseCase
+import com.example.khizana_user.domain.usecase.authusecases.LogoutUseCase
 import com.example.khizana_user.utils.CurrencyHelper
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,8 +21,10 @@ class SettingViewModel @Inject constructor(
     private val getExchangeRateUseCase: GetExchangeRateUseCase,
     private val clearCustomerUseCase: ClearCustomerUseCase,
     private val saveCurrencyUseCase: SaveCurrencyUseCase,
-    private val getCurrencyUseCase: GetCurrencyUseCase
-) : ViewModel() {
+    private val getCurrencyUseCase: GetCurrencyUseCase,
+    private val logoutUseCase: LogoutUseCase,
+
+    ) : ViewModel() {
 
     private val _state = MutableStateFlow("EGP")
     val state = _state.asStateFlow()
@@ -52,13 +55,16 @@ class SettingViewModel @Inject constructor(
     }
 
     fun logout() {
-        FirebaseAuth.getInstance().signOut()
         viewModelScope.launch {
-            clearCustomerUseCase()
-            Log.d("SettingViewModel", "User logged out and DataStore cleared.")
+            val result = logoutUseCase()
+            if (result.isSuccess) {
+                clearCustomerUseCase()
+                Log.d("SettingViewModel", "User fully logged out.")
+            } else {
+                Log.e("SettingViewModel", "Logout failed: ${result.exceptionOrNull()?.message}")
+            }
         }
     }
-
     fun saveCurrency(currency: String) {
         viewModelScope.launch {
             saveCurrencyUseCase(currency)
