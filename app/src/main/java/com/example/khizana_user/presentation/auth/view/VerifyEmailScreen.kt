@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.auth.view
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,11 +25,13 @@ fun VerifyEmailScreen(
     val context = LocalContext.current
 
     val email by viewModel.currentUserEmail.collectAsStateWithLifecycle()
+    val isVerified by viewModel.isEmailVerified.collectAsStateWithLifecycle()
     val state by viewModel.authState.collectAsStateWithLifecycle()
 
     var canResend by remember { mutableStateOf(false) }
     var timeLeft by remember { mutableStateOf(60) }
     var stopPolling by remember { mutableStateOf(false) }
+    var timeoutReached by remember { mutableStateOf(false) }
 
     // Countdown timer for resend
     LaunchedEffect(key1 = canResend) {
@@ -41,30 +44,40 @@ fun VerifyEmailScreen(
         }
     }
 
-    // Auto-refresh to detect verification
-    LaunchedEffect(key1 = state, key2 = stopPolling) {
-        if (!stopPolling) {
-            while (state != AuthState.Success) {
-                delay(3000)
+    // Poll every 3 seconds to detect if email is verified
+    LaunchedEffect(key1 = stopPolling, key2 = timeoutReached) {
+        if (!stopPolling && !timeoutReached) {
+            repeat(40) { i -> // 40 * 3s = 2 minutes timeout
+                Log.d("VerifyEmailScreen", "Polling... attempt=${i + 1}")
                 viewModel.reloadUser()
+                delay(3000)
+                if (viewModel.isEmailVerified.value) {
+                    Log.d("VerifyEmailScreen", "Email is verified, stopping polling.")
+                    stopPolling = true
+                    return@repeat
+                }
             }
+            timeoutReached = true
+            Log.w("VerifyEmailScreen", "Email verification polling timed out.")
         }
     }
 
-    // Handle success or error
+    // Handle verification state
+    LaunchedEffect(isVerified) {
+        if (isVerified && !stopPolling) {
+            Log.d("VerifyEmailScreen", "LaunchedEffect: email verified, navigating...")
+            Toast.makeText(context, "Email verified! Logging you in...", Toast.LENGTH_SHORT).show()
+            stopPolling = true
+            viewModel.resetState()
+            onLoginComplete()
+        }
+    }
+
+    // Handle errors
     LaunchedEffect(state) {
-        when (state) {
-            is AuthState.Success -> {
-                stopPolling = true
-                Toast.makeText(context, "Email verified! Logging you in...", Toast.LENGTH_SHORT).show()
-                viewModel.resetState()
-                onLoginComplete()
-            }
-            is AuthState.Error -> {
-                val errorMsg = (state as? AuthState.Error)?.message ?: "Unknown error"
-                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-            }
-            else -> Unit
+        if (state is AuthState.Error) {
+            val errorMsg = (state as AuthState.Error).message ?: "Unknown error"
+            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -101,6 +114,11 @@ fun VerifyEmailScreen(
 
         if (state is AuthState.Loading) {
             CircularProgressIndicator()
+            Spacer(Modifier.height(16.dp))
+        }
+
+        if (timeoutReached) {
+            Text("Verification timeout. Please try again.", color = MaterialTheme.colorScheme.error)
             Spacer(Modifier.height(16.dp))
         }
 
