@@ -109,4 +109,14 @@ class OrderRemoteDataSourceImpl @Inject constructor(
 
         }
     }
+
+    override suspend fun getOrderById(orderId: Long): OrderDto {
+        val response = api.getOrderById(orderId)
+        val body = response.body()
+        if (response.isSuccessful && body != null) {
+            return body.order
+        } else {
+            throw Exception("Error fetching order details: ${response.message()}")
+        }
+    }
 }

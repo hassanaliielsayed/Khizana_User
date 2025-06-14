@@ -28,6 +28,7 @@ sealed class ScreenRoute(
     @Serializable object Category : ScreenRoute("category", Icons.Default.Category, "Category")
     @Serializable object Profile : ScreenRoute("profile", Icons.Default.Person, "Profile")
     @Serializable object Orders : ScreenRoute("orders", Icons.Default.List, "Orders")
+    @Serializable object OrderDetails : ScreenRoute("orderDetails", Icons.Default.List, "OrderDetails")
 
 
     @Serializable

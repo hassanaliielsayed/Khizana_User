@@ -15,4 +15,6 @@ interface OrderRemoteDataSource {
     ): Response<DraftOrderDto>
 
     suspend fun getOrdersByCustomerId(customerId: Long):List<OrderDto>
+
+    suspend fun getOrderById(orderId: Long): OrderDto
 }

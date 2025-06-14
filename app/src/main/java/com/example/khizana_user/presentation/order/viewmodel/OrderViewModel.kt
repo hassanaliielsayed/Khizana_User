@@ -7,6 +7,7 @@ import com.example.khizana_user.data.dto.draftorderDto.AppliedDiscountDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItem
 import com.example.khizana_user.data.dto.draftorderDto.ShippingAddressDto
 import com.example.khizana_user.domain.model.Orders
+import com.example.khizana_user.domain.usecase.GetOrderByIdUseCase
 import com.example.khizana_user.domain.usecase.GetOrdersByCustomerIdUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
@@ -25,7 +26,8 @@ class OrderViewModel @Inject constructor(
     private val getDraftOrderUseCase: GetDraftOrderUseCase,
     private val sendInvoiceUseCase: SendInvoiceUseCase,
     private val updateDraftOrderUseCase: UpdateDraftOrderUseCase,
-    private val getOrdersByCustomerIdUseCase: GetOrdersByCustomerIdUseCase
+    private val getOrdersByCustomerIdUseCase: GetOrdersByCustomerIdUseCase,
+    private val getOrderByIdUseCase: GetOrderByIdUseCase
 ) : ViewModel() {
 
     private val _orderState = MutableStateFlow<Result<Unit>>(Result.Loading)
@@ -36,6 +38,9 @@ class OrderViewModel @Inject constructor(
 
     private val _orders = MutableStateFlow<Result<List<Orders>>>(Result.Loading)
     val orders: StateFlow<Result<List<Orders>>> = _orders
+
+    private val _orderDetails = MutableStateFlow<Result<Orders>>(Result.Loading)
+    val orderDetails: StateFlow<Result<Orders>> = _orderDetails
 
     fun completeCODOrder(draftOrderId: Long) {
         viewModelScope.launch {
@@ -122,6 +127,18 @@ class OrderViewModel @Inject constructor(
                 val error = e.message ?: "Error fetching orders"
                 _orders.value = Result.Error(error)
                 Log.e("OrderVM", "Failed to fetch orders: $error")
+            }
+        }
+    }
+
+    fun fetchOrderDetails(orderId: Long) {
+        viewModelScope.launch {
+            _orderDetails.value = Result.Loading
+            try {
+                val order = getOrderByIdUseCase(orderId)
+                _orderDetails.value = Result.Success(order)
+            } catch (e: Exception) {
+                _orderDetails.value = Result.Error(e.message ?: "Unknown error")
             }
         }
     }

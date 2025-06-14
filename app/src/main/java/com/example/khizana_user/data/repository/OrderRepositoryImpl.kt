@@ -47,4 +47,8 @@ class OrderRepositoryImpl @Inject constructor(
         val dtos = remote.getOrdersByCustomerId(customerId)
         return dtos.map { it.toDomain() }
     }
+
+    override suspend fun getOrder(orderId: Long): Orders {
+        return remote.getOrderById(orderId).toDomain()
+    }
 }

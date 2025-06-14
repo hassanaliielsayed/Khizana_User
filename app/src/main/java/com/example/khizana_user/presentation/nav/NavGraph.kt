@@ -29,6 +29,7 @@ import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.cart.view.MapScreen
+import com.example.khizana_user.presentation.order.view.OrderDetailsScreen
 import com.example.khizana_user.presentation.order.view.OrdersScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
 import com.example.khizana_user.presentation.profile.view.ProfileScreen
@@ -273,9 +274,17 @@ fun AppNavGraph(
                 }
             )
         }
-//https://mad45-sv-and4.myshopify.com/admin/api/2024-01/orders.json?customer_id=7858653888625&status=any
-        composable(ScreenRoute.Orders.route) {
-            OrdersScreen(customerId = 7858653888625)
+
+      composable(ScreenRoute.Orders.route) {
+            OrdersScreen(customerId = 7858653888625, navController = navController)
+        }
+
+        composable(
+            route = "${ScreenRoute.OrderDetails.route}/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getLong("orderId") ?: -1
+            OrderDetailsScreen(orderId = orderId)
         }
 
     }

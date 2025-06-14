@@ -60,11 +60,10 @@ import coil.compose.AsyncImage
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.khizana_user.R
+import com.example.khizana_user.domain.model.Orders
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.nav.ScreenRoute
-import com.example.khizana_user.presentation.order.view.OrderItem
 import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
-import com.example.khizana_user.presentation.profile.view.ui.theme.Khizana_UserTheme
 import com.example.khizana_user.utils.customFontFamily
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -99,22 +98,21 @@ fun ProfileScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
                 actions = {
-                    IconButton(onClick = {
-                    }) {
+                    IconButton(onClick = { }) {
                         Image(
                             painter = painterResource(R.drawable.filter2),
                             contentDescription = "Filter",
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = "Favorites",
                             tint = Color.Black
                         )
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
                             contentDescription = "Cart",
@@ -122,13 +120,10 @@ fun ProfileScreen(
                         )
                     }
                 }
-
             )
         },
     ) { innerPadding ->
-
-        if (Firebase.auth.currentUser != null && !Firebase.auth.currentUser!!.email.isNullOrBlank()) {  // when guest
-
+        if (Firebase.auth.currentUser != null && !Firebase.auth.currentUser!!.email.isNullOrBlank()) {
             if (currentCustomer != null) {
                 Box(
                     modifier = Modifier
@@ -137,8 +132,7 @@ fun ProfileScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.SpaceAround
                     ) {
                         Row(
@@ -154,11 +148,13 @@ fun ProfileScreen(
                                 modifier = Modifier.size(100.dp)
                             )
                         }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight()
-                                .padding(top = 2.dp, start = 20.dp, end = 20.dp), Arrangement.Center
+                                .padding(top = 2.dp, start = 20.dp, end = 20.dp),
+                            Arrangement.Center
                         ) {
                             Text(
                                 text = "Name : ${currentCustomer?.name ?: ""}",
@@ -169,6 +165,7 @@ fun ProfileScreen(
 
                         val configuration = LocalConfiguration.current
                         val screenWidth = configuration.screenWidthDp.dp
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -188,14 +185,6 @@ fun ProfileScreen(
                             )
                         }
 
-                        Text(
-                            text = "Orders",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-                        )
-
                         when (val result = orderState) {
                             is Result.Loading -> {
                                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -210,6 +199,32 @@ fun ProfileScreen(
                                         modifier = Modifier.align(Alignment.CenterHorizontally)
                                     )
                                 } else {
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Orders",
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+
+                                        if (result.data.size > 2) {
+                                            Text(
+                                                text = "See more",
+                                                color = colorResource(id = R.color.black),
+                                                fontSize = 14.sp,
+                                                modifier = Modifier.clickable {
+                                                    navController.navigate(ScreenRoute.Orders.route)
+                                                }
+                                            )
+                                        }
+                                    }
+
                                     val ordersToShow = result.data.take(2)
                                     Column(
                                         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -220,9 +235,7 @@ fun ProfileScreen(
                                                 shape = RoundedCornerShape(12.dp),
                                                 elevation = CardDefaults.cardElevation(6.dp),
                                                 colors = CardDefaults.cardColors(
-                                                    containerColor = Color(
-                                                        0xFFE3F2FD
-                                                    )
+                                                    containerColor = Color(0xFFE3F2FD)
                                                 ),
                                                 modifier = Modifier.fillMaxWidth()
                                             ) {
@@ -239,22 +252,6 @@ fun ProfileScreen(
                                             }
                                         }
                                     }
-
-                                    if (result.data.size > 2) {
-                                        Button(
-                                            onClick = { navController.navigate(ScreenRoute.Orders.route) },
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = colorResource(
-                                                    id = R.color.dark_blue
-                                                )
-                                            ),
-                                            modifier = Modifier
-                                                .align(Alignment.CenterHorizontally)
-                                                .padding(top = 8.dp)
-                                        ) {
-                                            Text(text = "See more", color = Color.White)
-                                        }
-                                    }
                                 }
                             }
 
@@ -266,110 +263,18 @@ fun ProfileScreen(
                                 )
                             }
                         }
-
                     }
                 }
-            }
-                else{
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-        }
-    }
-}
-
-@Composable
-fun LogoutButton(controller: NavController) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize(), // Fill the entire screen
-        contentAlignment = Alignment.Center // Center the content (button)
-    ) {
-        Button(
-            onClick = {
-                },
-            modifier = Modifier
-                .wrapContentWidth()
-                .padding(vertical = 12.dp), // Add vertical padding if needed
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error)
-        ) {
-            Text(
-                text = "Logout",
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
-}
-
-
-@Composable
-fun ProfieItem(t: String, id: Int) {
-    Row(
-        modifier = Modifier
-            .wrapContentWidth()
-            .wrapContentHeight()
-            .padding(20.dp),
-        Arrangement.Center
-    ) {
-
-        Card(
-            elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-            shape = RoundedCornerShape(30.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(30.dp))
-                .clickable {  }
-                .animateContentSize(),
-            border = BorderStroke(2.dp, Color.Black),
-            colors = CardDefaults.cardColors(
-
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(start = 10.dp, end = 10.dp, bottom = 5.dp, top = 9.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = id),
-                    contentDescription = "",
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(2F)
-                        .padding(start = 10.dp)
-                )
-
+            } else {
                 Box(
-                    modifier = Modifier
+                    Modifier
                         .fillMaxSize()
-                        .weight(8F),
+                        .padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = t,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    CircularProgressIndicator()
                 }
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_arrow_forward_ios_24),
-                    contentDescription = "",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(2F)
-                        .padding(start = 10.dp)
-                )
             }
-
         }
     }
-
 }

@@ -20,4 +20,6 @@ interface OrderRepository {
     )
 
     suspend fun getOrders(customerId: Long): List<Orders>
+
+    suspend fun getOrder(orderId: Long): Orders
 }

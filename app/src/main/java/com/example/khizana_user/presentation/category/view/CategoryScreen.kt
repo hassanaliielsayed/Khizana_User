@@ -258,7 +258,7 @@ fun ProductItem(product: ProductByCategory) {
                     fontFamily = customFontFamily,
                 )
                 Text("Vendor: ${product.productVendor ?: "N/A"}", fontFamily = customFontFamily)
-                Text("Price: ${product.productPrice} EG", fontFamily = customFontFamily)
+                Text("Price: ${product.productPrice} EGP", fontFamily = customFontFamily)
                 Text("Product Type: ${product.product_type}", fontFamily = customFontFamily)
             }
         }
