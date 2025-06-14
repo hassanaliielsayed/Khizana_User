@@ -44,7 +44,6 @@ class OrderViewModel @Inject constructor(
         }
     }
 
-
     fun initiateOnlinePayment(draftOrderId: Long) {
         viewModelScope.launch {
             _invoiceUrl.value = Result.Loading

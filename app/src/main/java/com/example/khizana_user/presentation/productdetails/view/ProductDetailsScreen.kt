@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.productdetails.view
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -27,6 +28,7 @@ import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.ProductDetails
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.productdetails.viewmodel.ProductDetailsViewModel
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.isGuestUser
@@ -47,90 +49,118 @@ fun ProductDetailsScreen(
     val productState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
-    // Independent Favorite State
+    val connectionState by viewModel.networkState.collectAsState()
     var isFavorite by remember { mutableStateOf<Boolean?>(null) }
     var isToggling by remember { mutableStateOf(false) }
 
-    // Load product
-    LaunchedEffect(productId, variantId) {
-        when {
-            productId != null -> viewModel.loadProduct(productId)
-            variantId != null -> viewModel.loadProductByVariant(variantId)
+    LaunchedEffect(customerId) {
+        if (connectionState) {
+            wishlistViewModel.loadFavorites(customerId)
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        when (val result = productState) {
-            is ProductDetailsViewModel.Result.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+    // Load product
+    LaunchedEffect(productId, variantId) {
+        if (connectionState) {
+            when {
+                productId != null -> viewModel.loadProduct(productId)
+                variantId != null -> viewModel.loadProductByVariant(variantId)
             }
+        }
+    }
 
-            is ProductDetailsViewModel.Result.Error -> {
-                Text("Error: ${result.message}", color = Color.Red, modifier = Modifier.align(Alignment.Center))
-            }
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
 
-            is ProductDetailsViewModel.Result.Success -> {
-                val product = result.data
-
-                // Fetch favorite status only when product is available
-                LaunchedEffect(product.variantId) {
-                    isFavorite = wishlistViewModel.isFavorite(customerId, product.variantId ?: return@LaunchedEffect)
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (val result = productState) {
+                is ProductDetailsViewModel.Result.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
-                ProductDetailsContent(
-                    product = product,
-                    isFavorite = isFavorite ?: false,
-                    isToggling = isToggling || isFavorite == null,
-                    onToggleFavorite = {
-                        val variantId = product.variantId ?: return@ProductDetailsContent
+                is ProductDetailsViewModel.Result.Error -> {
+                    Text(
+                        "Error: ${result.message}",
+                        color = Color.Red,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
-                        if (isGuestUser()) {
-                            Toast.makeText(context, "Please sign in to add to favorites", Toast.LENGTH_SHORT).show()
-                            return@ProductDetailsContent
-                        }
+                is ProductDetailsViewModel.Result.Success -> {
+                    val product = result.data
 
-                        if (isToggling || isFavorite == null) return@ProductDetailsContent
+                    LaunchedEffect(product.variantId) {
+                        isFavorite = wishlistViewModel.isFavorite(
+                            customerId,
+                            product.variantId ?: return@LaunchedEffect
+                        )
+                    }
 
-                        isToggling = true
-                        coroutineScope.launch {
-                            val wasFavorite = isFavorite ?: false
+                    ProductDetailsContent(
+                        product = product,
+                        isFavorite = isFavorite ?: false,
+                        isToggling = isToggling || isFavorite == null,
+                        onToggleFavorite = {
+                            val variantId = product.variantId ?: return@ProductDetailsContent
 
-                            val result = if (wasFavorite)
-                                wishlistViewModel.removeFromFavorites(customerId, variantId)
-                            else
-                                wishlistViewModel.addToFavorites(customerId, variantId)
-
-                            when (result) {
-                                is Result.Success<*> -> {
-                                    isFavorite = !wasFavorite
-                                }
-                                is Result.Error -> {
-                                    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
-                                }
-                                else -> {}
+                            if (isGuestUser()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please sign in to add to favorites",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@ProductDetailsContent
                             }
 
-                            isToggling = false
-                        }
+                            if (isToggling || isFavorite == null) return@ProductDetailsContent
 
-                    },
-                    onAddToCart = {
-                        val id = product.variantId ?: return@ProductDetailsContent
+                            isToggling = true
+                            coroutineScope.launch {
+                                val wasFavorite = isFavorite ?: false
 
-                        if (isGuestUser()) {
-                            Toast.makeText(context, "Please sign in to add items to cart", Toast.LENGTH_SHORT).show()
-                        } else {
-                            cartViewModel.addToCart(customerId, id)
-                            Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
+                                val result = if (wasFavorite)
+                                    wishlistViewModel.removeFromFavorites(customerId, variantId)
+                                else
+                                    wishlistViewModel.addToFavorites(customerId, variantId)
+
+                                when (result) {
+                                    is Result.Success<*> -> {
+                                        isFavorite = !wasFavorite
+                                    }
+
+                                    is Result.Error -> {
+                                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT)
+                                            .show()
+                                    }
+
+                                    else -> {}
+                                }
+
+                                isToggling = false
+                            }
+
+                        },
+                        onAddToCart = {
+                            val id = product.variantId ?: return@ProductDetailsContent
+
+                            if (isGuestUser()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please sign in to add items to cart",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                cartViewModel.addToCart(customerId, id)
+                                Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }
 }
-
 @Composable
 fun ProductDetailsContent(
     product: ProductDetails,

@@ -1,20 +1,56 @@
 package com.example.khizana_user.presentation.cart.view
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.location.Geocoder
 import android.net.Uri
+import android.provider.Settings
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,30 +60,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.khizana_user.R
 import com.example.khizana_user.data.dto.draftorderDto.AppliedDiscountDto
-import com.example.khizana_user.data.dto.draftorderDto.CustomerData
-import com.example.khizana_user.data.dto.draftorderDto.DraftOrderData
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItem
-import com.example.khizana_user.data.dto.draftorderDto.DraftOrderRequest
 import com.example.khizana_user.data.dto.draftorderDto.ShippingAddressDto
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
 import com.example.khizana_user.utils.ConfirmationDialog
+import com.example.khizana_user.utils.LocationUtils
 import com.example.khizana_user.utils.PaymentMethod
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.toCurrentCurrency
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+
+@SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
@@ -62,6 +97,10 @@ fun CheckoutScreen(
     onAddressClick: () -> Unit,
     onPaymentMethodClick: () -> Unit
 ) {
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     var couponCode by remember { mutableStateOf("") }
     var showConfirmationDialog by remember { mutableStateOf(false) }
     var selectedPaymentMethod by remember { mutableStateOf(PaymentMethod.COD) }
@@ -70,6 +109,7 @@ fun CheckoutScreen(
     val cartState by viewModel.cartState.collectAsState()
     val orderState by orderViewModel.orderState.collectAsState()
     val invoiceUrlState by orderViewModel.invoiceUrl.collectAsState()
+    val connectionState by viewModel.networkState.collectAsState()
 
     val coupon = (couponState as? Result.Success)?.data
     val totalDiscount = if (coupon != null) totalPrice * (coupon.discount / 100.0) else 0.0
@@ -77,14 +117,129 @@ fun CheckoutScreen(
 
     val selectedAddress by locationViewModel.selectedAddress.collectAsState()
     val selectedLatLng by locationViewModel.selectedLatLng.collectAsState()
-    val context = LocalContext.current
+
+    val locationUtils = remember { LocationUtils(context) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var locationPermissionGranted by remember { mutableStateOf(locationUtils.hasLocationPermission()) }
+    var locationEnabled by remember { mutableStateOf(locationUtils.isLocationEnabled()) }
+
+    var userSelectedLocation by remember { mutableStateOf(false) }
+
     val autocompleteLauncher = LaunchPlacesAutoComplete(context) { place ->
         val address = place.address ?: "Unknown"
         val latLng = place.latLng ?: LatLng(30.0, 31.0)
+        userSelectedLocation = true
         locationViewModel.updateAddress(address, latLng)
     }
 
-    val connectionState by viewModel.networkState.collectAsState()
+    DisposableEffect(lifecycleOwner) {
+        val observer = object : DefaultLifecycleObserver {
+            override fun onResume(owner: LifecycleOwner) {
+                locationEnabled = locationUtils.isLocationEnabled()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+//    // Fetch initial location only once when screen loads
+//    LaunchedEffect(Unit) {
+//        if (locationPermissionGranted && locationEnabled && selectedAddress.isEmpty()) {
+//            try {
+//                val location = locationUtils.getCurrentLocation().first()
+//                val geocoder = Geocoder(context)
+//                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+//                val address = addresses?.firstOrNull()?.getAddressLine(0) ?: "Unknown Address"
+//                locationViewModel.updateAddress(
+//                    address,
+//                    LatLng(location.latitude, location.longitude)
+//                )
+//            } catch (e: Exception) {
+//                Log.e("CheckoutScreen", "Error getting initial location: ${e.message}")
+//            }
+//        }
+//    }
+
+    val fetchCurrentLocation = remember {
+        suspend {
+            try {
+                val location = locationUtils.getCurrentLocation().first()
+                val geocoder = Geocoder(context)
+                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                val address = addresses?.firstOrNull()?.getAddressLine(0) ?: "Unknown Address"
+                locationViewModel.updateAddress(
+                    address,
+                    LatLng(location.latitude, location.longitude)
+                )
+            } catch (e: Exception) {
+                Log.e("CheckoutScreen", "Error getting location: ${e.message}")
+            }
+        }
+    }
+
+    // Fetch location when screen loads or when location becomes enabled
+    LaunchedEffect(locationEnabled) {
+        if (locationPermissionGranted && locationEnabled && selectedAddress.isEmpty()) {
+            fetchCurrentLocation()
+        }
+    }
+
+    // Original location fetch (kept for initial load if already enabled)
+    LaunchedEffect(Unit) {
+        if (locationPermissionGranted && locationEnabled && selectedAddress.isEmpty()) {
+            fetchCurrentLocation()
+        }
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    }
+
+    // Request location permission if not granted
+    if (!locationPermissionGranted) {
+        LaunchedEffect(Unit) {
+            launcher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    // Show location services dialog if disabled
+    if (!locationEnabled) {
+        AlertDialog(
+            onDismissRequest = {
+                // Allow dismiss now, but you might want to handle this case
+                locationEnabled = locationUtils.isLocationEnabled()
+            },
+            title = { Text("Location Services Disabled") },
+            text = { Text("Please enable location services to get your current address") },
+            confirmButton = {
+                Button(onClick = {
+                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }) {
+                    Text("Enable Location")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    locationEnabled = locationUtils.isLocationEnabled()
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     LaunchedEffect(customerId) {
         if (connectionState) {
@@ -132,41 +287,32 @@ fun CheckoutScreen(
                     Text("Shipping Address", color = Color(0xFFA1A6B0), fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))
                     Text("Address", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = selectedAddress,
+                        text = selectedAddress.ifBlank { "Please select a location" },
                         color = Color(0xFF929292),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row {
                         Button(onClick = autocompleteLauncher) {
                             Text("Search Address")
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = onAddressClick) {
+                        Button(onClick = {
+                            userSelectedLocation = true
+                            onAddressClick()
+                        }) {
                             Text("Select on Map")
                         }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    GoogleMap(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        cameraPositionState = rememberCameraPositionState {
-                            position = CameraPosition.fromLatLngZoom(selectedLatLng, 12f)
-                        }
-                    ) {
-                        Marker(
-                            state = MarkerState(position = selectedLatLng),
-                            title = "Your Address"
-                        )
                     }
                 }
             }
 
             // Payment Method
+            var expanded by remember { mutableStateOf(false) }
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -186,28 +332,53 @@ fun CheckoutScreen(
                             modifier = Modifier.size(50.dp)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            if (selectedPaymentMethod == PaymentMethod.COD) "Cash on Delivery (COD)" else "Online Payment",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
+
+                        // Payment method text and dropdown
                         Box(
-                            modifier = Modifier
-                                .padding(15.dp)
-                                .background(Color(0xFFE3E5E8), RoundedCornerShape(10.dp))
-                                .clickable {
-                                    selectedPaymentMethod =
-                                        if (selectedPaymentMethod == PaymentMethod.COD)
-                                            PaymentMethod.ONLINE else PaymentMethod.COD
-                                },
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowForwardIos,
-                                contentDescription = "Change Payment",
-                                modifier = Modifier.size(20.dp)
+                            Text(
+                                when (selectedPaymentMethod) {
+                                    PaymentMethod.COD -> "Cash on Delivery (COD)"
+                                    PaymentMethod.ONLINE -> "Online Payment"
+                                },
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
                             )
+                        }
+
+                        // Dropdown menu
+                        Box(
+                            modifier = Modifier.wrapContentSize(Alignment.TopEnd)
+                        ) {
+                            IconButton(
+                                onClick = { expanded = true }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowForwardIos,
+                                    contentDescription = "Select Payment Method"
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Cash on Delivery (COD)") },
+                                    onClick = {
+                                        selectedPaymentMethod = PaymentMethod.COD
+                                        expanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Online Payment") },
+                                    onClick = {
+                                        selectedPaymentMethod = PaymentMethod.ONLINE
+                                        expanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -346,94 +517,46 @@ fun CheckoutScreen(
         }
     }
 
-    val coroutineScope = rememberCoroutineScope()
-
     ConfirmationDialog(
         showDialog = showConfirmationDialog,
         onDismiss = { showConfirmationDialog = false },
         onConfirm = {
             coroutineScope.launch {
-                Log.i("CheckoutScreen", "Cart State: $cartState")
                 val draftOrder = (cartState as? Result.Success)?.data
-                val draftOrderId = draftOrder?.draftOrderId
+                val draftOrderId = draftOrder?.draftOrderId ?: return@launch
 
-                if (draftOrderId != null) {
-                    Log.i("CheckoutScreen", "Draft ID: $draftOrderId")
-                    Log.i("CheckoutScreen", "Customer ID: $customerId")
-                    Log.i("CheckoutScreen", "Selected Payment Method: $selectedPaymentMethod")
-                    Log.i("CheckoutScreen", "Address: $selectedAddress")
-                    Log.i("CheckoutScreen", "atLng: $selectedLatLng")
+                val cityCountry = getCityAndCountryFromLatLng(context, selectedLatLng)
+                val shippingAddressDto = ShippingAddressDto(
+                    address1 = selectedAddress,
+                    city = cityCountry?.first ?: "Unknown",
+                    country = cityCountry?.second ?: "Unknown",
+                    zip = "00000"
+                )
 
-                    val cityCountry = getCityAndCountryFromLatLng(context, selectedLatLng)
-                    val city = cityCountry?.first ?: "Unknown"
-                    val country = cityCountry?.second ?: "Unknown"
-
-                    Log.i("CheckoutScreen", "City: $city, Country: $country")
-
-                    val shippingAddressDto = ShippingAddressDto(
-                        address1 = selectedAddress,
-                        city = city,
-                        country = country,
-                        zip = "00000"
+                val appliedDiscount = coupon?.let {
+                    AppliedDiscountDto(
+                        title = it.title,
+                        value = it.discount.toString(),
+                        valueType = "percentage",
+                        amount = (totalPrice * (it.discount / 100.0)).toString()
                     )
+                }
 
-                    val discountAmount = totalPrice * (coupon?.discount?.toDouble() ?: 0.0) / 100.0
-                    Log.i(
-                        "CheckoutScreen",
-                        "Discount: ${coupon?.discount}% (${discountAmount.toCurrentCurrency()})"
-                    )
+                val draftLineItems = draftOrder.items.filterNotNull().map {
+                    DraftOrderItem(variantId = it.variantId, quantity = it.quantity)
+                }
 
-                    val appliedDiscount = coupon?.let {
-                        AppliedDiscountDto(
-                            title = it.title,
-                            value = it.discount.toString(),
-                            valueType = "percentage",
-                            amount = (totalPrice * (it.discount / 100.0)).toString()
-                        )
-                    }
+                orderViewModel.updateDraftOrderBeforeCheckout(
+                    draftOrderId = draftOrderId,
+                    customerId = customerId,
+                    shippingAddress = shippingAddressDto,
+                    appliedDiscount = appliedDiscount,
+                    lineItems = draftLineItems
+                )
 
-                    val draftLineItems = draftOrder.items.filterNotNull().map {
-                        DraftOrderItem(variantId = it.variantId, quantity = it.quantity)
-                    }
-
-
-                    val draftRequest = DraftOrderRequest(
-                        draftOrder = DraftOrderData(
-                            line_items = draftLineItems,
-                            customer = CustomerData(customerId),
-                            note = "CART-$customerId",
-                            shipping_address = shippingAddressDto,
-                            applied_discount = appliedDiscount,
-                            use_customer_default_address = false
-                        )
-                    )
-
-
-                    Log.i("CheckoutScreen", "DraftOrderRequest Body:\n$draftRequest")
-
-                    orderViewModel.updateDraftOrderBeforeCheckout(
-                        draftOrderId = draftOrderId,
-                        customerId = customerId,
-                        shippingAddress = shippingAddressDto,
-                        appliedDiscount = appliedDiscount,
-                        lineItems = draftLineItems
-                    )
-
-
-
-                    when (selectedPaymentMethod) {
-                        PaymentMethod.COD -> {
-                            Log.i("CheckoutScreen", "placing COD order...")
-                            orderViewModel.completeCODOrder(draftOrderId)
-                        }
-
-                        PaymentMethod.ONLINE -> {
-                            Log.i("CheckoutScreen", "Initiating online payment...")
-                            orderViewModel.initiateOnlinePayment(draftOrderId)
-                        }
-                    }
-                } else {
-                    Log.e("CheckoutScreen", "Draft order ID is null.")
+                when (selectedPaymentMethod) {
+                    PaymentMethod.COD -> orderViewModel.completeCODOrder(draftOrderId)
+                    PaymentMethod.ONLINE -> orderViewModel.initiateOnlinePayment(draftOrderId)
                 }
             }
         },

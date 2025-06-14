@@ -2,12 +2,14 @@ package com.example.khizana_user.presentation.favorites.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.FavoriteList
 import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
 import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavoritesUseCase
+import com.example.khizana_user.utils.ConnectionLiveData
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +22,8 @@ class WishlistViewModel @Inject constructor(
     private val addToFavoritesUseCase: AddToFavoritesUseCase,
     private val removeFromFavoritesUseCase: RemoveFromFavoritesUseCase,
     private val getFavoritesUseCase: GetFavoritesUseCase,
-    private val deleteFavoritesUseCase: DeleteFavoritesUseCase
+    private val deleteFavoritesUseCase: DeleteFavoritesUseCase,
+    private val connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val _favoritesState = MutableStateFlow<FavoriteList?>(null)
@@ -29,8 +32,19 @@ class WishlistViewModel @Inject constructor(
     private val _toggleFavoriteState = MutableStateFlow<Result<Boolean>>(Result.Success(false))
     val toggleFavoriteState: StateFlow<Result<Boolean>> = _toggleFavoriteState
 
-    fun setInitialFavoriteStatus(isFavorite: Boolean) {
-        _toggleFavoriteState.value = Result.Success(isFavorite)
+    private val _networkState = MutableStateFlow(true)
+    val networkState: StateFlow<Boolean> = _networkState
+
+    init {
+        observeNetworkState()
+    }
+
+    private fun observeNetworkState() {
+        viewModelScope.launch {
+            connectionLiveData.asFlow().collect { isConnected ->
+                _networkState.value = isConnected
+            }
+        }
     }
 
     fun loadFavorites(customerId: Long) {

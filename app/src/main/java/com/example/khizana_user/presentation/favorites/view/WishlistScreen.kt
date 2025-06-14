@@ -16,6 +16,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.utils.Result
 import kotlinx.coroutines.launch
@@ -34,8 +35,12 @@ fun WishlistScreen(
     var showClearDialog by remember { mutableStateOf(false) }
     var confirmRemoveItem by remember { mutableStateOf<FavoriteItem?>(null) }
 
+    val connectionState by viewModel.networkState.collectAsState()
+
     LaunchedEffect(customerId) {
-        viewModel.loadFavorites(customerId)
+        if (connectionState) {
+            viewModel.loadFavorites(customerId)
+        }
     }
 
     if (showClearDialog) {
@@ -82,64 +87,66 @@ fun WishlistScreen(
             }
         )
     }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("My Wishlist") },
-                actions = {
-                    if (!favoritesState?.items.isNullOrEmpty()) {
-                        TextButton(onClick = { showClearDialog = true }) {
-                            Text("Clear All")
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("My Wishlist") },
+                    actions = {
+                        if (!favoritesState?.items.isNullOrEmpty()) {
+                            TextButton(onClick = { showClearDialog = true }) {
+                                Text("Clear All")
+                            }
                         }
                     }
-                }
-            )
-        }
-    ) { padding ->
-        val items = favoritesState?.items?.filterNotNull().orEmpty()
+                )
+            }
+        ) { padding ->
+            val items = favoritesState?.items?.filterNotNull().orEmpty()
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when (val state = favoritesState) {
-                null -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                when (val state = favoritesState) {
+                    null -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
 
-                else -> {
-                    val items = state.items?.filterNotNull().orEmpty()
+                    else -> {
+                        val items = state.items?.filterNotNull().orEmpty()
 
-                    if (items.isEmpty()) {
-                        Text(
-                            "No favorites found",
-                            modifier = Modifier.align(Alignment.Center),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    } else {
-                        LazyColumn {
-                            items(items, key = { it.variantId }) { item ->
-                                FavoriteItemCard(
-                                    item = item,
-                                    isLoading = removingIds.contains(item.variantId),
-                                    onRemoveClick = { confirmRemoveItem = item },
-                                    onItemClick = {
-                                        navController.navigate(
-                                            ScreenRoute.ProductDetails.createRoute(
-                                                variantId = item.variantId
+                        if (items.isEmpty()) {
+                            Text(
+                                "No favorites found",
+                                modifier = Modifier.align(Alignment.Center),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        } else {
+                            LazyColumn {
+                                items(items, key = { it.variantId }) { item ->
+                                    FavoriteItemCard(
+                                        item = item,
+                                        isLoading = removingIds.contains(item.variantId),
+                                        onRemoveClick = { confirmRemoveItem = item },
+                                        onItemClick = {
+                                            navController.navigate(
+                                                ScreenRoute.ProductDetails.createRoute(
+                                                    variantId = item.variantId
+                                                )
                                             )
-                                        )
-                                    }
-                                )
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
     }
 }
 
