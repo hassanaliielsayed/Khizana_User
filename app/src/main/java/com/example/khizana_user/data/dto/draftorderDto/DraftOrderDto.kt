@@ -17,7 +17,14 @@ data class DraftOrderDto(
     val lineItems: List<DraftOrderItemDto>,
     val customer: CustomerData,
     @SerializedName("invoice_url")
-    val invoiceUrl: String? = null
+    val invoiceUrl: String? = null,
+    @SerializedName("completed_at")
+    val completedAt: String? = null,
+    val email: String? = null,
+    @SerializedName("shipping_address")
+    val shippingAddress: ShippingAddressDto? = null,
+    @SerializedName("applied_discount")
+    val appliedDiscount: AppliedDiscountDto? = null
 )
 
 data class DraftOrderItemDto(
@@ -31,6 +38,6 @@ data class DraftOrderItemDto(
 )
 
 data class CustomerData(
-    val id: Long,
+    val id: Long
 )
 

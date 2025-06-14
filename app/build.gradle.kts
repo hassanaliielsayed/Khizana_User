@@ -143,6 +143,10 @@ dependencies {
     // coil
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    //google
+    implementation ("com.google.android.gms:play-services-auth:21.3.0")
+    implementation ("com.google.firebase:firebase-auth-ktx")
+
     // google map
     implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.android.libraries.places:places:3.4.0")
