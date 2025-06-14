@@ -2,10 +2,13 @@
 
 package com.example.khizana_user.presentation.nav
 
+import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -13,20 +16,28 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
+import com.example.khizana_user.presentation.auth.view.VerifyEmailScreen
 import com.example.khizana_user.presentation.category.view.CategoryScreen
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.cart.view.CartScreen
 import com.example.khizana_user.presentation.cart.view.CheckoutScreen
+import com.example.khizana_user.presentation.cart.view.OrderSuccessScreen
+import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
+import com.example.khizana_user.presentation.cart.view.MapScreen
+import com.example.khizana_user.presentation.order.view.OrderDetailsScreen
+import com.example.khizana_user.presentation.order.view.OrdersScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
+import com.example.khizana_user.presentation.profile.view.ProfileScreen
 import com.example.khizana_user.presentation.setting.view.AboutUs
 import com.example.khizana_user.presentation.setting.view.ContactsScreen
 import com.example.khizana_user.presentation.setting.view.SettingScreen
+import com.example.khizana_user.utils.isGuestUser
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun AppNavGraph(
@@ -55,7 +66,7 @@ fun AppNavGraph(
         composable(ScreenRoute.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = {
-                    navController.navigate(ScreenRoute.Home.route) {
+                    navController.navigate("verify_email") {
                         popUpTo(ScreenRoute.Login.route) { inclusive = true }
                     }
                 },
@@ -96,13 +107,18 @@ fun AppNavGraph(
 
         composable(ScreenRoute.Favorites.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
-                if (customer != null) {
+                if (customer != null && !isGuestUser()) {
                     WishlistScreen(
                         customerId = customer.id,
                         navController = navController
                     )
                 } else {
-                    Text("Please log in to view favorites", modifier = Modifier.padding(innerPadding))
+                    LaunchedEffect(Unit) {
+                        navController.navigate(ScreenRoute.Login.route) {
+                            popUpTo(ScreenRoute.Favorites.route) { inclusive = true }
+                        }
+                    }
+                    Text("Redirecting to login...", modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -110,16 +126,23 @@ fun AppNavGraph(
         composable(ScreenRoute.Cart.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
                 val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
-                if (customer != null) {
+
+                if (customer != null && !isGuestUser()) {
                     CartScreen(
                         customerId = customer.id,
                         viewModel = hiltViewModel(),
                         modifier = Modifier.padding(innerPadding),
                         onCheckoutClick = { totalPrice ->
-                            navController.navigate("checkout/$totalPrice") }
+                            navController.navigate("checkout/${customer.id}/$totalPrice")
+                        }
                     )
                 } else {
-                    Text("Please log in to access your cart", modifier = Modifier.padding(innerPadding))
+                    LaunchedEffect(Unit) {
+                        navController.navigate(ScreenRoute.Login.route) {
+                            popUpTo(ScreenRoute.Cart.route) { inclusive = true }
+                        }
+                    }
+                    Text("Redirecting to login...", modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -134,6 +157,20 @@ fun AppNavGraph(
                 )
             }
         }
+
+        composable(ScreenRoute.Profile.route) {
+            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
+                val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+                if(customer != null) {
+                    ProfileScreen(
+                        customerId = customer.id,
+                        modifier = Modifier.padding(innerPadding),
+                        navController = navController
+                    )
+                }
+            }
+        }
+
 
         composable(
             route = ScreenRoute.ProductDetails.route,
@@ -162,8 +199,6 @@ fun AppNavGraph(
             }
         }
 
-
-
         composable("contact") {
             ContactsScreen()
         }
@@ -172,15 +207,91 @@ fun AppNavGraph(
             AboutUs()
         }
 
-        composable("checkout/{totalPrice}") { backStackEntry ->
+        composable("order_success") {
+            OrderSuccessScreen(
+                onBackToHomeClick = {
+                    navController.popBackStack("home", inclusive = false)
+                },
+                onContactUsClick = {
+                    navController.navigate("contact")
+                }
+            )
+        }
+
+        composable("checkout/{customerId}/{totalPrice}",
+            arguments = listOf(
+                navArgument("customerId") { type = NavType.LongType },
+                navArgument("totalPrice") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val customerId = backStackEntry.arguments?.getLong("customerId") ?: return@composable
             val totalPrice = backStackEntry.arguments?.getString("totalPrice")?.toDoubleOrNull() ?: 0.0
+
+            val locationViewModel: LocationViewModel = hiltViewModel()
+
+            val selectedLocation = backStackEntry.savedStateHandle
+                .getLiveData<Pair<LatLng, String>>("selected_location")
+                .observeAsState()
+
+            selectedLocation.value?.let { (latLng, address) ->
+                LaunchedEffect(latLng) {
+                    locationViewModel.updateAddress(address, latLng)
+                    backStackEntry.savedStateHandle.remove<Pair<LatLng, String>>("selected_location")
+                }
+            }
+
             CheckoutScreen(
+                customerId = customerId,
                 totalPrice = totalPrice,
                 onBackClick = { navController.popBackStack() },
                 onPlaceOrderClick = {},
-                onAddressClick = {  },
-                onPaymentMethodClick = { },
+                onAddressClick = {
+                    navController.navigate("map")
+                },
+                onPaymentMethodClick = {},
+                onNavigateToOrderSuccess = {
+                    navController.navigate("order_success")
+                }
             )
         }
+
+
+        composable("map") {
+            MapScreen(
+                navController = navController
+            )
+        }
+
+        composable("verify_email") {
+            VerifyEmailScreen(
+                onLoginComplete = {
+                    Log.d("AppNavGraph", "Email verified. Navigating to Home.")
+                    navController.navigate(ScreenRoute.Home.route) {
+                        popUpTo("verify_email") { inclusive = true }
+                    }
+                },
+                onBackToLogin = {
+                    navController.navigate(ScreenRoute.Login.route) {
+                        popUpTo("verify_email") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+      composable(ScreenRoute.Orders.route) {
+          val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+          if(customer != null) {
+              OrdersScreen(customerId = customer.id, navController = navController)
+          }
+        }
+
+        composable(
+            route = "${ScreenRoute.OrderDetails.route}/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getLong("orderId") ?: -1
+            OrderDetailsScreen(orderId = orderId)
+        }
+
     }
 }

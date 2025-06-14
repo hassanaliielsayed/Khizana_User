@@ -1,5 +1,7 @@
 package com.example.khizana_user.data.dataSource.remote.api
 
+import com.example.khizana_user.data.dto.OrderResponse
+import com.example.khizana_user.data.dto.SingleOrderResponse
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderRequest
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderResponse
 import com.example.khizana_user.data.dto.draftorderDto.ProductImagesResponse
@@ -32,4 +34,23 @@ interface ShopifyDraftOrderService {
     suspend fun getProductImages(
         @Path("product_id") productId: Long
     ): Response<ProductImagesResponse>
+
+    @PUT("draft_orders/{id}/complete.json")
+    suspend fun completeDraftOrder(
+        @Path("id") id: Long,
+        @Body body: Map<String, @JvmSuppressWildcards Any>
+    ): Response<DraftOrderResponse>
+
+
+    @GET("draft_orders/{id}.json")
+    suspend fun getDraftOrder(@Path("id") id: Long): Response<DraftOrderResponse>
+
+    @POST("draft_orders/{id}/send_invoice.json")
+    suspend fun sendInvoice(@Path("id") id: Long): Response<Unit>
+
+    @GET("orders.json")
+    suspend fun getOrdersByCustomerId(@Query("customer_id") customerId: Long): Response<OrderResponse>
+
+    @GET("orders/{order_id}.json")
+    suspend fun getOrderById(@Path("order_id") orderId: Long): Response<SingleOrderResponse>
 }

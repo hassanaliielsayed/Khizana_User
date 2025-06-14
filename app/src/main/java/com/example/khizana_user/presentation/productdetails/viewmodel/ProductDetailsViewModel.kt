@@ -1,9 +1,11 @@
 package com.example.khizana_user.presentation.productdetails.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.ProductDetails
 import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
+import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,11 +14,27 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProductDetailsViewModel @Inject constructor(
-    private val useCase: GetProductDetailsUseCase
+    private val useCase: GetProductDetailsUseCase,
+    private val connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<Result>(Result.Loading)
     val state: StateFlow<Result> = _state
+
+    private val _networkState = MutableStateFlow(true)
+    val networkState: StateFlow<Boolean> = _networkState
+
+    init {
+        observeNetworkState()
+    }
+
+    private fun observeNetworkState() {
+        viewModelScope.launch {
+            connectionLiveData.asFlow().collect { isConnected ->
+                _networkState.value = isConnected
+            }
+        }
+    }
 
     fun loadProduct(productId: Long) {
         viewModelScope.launch {

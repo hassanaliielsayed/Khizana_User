@@ -58,6 +58,7 @@ import coil.compose.AsyncImage
 import com.example.khizana_user.R
 import com.example.khizana_user.domain.model.ProductByCategory
 import com.example.khizana_user.presentation.category.viewModel.CategoryViewModel
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.customFontFamily
 
 
@@ -80,130 +81,148 @@ fun CategoryScreen(
 
     var isSubCategoryMenuOpen by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.project_name),
-                        fontFamily = customFontFamily,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = Color.Black)
-                    }
-                    IconButton(onClick = onNavigateToFavorites) {
-                        Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.Black)
-                    }
-                    IconButton(onClick = onNavigateToCart) {
-                        Icon(
-                            Icons.Default.ShoppingCart,
-                            tint = Color.Black,
-                            contentDescription = null,
-                        )
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End) {
-                AnimatedVisibility(visible = isSubCategoryMenuOpen) {
-                    Column(
-                        modifier = Modifier
-                            .padding(bottom = 8.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                    ) {
-                        val subCategoryImages = mapOf(
-                            "All" to R.drawable.all,
-                            "ACCESSORIES" to R.drawable.accessories,
-                            "SHOES" to R.drawable.shoes,
-                            "T-SHIRTS" to R.drawable.tshirt
-                        )
+    val connectionState by viewModel.networkState.collectAsState()
 
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            stringResource(R.string.project_name),
+                            fontFamily = customFontFamily,
+                            fontSize = 20.sp,
+                            color = Color.Black
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
+                    actions = {
+                        IconButton(onClick = {}) {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = null,
+                                tint = Color.Black
+                            )
+                        }
+                        IconButton(onClick = onNavigateToFavorites) {
+                            Icon(
+                                Icons.Default.Favorite,
+                                contentDescription = null,
+                                tint = Color.Black
+                            )
+                        }
+                        IconButton(onClick = onNavigateToCart) {
+                            Icon(
+                                Icons.Default.ShoppingCart,
+                                tint = Color.Black,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                Column(horizontalAlignment = Alignment.End) {
+                    AnimatedVisibility(visible = isSubCategoryMenuOpen) {
                         Column(
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
                                 .clip(RoundedCornerShape(12.dp))
                         ) {
-                            subCategories.forEach { subCategory ->
-                                val imageRes = subCategoryImages[subCategory] ?: R.drawable.all
-                                CategoryChipImage(
-                                    imageResId = imageRes,
-                                    isSelected = selectedSubCategory == subCategory,
-                                    onClick = {
-                                        selectedSubCategory = subCategory
-                                        viewModel.filterProductsBySubCategory(subCategory)
-                                        isSubCategoryMenuOpen = false
-                                    },
-                                    contentDescription = subCategory
-                                )
+                            val subCategoryImages = mapOf(
+                                "All" to R.drawable.all,
+                                "ACCESSORIES" to R.drawable.accessories,
+                                "SHOES" to R.drawable.shoes,
+                                "T-SHIRTS" to R.drawable.tshirt
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .padding(bottom = 8.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            ) {
+                                subCategories.forEach { subCategory ->
+                                    val imageRes = subCategoryImages[subCategory] ?: R.drawable.all
+                                    CategoryChipImage(
+                                        imageResId = imageRes,
+                                        isSelected = selectedSubCategory == subCategory,
+                                        onClick = {
+                                            selectedSubCategory = subCategory
+                                            viewModel.filterProductsBySubCategory(subCategory)
+                                            isSubCategoryMenuOpen = false
+                                        },
+                                        contentDescription = subCategory
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                FloatingActionButton(
-                    onClick = { isSubCategoryMenuOpen = !isSubCategoryMenuOpen },
-                    containerColor = colorResource(id = R.color.black),
-                    modifier = Modifier
-                        .padding(bottom = 70.dp)
-                        .clip(RoundedCornerShape(42.dp))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FilterList,
-                        contentDescription = "Filter",
-                        tint = Color.White
-                    )
+                    FloatingActionButton(
+                        onClick = { isSubCategoryMenuOpen = !isSubCategoryMenuOpen },
+                        containerColor = colorResource(id = R.color.black),
+                        modifier = Modifier
+                            .padding(bottom = 70.dp)
+                            .clip(RoundedCornerShape(42.dp))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filter",
+                            tint = Color.White
+                        )
+                    }
                 }
             }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Color.White)
-        ) {
-
-            ScrollableTabRow(
-                selectedTabIndex = mainCategory.indexOf(selectedMainCategory),
-                edgePadding = 16.dp,
-                indicator = {},
-                modifier = Modifier.background(colorResource(id = R.color.dark_blue))
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Color.White)
             ) {
-                mainCategory.forEach { main ->
-                    Tab(
-                        selected = selectedMainCategory == main,
-                        onClick = {
-                            selectedMainCategory = main
-                            viewModel.filterProductsByTag(main)
-                        },
-                        text = {
-                            Text(
-                                text = main,
-                                color = if (selectedMainCategory == main) Color.Black else Color.Gray,
-                                fontWeight = if (selectedMainCategory == main) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        modifier = Modifier.background(colorResource(id = R.color.white))
-                    )
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (products.isEmpty()) {
-                Text("No products found.", modifier = Modifier.padding(16.dp), fontFamily = customFontFamily,)
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ScrollableTabRow(
+                    selectedTabIndex = mainCategory.indexOf(selectedMainCategory),
+                    edgePadding = 16.dp,
+                    indicator = {},
+                    modifier = Modifier.background(colorResource(id = R.color.dark_blue))
                 ) {
-                    items(products) { product ->
-                        ProductItem(product = product)
+                    mainCategory.forEach { main ->
+                        Tab(
+                            selected = selectedMainCategory == main,
+                            onClick = {
+                                selectedMainCategory = main
+                                viewModel.filterProductsByTag(main)
+                            },
+                            text = {
+                                Text(
+                                    text = main,
+                                    color = if (selectedMainCategory == main) Color.Black else Color.Gray,
+                                    fontWeight = if (selectedMainCategory == main) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            modifier = Modifier.background(colorResource(id = R.color.white))
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (products.isEmpty()) {
+                    Text(
+                        "No products found.",
+                        modifier = Modifier.padding(16.dp),
+                        fontFamily = customFontFamily,
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(products) { product ->
+                            ProductItem(product = product)
+                        }
                     }
                 }
             }
@@ -219,7 +238,7 @@ fun ProductItem(product: ProductByCategory) {
             .padding(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = colorResource(id = R.color.dark_blue)
+            containerColor = colorResource(id = R.color.white)
         )
     ) {
         Row(
@@ -233,10 +252,14 @@ fun ProductItem(product: ProductByCategory) {
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(product.productTitle, fontWeight = FontWeight.Bold, fontFamily = customFontFamily,)
-                Text("Vendor: ${product.productVendor ?: "N/A"}", fontFamily = customFontFamily,)
-                Text("Price: ${product.productPrice} EG", fontFamily = customFontFamily,)
-                Text("Product Type: ${product.product_type}", fontFamily = customFontFamily,)
+                Text(
+                    product.productTitle,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = customFontFamily,
+                )
+                Text("Vendor: ${product.productVendor ?: "N/A"}", fontFamily = customFontFamily)
+                Text("Price: ${product.productPrice} EGP", fontFamily = customFontFamily)
+                Text("Product Type: ${product.product_type}", fontFamily = customFontFamily)
             }
         }
     }
@@ -262,7 +285,9 @@ fun CategoryChipImage(
             painter = painterResource(id = imageResId),
             contentDescription = contentDescription,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.padding(6.dp).size(20.dp)
+            modifier = Modifier
+                .padding(6.dp)
+                .size(20.dp)
         )
     }
 }

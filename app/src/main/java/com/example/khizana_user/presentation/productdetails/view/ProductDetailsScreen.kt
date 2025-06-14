@@ -28,10 +28,14 @@ import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.ProductDetails
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.productdetails.viewmodel.ProductDetailsViewModel
+import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.isGuestUser
 import com.example.khizana_user.utils.toCurrentCurrency
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProductDetailsScreen(
@@ -42,71 +46,126 @@ fun ProductDetailsScreen(
     wishlistViewModel: WishlistViewModel = hiltViewModel(),
     cartViewModel: CartViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val favorites by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
+    val productState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val connectionState by viewModel.networkState.collectAsState()
+    var isFavorite by remember { mutableStateOf<Boolean?>(null) }
+    var isToggling by remember { mutableStateOf(false) }
 
     LaunchedEffect(customerId) {
-        wishlistViewModel.loadFavorites(customerId)
+        if (connectionState) {
+            wishlistViewModel.loadFavorites(customerId)
+        }
     }
 
-    val isInitiallyFavorite = remember(favorites, variantId, productId) {
-        val id = variantId ?: productId
-        val fav = favorites?.items?.any { it!!.variantId == id } ?: false
-        fav
-    }
-
-    var isFavorite by remember { mutableStateOf(isInitiallyFavorite) }
-
+    // Load product
     LaunchedEffect(productId, variantId) {
-        when {
-            productId != null -> {
-                viewModel.loadProduct(productId)
-            }
-            variantId != null -> {
-                viewModel.loadProductByVariant(variantId)
+        if (connectionState) {
+            when {
+                productId != null -> viewModel.loadProduct(productId)
+                variantId != null -> viewModel.loadProductByVariant(variantId)
             }
         }
     }
 
-    when (val result = state) {
-        is ProductDetailsViewModel.Result.Loading -> CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        is ProductDetailsViewModel.Result.Error -> Text("Error: ${result.message}", color = Color.Red)
-        is ProductDetailsViewModel.Result.Success -> {
-            ProductDetailsContent(
-                product = result.data,
-                isFavorite = isFavorite,
-                onToggleFavorite = {
-                    val id = result.data.variantId
-                    if (id == null) {
-                        return@ProductDetailsContent
-                    }
-                    val alreadyInFavorites = favorites?.items?.any { it!!.variantId == id } ?: false
-                    if (!isFavorite && !alreadyInFavorites) {
-                        isFavorite = true
-                        wishlistViewModel.addToFavorites(customerId, id)
-                    } else if (isFavorite && alreadyInFavorites) {
-                        isFavorite = false
-                        wishlistViewModel.removeFromFavorites(customerId, id)
-                    }
-                },
-                onAddToCart = {
-                    val id = result.data.variantId
-                    if (id == null) {
-                        return@ProductDetailsContent
-                    }
-                    cartViewModel.addToCart(customerId, id)
-                    Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (val result = productState) {
+                is ProductDetailsViewModel.Result.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
-            )
+
+                is ProductDetailsViewModel.Result.Error -> {
+                    Text(
+                        "Error: ${result.message}",
+                        color = Color.Red,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                is ProductDetailsViewModel.Result.Success -> {
+                    val product = result.data
+
+                    LaunchedEffect(product.variantId) {
+                        isFavorite = wishlistViewModel.isFavorite(
+                            customerId,
+                            product.variantId ?: return@LaunchedEffect
+                        )
+                    }
+
+                    ProductDetailsContent(
+                        product = product,
+                        isFavorite = isFavorite ?: false,
+                        isToggling = isToggling || isFavorite == null,
+                        onToggleFavorite = {
+                            val variantId = product.variantId ?: return@ProductDetailsContent
+
+                            if (isGuestUser()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please sign in to add to favorites",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@ProductDetailsContent
+                            }
+
+                            if (isToggling || isFavorite == null) return@ProductDetailsContent
+
+                            isToggling = true
+                            coroutineScope.launch {
+                                val wasFavorite = isFavorite ?: false
+
+                                val result = if (wasFavorite)
+                                    wishlistViewModel.removeFromFavorites(customerId, variantId)
+                                else
+                                    wishlistViewModel.addToFavorites(customerId, variantId)
+
+                                when (result) {
+                                    is Result.Success<*> -> {
+                                        isFavorite = !wasFavorite
+                                    }
+
+                                    is Result.Error -> {
+                                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT)
+                                            .show()
+                                    }
+
+                                    else -> {}
+                                }
+
+                                isToggling = false
+                            }
+
+                        },
+                        onAddToCart = {
+                            val id = product.variantId ?: return@ProductDetailsContent
+
+                            if (isGuestUser()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please sign in to add items to cart",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                cartViewModel.addToCart(customerId, id)
+                                Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 }
-
 @Composable
 fun ProductDetailsContent(
     product: ProductDetails,
     isFavorite: Boolean,
+    isToggling: Boolean,
     onToggleFavorite: () -> Unit,
     onAddToCart: () -> Unit
 ) {
@@ -114,13 +173,9 @@ fun ProductDetailsContent(
     var selectedColor by remember { mutableStateOf<String?>(null) }
 
     val colorMap = mapOf(
-        "black" to Color(0xFF000000),
-        "white" to Color(0xFFFFFFFF),
-        "blue" to Color(0xFF2196F3),
-        "red" to Color(0xFFF44336),
-        "orange" to Color(0xFFFF9800),
-        "green" to Color(0xFF4CAF50),
-        "magenta" to Color(0xFFFF00FF)
+        "black" to Color.Black, "white" to Color.White, "blue" to Color(0xFF2196F3),
+        "red" to Color(0xFFF44336), "orange" to Color(0xFFFF9800),
+        "green" to Color(0xFF4CAF50), "magenta" to Color(0xFFFF00FF)
     )
 
     val pagerState = rememberPagerState(initialPage = 0)
@@ -146,36 +201,22 @@ fun ProductDetailsContent(
                 )
             }
 
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                repeat(product.images.size) { index ->
-                    val selected = pagerState.currentPage == index
-                    Box(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .size(if (selected) 10.dp else 8.dp)
-                            .clip(CircleShape)
-                            .background(if (selected) Color.Black else Color.LightGray)
-                    )
-                }
-            }
-
             IconButton(
                 onClick = onToggleFavorite,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(30.dp)
+                    .padding(12.dp)
                     .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
             ) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorite",
-                    tint = if (isFavorite) Color.Red else Color.Black
-                )
+                if (isToggling) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Unfavorite" else "Favorite",
+                        tint = if (isFavorite) Color.Red else Color.Black
+                    )
+                }
             }
         }
 
@@ -188,12 +229,16 @@ fun ProductDetailsContent(
                 val filled = i < product.rating.toInt()
                 Icon(Icons.Default.Star, contentDescription = null, tint = if (filled) Color(0xFFFFC107) else Color.LightGray)
             }
-            Text("  (${product.rating})", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text("  (${product.rating})", fontSize = 14.sp)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text("$${product.price.toCurrentCurrency()}", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1E88E5))
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            "$${product.price.toCurrentCurrency()}",
+            fontSize = 20.sp,
+            color = Color(0xFF1E88E5),
+            fontWeight = FontWeight.SemiBold
+        )
 
         if (product.colors.isNotEmpty()) {
             Text("Color", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
@@ -205,11 +250,12 @@ fun ProductDetailsContent(
                             .size(32.dp)
                             .clip(CircleShape)
                             .background(colorHex)
-                            .border(2.dp, if (selectedColor == colorName) Color.Black else Color.Transparent, CircleShape)
-                            .clickable {
-                                selectedColor = colorName
-                                Log.d("ProductDetails", "Selected color: $colorName")
-                            }
+                            .border(
+                                2.dp,
+                                if (selectedColor == colorName) Color.Black else Color.Transparent,
+                                CircleShape
+                            )
+                            .clickable { selectedColor = colorName }
                     )
                 }
             }
@@ -230,10 +276,7 @@ fun ProductDetailsContent(
                                 RoundedCornerShape(12.dp)
                             )
                             .background(if (size == selectedSize) Color(0xFF1E88E5) else Color.White)
-                            .clickable {
-                                selectedSize = size
-                                Log.d("ProductDetails", "Selected size: $size")
-                            }
+                            .clickable { selectedSize = size }
                             .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Text(size, color = if (size == selectedSize) Color.White else Color.Black)
@@ -248,6 +291,7 @@ fun ProductDetailsContent(
         Text(product.description, fontSize = 14.sp, lineHeight = 20.sp)
 
         Spacer(modifier = Modifier.height(32.dp))
+
         Button(
             onClick = onAddToCart,
             modifier = Modifier

@@ -7,6 +7,15 @@ import javax.inject.Inject
 class ValidateCouponUseCase @Inject constructor(
     private val repository: CartRepository
 ) {
-    suspend operator fun invoke(code: String): Coupon  = repository.fetchCoupon(code)[0]
+    suspend operator fun invoke(code: String): Coupon {
+        val coupons = repository.fetchCoupon(code) // Assuming this returns List<Coupon>
+        
+        val validCoupon = coupons.firstOrNull { it.title.equals(code, ignoreCase = true) }
 
+        if (validCoupon == null) {
+            throw IllegalArgumentException("Invalid coupon code")
+        }
+
+        return validCoupon
+    }
 }
