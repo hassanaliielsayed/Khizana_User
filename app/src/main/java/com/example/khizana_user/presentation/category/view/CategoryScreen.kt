@@ -63,6 +63,11 @@ import com.example.khizana_user.domain.model.ProductByCategory
 import com.example.khizana_user.presentation.category.viewModel.CategoryViewModel
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.customFontFamily
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import com.airbnb.lottie.compose.*
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,7 +79,13 @@ fun CategoryScreen(
     onNavigateToSearch: () -> Unit
 ) {
 
-    val mainCategory = listOf("All", "Women", "Men", "Kid")
+    val mainCategory = listOf(
+        "All" to "All",
+        "Women" to "Women",
+        "Men" to "Men",
+        "Kid" to "Kids"
+    )
+
     var selectedMainCategory by remember { mutableStateOf("All") }
 
     val subCategories = listOf("All", "ACCESSORIES", "SHOES", "T-SHIRTS")
@@ -197,23 +208,23 @@ fun CategoryScreen(
             ) {
 
                 ScrollableTabRow(
-                    selectedTabIndex = mainCategory.indexOf(selectedMainCategory),
+                    selectedTabIndex = mainCategory.indexOfFirst { it.first == selectedMainCategory },
                     edgePadding = 16.dp,
                     indicator = {},
                     modifier = Modifier.background(colorResource(id = R.color.dark_blue))
                 ) {
-                    mainCategory.forEach { main ->
+                    mainCategory.forEach { (tagValue, displayValue) ->
                         Tab(
-                            selected = selectedMainCategory == main,
+                            selected = selectedMainCategory == tagValue,
                             onClick = {
-                                selectedMainCategory = main
-                                viewModel.filterProductsByTag(main)
+                                selectedMainCategory = tagValue
+                                viewModel.filterProductsByTag(tagValue)
                             },
                             text = {
                                 Text(
-                                    text = main,
-                                    color = if (selectedMainCategory == main) Color.Black else Color.Gray,
-                                    fontWeight = if (selectedMainCategory == main) FontWeight.Bold else FontWeight.Normal
+                                    text = displayValue,
+                                    color = if (selectedMainCategory == tagValue) Color.Black else Color.Gray,
+                                    fontWeight = if (selectedMainCategory == tagValue) FontWeight.Bold else FontWeight.Normal
                                 )
                             },
                             modifier = Modifier.background(colorResource(id = R.color.white))
@@ -233,11 +244,20 @@ fun CategoryScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (products.isEmpty()) {
-                    Text(
-                        "No products found.",
-                        modifier = Modifier.padding(16.dp),
-                        fontFamily = customFontFamily,
-                    )
+                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.no_data))
+                    val progress by animateLottieCompositionAsState(composition)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LottieAnimation(
+                            composition = composition,
+                            progress = progress
+                        )
+                    }
                 } else {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
