@@ -36,7 +36,7 @@ class OrderViewModel @Inject constructor(
             _orderState.value = Result.Loading
             try {
                 Log.d("OrderVM", "Sending invoice for draft ID: $draftOrderId")
-                sendInvoiceUseCase(draftOrderId)
+                //sendInvoiceUseCase(draftOrderId)
 
                 Log.d("OrderVM", "Invoice sent. Completing order...")
                 completeOrderUseCase(draftOrderId)
