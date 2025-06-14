@@ -93,6 +93,7 @@ fun ProfileScreen(
     if (!connectionState) {
         NoInternetConnectionView()
     } else {
+
         Scaffold(
             topBar = {
                 TopAppBar(
