@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -100,15 +101,15 @@ fun ProfileScreen(
                 actions = {
                     IconButton(onClick = { }) {
                         Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Favorites",
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings),
                             tint = Color.Black
                         )
                     }
                     IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Cart",
+                            contentDescription = stringResource(R.string.shopping_cart),
                             tint = Color.Black
                         )
                     }

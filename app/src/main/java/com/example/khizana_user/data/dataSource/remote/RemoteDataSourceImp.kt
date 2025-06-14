@@ -1,20 +1,15 @@
 package com.example.khizana_user.data.dataSource.remote
 
-import android.util.Log
 import com.example.khizana_user.data.dataSource.remote.api.CurrencyAPIService
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dto.BrandResponseDto
 import com.example.khizana_user.data.dto.CouponsResponseDto
-import com.example.khizana_user.data.dto.CurrencyResponseDto
 import com.example.khizana_user.data.dto.ProductDetailsDto
 import com.example.khizana_user.data.dto.ProductDto
-import com.example.khizana_user.data.dto.ProductResponseDto
 import com.example.khizana_user.data.dto.ShopifyCreateCustomerRequest
 import com.example.khizana_user.data.dto.ShopifyCustomerCreatedResponse
 import com.example.khizana_user.data.dto.ShopifyCustomerSearchResponseDto
 import com.example.khizana_user.data.repository.RemoteDataSource
-import com.example.khizana_user.di.CurrencyApi
-import com.example.khizana_user.di.ShopifyApi
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -49,9 +44,6 @@ class RemoteDataSourceImp @Inject constructor(
         val response = apiService.getAllProducts(vendor)
         val body = response.body()
 
-        Log.d("AllProductsDebug", "code: ${response.code()}")
-        Log.d("AllProductsDebug", "All Product body: ${response.body()?.products}")
-
         return if (response.isSuccessful && body != null) {
 
             body.products
@@ -67,14 +59,6 @@ class RemoteDataSourceImp @Inject constructor(
 
         val response = apiService.getAllProducts()
         val body = response.body()
-
-        if (body != null) {
-            for (product in body.products) {
-
-                val productType = product.product_type
-                Log.d("ProductType", "Product Type: ${product.id}, Tags: $productType")
-            }
-        }
 
         return if (response.isSuccessful && body != null) {
 
