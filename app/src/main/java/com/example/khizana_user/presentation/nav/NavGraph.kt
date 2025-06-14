@@ -17,6 +17,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.khizana_user.presentation.SearchScreen
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
 import com.example.khizana_user.presentation.auth.view.VerifyEmailScreen
@@ -98,9 +99,9 @@ fun AppNavGraph(
                     onNavigateToFavorites = {
                         navController.navigate(ScreenRoute.Favorites.route)
                     },
-                    onNavigateToCart = {
-                        navController.navigate(ScreenRoute.Cart.route)
-                    }
+                    onNavigateToSearch = {
+                        navController.navigate("search")
+                                         },
                 )
             }
         }
@@ -293,5 +294,14 @@ fun AppNavGraph(
             OrderDetailsScreen(orderId = orderId)
         }
 
+        composable("search") {
+            SearchScreen(
+                onNavigateToFavorites = {
+                navController.navigate(ScreenRoute.Favorites.route)
+                                        },
+                onNavigateToCart = {
+                    navController.navigate(ScreenRoute.Cart.route)
+                })
+        }
     }
 }

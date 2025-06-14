@@ -71,7 +71,7 @@ fun CategoryScreen(
     modifier: Modifier = Modifier,
     viewModel: CategoryViewModel = hiltViewModel(),
     onNavigateToFavorites: () -> Unit,
-    onNavigateToCart: () -> Unit
+    onNavigateToSearch: () -> Unit
 ) {
 
     val mainCategory = listOf("All", "Women", "Men", "Kid")
@@ -110,7 +110,7 @@ fun CategoryScreen(
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
                     actions = {
 
-                        IconButton(onClick = onNavigateToCart) {
+                        IconButton(onClick = onNavigateToSearch) {
                             Icon(
                                 Icons.Default.Search,
                                 tint = Color.Black,

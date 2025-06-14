@@ -14,7 +14,7 @@ fun BottomNavigationBar(navController: NavController) {
         ScreenRoute.Favorites,
         ScreenRoute.Cart,
         ScreenRoute.Settings,
-        ScreenRoute.Profile
+        ScreenRoute.Profile,
     )
 
     NavigationBar(containerColor = Color.White) {

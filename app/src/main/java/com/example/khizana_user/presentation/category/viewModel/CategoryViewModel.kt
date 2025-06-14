@@ -93,4 +93,11 @@ class CategoryViewModel @Inject constructor(
         currentPrice = price
         filterProducts()
     }
+
+    fun filterProductsBySearch(query: String) {
+        _products.value = _allProducts.value.filter {
+            it.productTitle.contains(query, ignoreCase = true)
+        }
+    }
+
 }
