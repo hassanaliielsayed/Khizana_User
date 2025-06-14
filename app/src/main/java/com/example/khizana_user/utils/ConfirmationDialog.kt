@@ -16,7 +16,8 @@ fun ConfirmationDialog(
     text: String,
     confirmText: String = "Confirm",
     dismissText: String = "Cancel",
-    confirmButtonColor: Color = Color.Red
+    confirmButtonColor: Color = Color.Red,
+    dismissButtonColor: Color = Color.Blue
 ) {
     if (showDialog) {
         AlertDialog(

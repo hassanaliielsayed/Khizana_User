@@ -236,6 +236,7 @@ fun CheckoutScreen(
     LaunchedEffect(invoiceUrlState) {
         if (invoiceUrlState is Result.Success) {
             val url = (invoiceUrlState as Result.Success).data
+            // Open the URL in a web view
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
     }
@@ -278,14 +279,26 @@ fun CheckoutScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Row {
-                        Button(onClick = autocompleteLauncher) {
-                            Text("Search Address")
+                        Button(
+                            onClick = { autocompleteLauncher() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1E88E5)
+                            )
+                        ) {
+                            Text("Change Address")
                         }
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = {
-                            userSelectedLocation = true
-                            onAddressClick()
-                        }) {
+
+                        Button(
+                            onClick = {
+                                userSelectedLocation = true
+                                onAddressClick()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1E88E5)
+                            )
+                        ) {
                             Text("Select on Map")
                         }
                     }
@@ -376,7 +389,6 @@ fun CheckoutScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Fees", color = Color(0xFFA1A6B0), fontSize = 14.sp)
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -425,7 +437,8 @@ fun CheckoutScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Button(
                             onClick = { viewModel.validateCoupon(couponCode) },
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
                         ) {
                             Text("Validate")
                         }
@@ -480,20 +493,16 @@ fun CheckoutScreen(
 
             // Place Order Button
             Button(
+
                 onClick = { showConfirmationDialog = true },
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .padding(16.dp)
-                    .align(Alignment.End),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE)),
+                    .fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
                 elevation = ButtonDefaults.buttonElevation(8.dp),
-                shape = RoundedCornerShape(8.dp)
             ) {
                 Text("Place Order")
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    painter = painterResource(R.drawable.ic_group_right_arrow),
-                    contentDescription = "Place Order"
-                )
             }
 
         }
@@ -546,6 +555,7 @@ fun CheckoutScreen(
         text = "Please confirm your order:\n\nShipping Address: $selectedAddress\nTotal Amount: ${grandTotal.toCurrentCurrency()}",
         confirmText = "Place Order",
         dismissText = "Cancel",
-        confirmButtonColor = Color(0xFF6200EE)
+        confirmButtonColor = Color(0xFF1E88E5),
+        dismissButtonColor = Color(0xFF1E88E5)
     )
 }
