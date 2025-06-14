@@ -33,21 +33,6 @@ interface ShopifyDraftOrderService {
         @Path("product_id") productId: Long
     ): Response<ProductImagesResponse>
 
-//    @PUT("draft_orders/{id}/complete.json")
-//    suspend fun completeDraftOrder(
-//        @Path("id") draftOrderId: Long
-//    ): Any
-//
-//    @GET("draft_orders/{id}.json")
-//    suspend fun getDraftOrder(
-//        @Path("id") draftOrderId: Long
-//    ): DraftOrderResponse
-//
-//    @POST("draft_orders/{id}/send_invoice.json")
-//    suspend fun sendInvoice(
-//        @Path("id") draftOrderId: Long
-//    ): Any
-
     @PUT("draft_orders/{id}/complete.json")
     suspend fun completeDraftOrder(@Path("id") id: Long): Response<DraftOrderResponse>
 

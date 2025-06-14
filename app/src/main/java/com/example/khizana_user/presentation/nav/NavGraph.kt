@@ -8,6 +8,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,15 +25,16 @@ import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.cart.view.CartScreen
 import com.example.khizana_user.presentation.cart.view.CheckoutScreen
 import com.example.khizana_user.presentation.cart.view.OrderSuccessScreen
-import com.example.khizana_user.presentation.category.view.CategoryScreen
+import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
-import com.example.khizana_user.presentation.map.MapScreen
+import com.example.khizana_user.presentation.cart.view.MapScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
 import com.example.khizana_user.presentation.setting.view.AboutUs
 import com.example.khizana_user.presentation.setting.view.ContactsScreen
 import com.example.khizana_user.presentation.setting.view.SettingScreen
 import com.example.khizana_user.utils.isGuestUser
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun AppNavGraph(
@@ -208,24 +210,38 @@ fun AppNavGraph(
             val customerId = backStackEntry.arguments?.getLong("customerId") ?: return@composable
             val totalPrice = backStackEntry.arguments?.getString("totalPrice")?.toDoubleOrNull() ?: 0.0
 
+            val locationViewModel: LocationViewModel = hiltViewModel()
+
+            val selectedLocation = backStackEntry.savedStateHandle
+                .getLiveData<Pair<LatLng, String>>("selected_location")
+                .observeAsState()
+
+            selectedLocation.value?.let { (latLng, address) ->
+                LaunchedEffect(latLng) {
+                    locationViewModel.updateAddress(address, latLng)
+                    backStackEntry.savedStateHandle.remove<Pair<LatLng, String>>("selected_location")
+                }
+            }
+
             CheckoutScreen(
                 customerId = customerId,
                 totalPrice = totalPrice,
                 onBackClick = { navController.popBackStack() },
                 onPlaceOrderClick = {},
-                onAddressClick = { },
-                onPaymentMethodClick = { },
+                onAddressClick = {
+                    navController.navigate("map")
+                },
+                onPaymentMethodClick = {},
                 onNavigateToOrderSuccess = {
                     navController.navigate("order_success")
                 }
             )
         }
 
+
         composable("map") {
             MapScreen(
-                onLocationSelected = { latLng ->
-                    navController.popBackStack()
-                }
+                navController = navController
             )
         }
 

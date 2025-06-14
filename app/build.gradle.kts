@@ -152,5 +152,7 @@ dependencies {
     implementation ("com.google.android.libraries.places:places:3.4.0")
     implementation ("com.google.maps.android:maps-compose:2.11.4")
 
+    implementation ("com.google.accompanist:accompanist-permissions:0.34.0")
+
 
 }
