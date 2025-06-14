@@ -160,11 +160,14 @@ fun AppNavGraph(
 
         composable(ScreenRoute.Profile.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
-                ProfileScreen(
-                    customerId = 7858653888625,
-                    modifier = Modifier.padding(innerPadding),
-                    navController = navController
-                )
+                val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+                if(customer != null) {
+                    ProfileScreen(
+                        customerId = customer.id,
+                        modifier = Modifier.padding(innerPadding),
+                        navController = navController
+                    )
+                }
             }
         }
 
@@ -276,7 +279,10 @@ fun AppNavGraph(
         }
 
       composable(ScreenRoute.Orders.route) {
-            OrdersScreen(customerId = 7858653888625, navController = navController)
+          val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+          if(customer != null) {
+              OrdersScreen(customerId = customer.id, navController = navController)
+          }
         }
 
         composable(
