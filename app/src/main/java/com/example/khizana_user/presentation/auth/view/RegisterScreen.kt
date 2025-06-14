@@ -1,6 +1,7 @@
 package com.example.khizana_user.presentation.auth.view
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -28,7 +30,7 @@ import com.example.khizana_user.utils.AuthState
 @Composable
 fun RegisterScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onRegisterSuccess: () -> Unit = {},        // Navigate to VerifyEmailScreen
+    onRegisterSuccess: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -43,14 +45,12 @@ fun RegisterScreen(
     val state by viewModel.authState.collectAsStateWithLifecycle()
     val shopifyResult by viewModel.shopifyRegisterResult.collectAsStateWithLifecycle()
 
-    // Handle Shopify error if any
     LaunchedEffect(shopifyResult) {
         shopifyResult?.onFailure { error ->
             Toast.makeText(context, "Shopify Error: ${error.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    // Handle navigation after email is sent
     LaunchedEffect(state) {
         if (state is AuthState.VerificationEmailSent) {
             Toast.makeText(context, "Verification email sent. Please check your inbox.", Toast.LENGTH_LONG).show()
@@ -59,120 +59,122 @@ fun RegisterScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.Center
+            .background(Brush.verticalGradient(colors = listOf(Color(0xFFEEF2F3), Color(0xFF8E9EAB))))
+            .padding(20.dp)
     ) {
-        Text("Sign Up", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            singleLine = true,
-            shape = RoundedCornerShape(50),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true,
-            shape = RoundedCornerShape(50),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = mobile,
-            onValueChange = { mobile = it },
-            label = { Text("Mobile") },
-            singleLine = true,
-            shape = RoundedCornerShape(50),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = null
-                    )
-                }
-            },
-            shape = RoundedCornerShape(50),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = agreeChecked, onCheckedChange = { agreeChecked = it })
-            Text("I agree with ")
-            Text("privacy", color = Color.Magenta)
-            Text(" and ")
-            Text("Policy", color = Color.Magenta)
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                if (agreeChecked) {
-                    viewModel.register(
-                        email.trim(),
-                        password.trim(),
-                        name.trim()
-                    )
-                } else {
-                    Toast.makeText(context, "You must agree to the policy to continue.", Toast.LENGTH_SHORT).show()
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.End)
-                .size(56.dp),
-            shape = CircleShape,
-            contentPadding = PaddingValues(0.dp)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(Icons.Default.ArrowForward, contentDescription = null)
-        }
+            Text("Sign Up", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
 
-        Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
 
-        Text(
-            "Already have an account? Sign In",
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .clickable { onNavigateToLogin() },
-            color = MaterialTheme.colorScheme.primary
-        )
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                singleLine = true,
+                shape = RoundedCornerShape(50),
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        when (state) {
-            is AuthState.Loading -> {
-                Spacer(Modifier.height(16.dp))
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                singleLine = true,
+                shape = RoundedCornerShape(50),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = mobile,
+                onValueChange = { mobile = it },
+                label = { Text("Mobile") },
+                singleLine = true,
+                shape = RoundedCornerShape(50),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = null
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(50),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = agreeChecked, onCheckedChange = { agreeChecked = it })
+                Text("I agree with ")
+                Text("privacy", color = Color.Magenta)
+                Text(" and ")
+                Text("Policy", color = Color.Magenta)
             }
-            is AuthState.Error -> {
-                Spacer(Modifier.height(16.dp))
-                Text("Error: ${(state as AuthState.Error).message}", color = Color.Red)
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    if (agreeChecked) {
+                        viewModel.register(email.trim(), password.trim(), name.trim())
+                    } else {
+                        Toast.makeText(context, "You must agree to the policy to continue.", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .size(56.dp),
+                shape = CircleShape,
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Icon(Icons.Default.ArrowForward, contentDescription = null)
             }
-            else -> Unit // Idle, Success, VerificationEmailSent handled separately
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
+                "Already have an account? Sign In",
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .clickable { onNavigateToLogin() },
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            when (state) {
+                is AuthState.Loading -> {
+                    Spacer(Modifier.height(16.dp))
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                }
+                is AuthState.Error -> {
+                    Spacer(Modifier.height(16.dp))
+                    Text("Error: ${(state as AuthState.Error).message}", color = Color.Red)
+                }
+                else -> Unit
+            }
         }
     }
 }

@@ -34,7 +34,11 @@ interface ShopifyDraftOrderService {
     ): Response<ProductImagesResponse>
 
     @PUT("draft_orders/{id}/complete.json")
-    suspend fun completeDraftOrder(@Path("id") id: Long): Response<DraftOrderResponse>
+    suspend fun completeDraftOrder(
+        @Path("id") id: Long,
+        @Body body: Map<String, @JvmSuppressWildcards Any>
+    ): Response<DraftOrderResponse>
+
 
     @GET("draft_orders/{id}.json")
     suspend fun getDraftOrder(@Path("id") id: Long): Response<DraftOrderResponse>

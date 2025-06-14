@@ -47,16 +47,6 @@ class WishlistViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Initialize favorite status manually when screen loads.
-     */
-    fun setInitialFavoriteStatus(isFavorite: Boolean) {
-        _toggleFavoriteState.value = Result.Success(isFavorite)
-    }
-
-    /**
-     * Load the current list of favorites for a customer.
-     */
     fun loadFavorites(customerId: Long) {
         viewModelScope.launch {
             getFavoritesUseCase(customerId)
@@ -68,32 +58,6 @@ class WishlistViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Toggle between adding and removing favorite based on current state.
-     */
-    fun toggleFavorite(customerId: Long, variantId: Long, isCurrentlyFavorite: Boolean) {
-        viewModelScope.launch {
-            _toggleFavoriteState.value = Result.Loading
-
-            val result = if (isCurrentlyFavorite) {
-                removeFromFavoritesUseCase(customerId, variantId)
-            } else {
-                addToFavoritesUseCase(customerId, variantId)
-            }
-
-            loadFavorites(customerId)
-
-            _toggleFavoriteState.value = if (result.isSuccess) {
-                Result.Success(!isCurrentlyFavorite)
-            } else {
-                Result.Error(result.exceptionOrNull()?.message ?: "Favorite toggle failed")
-            }
-        }
-    }
-
-    /**
-     * Remove all favorites for the current user.
-     */
     fun clearFavorites(customerId: Long) {
         viewModelScope.launch {
             Log.d("WishlistViewModel", "Clearing all favorites for customerId: $customerId")
@@ -106,4 +70,46 @@ class WishlistViewModel @Inject constructor(
             loadFavorites(customerId)
         }
     }
+
+    suspend fun isFavorite(customerId: Long, variantId: Long): Boolean {
+        return try {
+            val result = getFavoritesUseCase(customerId)
+            result.getOrNull()?.items?.any { it?.variantId == variantId } == true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun addToFavorites(customerId: Long, variantId: Long): Result<Unit> {
+        return try {
+            addToFavoritesUseCase(customerId, variantId)
+            loadFavorites(customerId)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    fun removeFromFavorites(customerId: Long, variantId: Long) {
+        viewModelScope.launch {
+            try {
+                val currentItems = _favoritesState.value?.items?.filterNotNull().orEmpty()
+                val isLastItem = currentItems.size == 1 && currentItems[0].variantId == variantId
+                if (isLastItem) {
+                    clearFavorites(customerId)
+                    return@launch
+                }
+                val result = removeFromFavoritesUseCase(customerId, variantId)
+                if (result.isSuccess) {
+                    loadFavorites(customerId)
+                } else {
+                    Log.e("WishlistViewModel", "Remove failed: ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                Log.e("WishlistViewModel", "Exception during remove: ${e.message}")
+            }
+        }
+    }
+
+
 }
