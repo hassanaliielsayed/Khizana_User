@@ -147,24 +147,6 @@ fun CheckoutScreen(
         }
     }
 
-//    // Fetch initial location only once when screen loads
-//    LaunchedEffect(Unit) {
-//        if (locationPermissionGranted && locationEnabled && selectedAddress.isEmpty()) {
-//            try {
-//                val location = locationUtils.getCurrentLocation().first()
-//                val geocoder = Geocoder(context)
-//                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-//                val address = addresses?.firstOrNull()?.getAddressLine(0) ?: "Unknown Address"
-//                locationViewModel.updateAddress(
-//                    address,
-//                    LatLng(location.latitude, location.longitude)
-//                )
-//            } catch (e: Exception) {
-//                Log.e("CheckoutScreen", "Error getting initial location: ${e.message}")
-//            }
-//        }
-//    }
-
     val fetchCurrentLocation = remember {
         suspend {
             try {
