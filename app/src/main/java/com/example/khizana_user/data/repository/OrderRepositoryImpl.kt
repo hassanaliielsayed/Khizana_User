@@ -1,8 +1,10 @@
 package com.example.khizana_user.data.repository
 
 import com.example.khizana_user.data.dto.draftorderDto.*
+import com.example.khizana_user.data.repository.mapper.toDomain
 import com.example.khizana_user.data.repository.mapper.toOrder
 import com.example.khizana_user.domain.model.Order
+import com.example.khizana_user.domain.model.Orders
 import com.example.khizana_user.domain.repository.OrderRepository
 import javax.inject.Inject
 
@@ -39,5 +41,13 @@ class OrderRepositoryImpl @Inject constructor(
         if (!res.isSuccessful) {
             throw Exception("Update draft failed: ${res.code()}")
         }
+    }
+
+    override suspend fun getOrders(customerId: Long): List<Orders> {
+        return remote.getOrdersByCustomerId(customerId).map { it.toDomain() }
+    }
+
+    override suspend fun getOrder(orderId: Long): Orders {
+        return remote.getOrderById(orderId).toDomain()
     }
 }

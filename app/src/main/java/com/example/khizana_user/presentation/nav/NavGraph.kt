@@ -29,7 +29,10 @@ import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.cart.view.MapScreen
+import com.example.khizana_user.presentation.order.view.OrderDetailsScreen
+import com.example.khizana_user.presentation.order.view.OrdersScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
+import com.example.khizana_user.presentation.profile.view.ProfileScreen
 import com.example.khizana_user.presentation.setting.view.AboutUs
 import com.example.khizana_user.presentation.setting.view.ContactsScreen
 import com.example.khizana_user.presentation.setting.view.SettingScreen
@@ -155,6 +158,20 @@ fun AppNavGraph(
             }
         }
 
+        composable(ScreenRoute.Profile.route) {
+            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
+                val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+                if(customer != null) {
+                    ProfileScreen(
+                        customerId = customer.id,
+                        modifier = Modifier.padding(innerPadding),
+                        navController = navController
+                    )
+                }
+            }
+        }
+
+
         composable(
             route = ScreenRoute.ProductDetails.route,
             arguments = listOf(
@@ -260,5 +277,21 @@ fun AppNavGraph(
                 }
             )
         }
+
+      composable(ScreenRoute.Orders.route) {
+          val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+          if(customer != null) {
+              OrdersScreen(customerId = customer.id, navController = navController)
+          }
+        }
+
+        composable(
+            route = "${ScreenRoute.OrderDetails.route}/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getLong("orderId") ?: -1
+            OrderDetailsScreen(orderId = orderId)
+        }
+
     }
 }

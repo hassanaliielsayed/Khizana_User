@@ -10,4 +10,5 @@ interface WishlistRepository {
     suspend fun getFavorites(customerId: Long): Result<FavoriteList>
 
     suspend fun deleteFavoritesDraft(customerId: Long): Result<Unit>
+
 }
