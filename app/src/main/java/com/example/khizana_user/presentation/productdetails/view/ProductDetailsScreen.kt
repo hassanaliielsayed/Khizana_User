@@ -1,6 +1,5 @@
 package com.example.khizana_user.presentation.productdetails.view
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -34,6 +33,7 @@ import com.example.khizana_user.utils.isGuestUser
 import com.example.khizana_user.utils.toCurrentCurrency
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProductDetailsScreen(
@@ -45,20 +45,14 @@ fun ProductDetailsScreen(
     cartViewModel: CartViewModel = hiltViewModel()
 ) {
     val productState by viewModel.state.collectAsStateWithLifecycle()
-    val favorites by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
-    val favoriteStatus by wishlistViewModel.toggleFavoriteState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(customerId) {
-        wishlistViewModel.loadFavorites(customerId)
-    }
+    // Independent Favorite State
+    var isFavorite by remember { mutableStateOf<Boolean?>(null) }
+    var isToggling by remember { mutableStateOf(false) }
 
-    LaunchedEffect(favorites, productId, variantId) {
-        val id = variantId ?: productId ?: return@LaunchedEffect
-        val isFav = favorites?.items?.any { it?.variantId == id } ?: false
-        wishlistViewModel.setInitialFavoriteStatus(isFav)
-    }
-
+    // Load product
     LaunchedEffect(productId, variantId) {
         when {
             productId != null -> viewModel.loadProduct(productId)
@@ -78,18 +72,48 @@ fun ProductDetailsScreen(
 
             is ProductDetailsViewModel.Result.Success -> {
                 val product = result.data
+
+                // Fetch favorite status only when product is available
+                LaunchedEffect(product.variantId) {
+                    isFavorite = wishlistViewModel.isFavorite(customerId, product.variantId ?: return@LaunchedEffect)
+                }
+
                 ProductDetailsContent(
                     product = product,
-                    favoriteStatus = favoriteStatus,
+                    isFavorite = isFavorite ?: false,
+                    isToggling = isToggling || isFavorite == null,
                     onToggleFavorite = {
-                        val id = product.variantId ?: return@ProductDetailsContent
-                        val current = (favoriteStatus as? Result.Success)?.data ?: false
+                        val variantId = product.variantId ?: return@ProductDetailsContent
 
                         if (isGuestUser()) {
                             Toast.makeText(context, "Please sign in to add to favorites", Toast.LENGTH_SHORT).show()
-                        } else if (favoriteStatus !is Result.Loading) {
-                            wishlistViewModel.toggleFavorite(customerId, id, current)
+                            return@ProductDetailsContent
                         }
+
+                        if (isToggling || isFavorite == null) return@ProductDetailsContent
+
+                        isToggling = true
+                        coroutineScope.launch {
+                            val wasFavorite = isFavorite ?: false
+
+                            val result = if (wasFavorite)
+                                wishlistViewModel.removeFromFavorites(customerId, variantId)
+                            else
+                                wishlistViewModel.addToFavorites(customerId, variantId)
+
+                            when (result) {
+                                is Result.Success<*> -> {
+                                    isFavorite = !wasFavorite
+                                }
+                                is Result.Error -> {
+                                    Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                                }
+                                else -> {}
+                            }
+
+                            isToggling = false
+                        }
+
                     },
                     onAddToCart = {
                         val id = product.variantId ?: return@ProductDetailsContent
@@ -101,7 +125,6 @@ fun ProductDetailsScreen(
                             Toast.makeText(context, "Added to cart", Toast.LENGTH_SHORT).show()
                         }
                     }
-
                 )
             }
         }
@@ -111,7 +134,8 @@ fun ProductDetailsScreen(
 @Composable
 fun ProductDetailsContent(
     product: ProductDetails,
-    favoriteStatus: Result<Boolean>,
+    isFavorite: Boolean,
+    isToggling: Boolean,
     onToggleFavorite: () -> Unit,
     onAddToCart: () -> Unit
 ) {
@@ -154,25 +178,13 @@ fun ProductDetailsContent(
                     .padding(12.dp)
                     .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
             ) {
-                when (favoriteStatus) {
-                    is Result.Loading -> CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp
-                    )
-
-                    is Result.Success -> {
-                        val isFav = favoriteStatus.data
-                        Icon(
-                            imageVector = if (isFav) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = if (isFav) "Unfavorite" else "Favorite",
-                            tint = if (isFav) Color.Red else Color.Black
-                        )
-                    }
-
-                    is Result.Error -> Icon(
-                        imageVector = Icons.Default.FavoriteBorder,
-                        contentDescription = "Favorite",
-                        tint = Color.Gray
+                if (isToggling) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Unfavorite" else "Favorite",
+                        tint = if (isFavorite) Color.Red else Color.Black
                     )
                 }
             }

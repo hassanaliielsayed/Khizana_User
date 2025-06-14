@@ -17,6 +17,7 @@ import coil.compose.AsyncImage
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.utils.Result
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,21 +27,69 @@ fun WishlistScreen(
     navController: NavController,
     viewModel: WishlistViewModel = hiltViewModel()
 ) {
-    val favorites by viewModel.favoritesState.collectAsState()
+    val favoritesState by viewModel.favoritesState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val removingIds = remember { mutableStateListOf<Long>() }
+
+    var showClearDialog by remember { mutableStateOf(false) }
+    var confirmRemoveItem by remember { mutableStateOf<FavoriteItem?>(null) }
 
     LaunchedEffect(customerId) {
         viewModel.loadFavorites(customerId)
     }
 
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            title = { Text("Clear All Favorites") },
+            text = { Text("Are you sure you want to remove all items?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showClearDialog = false
+                    coroutineScope.launch {
+                        viewModel.clearFavorites(customerId)
+                    }
+                }) { Text("Yes") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) { Text("No") }
+            }
+        )
+    }
+
+    // Confirm Remove Dialog
+    confirmRemoveItem?.let { item ->
+        AlertDialog(
+            onDismissRequest = { confirmRemoveItem = null },
+            title = { Text("Remove Item") },
+            text = { Text("Do you want to remove ${item.title}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRemoveItem = null
+                    removingIds.add(item.variantId)
+                    coroutineScope.launch {
+                        val result = viewModel.removeFromFavorites(customerId, item.variantId)
+                        removingIds.remove(item.variantId)
+
+                        if (result is Result.Error) {
+                            println("Failed to remove item: ${result.message}")
+                        }
+                    }
+                }) { Text("Yes") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRemoveItem = null }) { Text("No") }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Favorites") },
+                title = { Text("My Wishlist") },
                 actions = {
-                    val items = favorites?.items.orEmpty().filterNotNull()
-                    if (items.isNotEmpty()) {
-                        TextButton(onClick = { viewModel.clearFavorites(customerId) }) {
+                    if (!favoritesState?.items.isNullOrEmpty()) {
+                        TextButton(onClick = { showClearDialog = true }) {
                             Text("Clear All")
                         }
                     }
@@ -48,39 +97,34 @@ fun WishlistScreen(
             )
         }
     ) { padding ->
+        val items = favoritesState?.items?.filterNotNull().orEmpty()
+
         Box(
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
+                .padding(padding)
         ) {
-            val items = favorites?.items.orEmpty().filterNotNull()
-
             when {
-                favorites == null -> {
+                favoritesState == null -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
                 items.isEmpty() -> {
-                    Text("No favorites found.", modifier = Modifier.align(Alignment.Center))
+                    Text("No favorites found", modifier = Modifier.align(Alignment.Center))
                 }
 
                 else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(items) { item ->
+                    LazyColumn {
+                        items(items, key = { it.variantId }) { item ->
                             FavoriteItemCard(
                                 item = item,
-                                onRemoveClick = {
-                                    coroutineScope.launch {
-                                        viewModel.toggleFavorite(
-                                            customerId = customerId,
-                                            variantId = item.variantId,
-                                            isCurrentlyFavorite = true
-                                        )
-                                    }
-                                },
+                                isLoading = removingIds.contains(item.variantId),
+                                onRemoveClick = { confirmRemoveItem = item },
                                 onItemClick = {
                                     navController.navigate(
-                                        ScreenRoute.ProductDetails.createRoute(variantId = item.variantId)
+                                        ScreenRoute.ProductDetails.createRoute(
+                                            variantId = item.variantId
+                                        )
                                     )
                                 }
                             )
@@ -95,6 +139,7 @@ fun WishlistScreen(
 @Composable
 fun FavoriteItemCard(
     item: FavoriteItem,
+    isLoading: Boolean = false,
     onRemoveClick: () -> Unit,
     onItemClick: () -> Unit
 ) {
@@ -102,7 +147,7 @@ fun FavoriteItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp)
-            .clickable { onItemClick() },
+            .clickable(enabled = !isLoading) { onItemClick() },
         elevation = CardDefaults.cardElevation()
     ) {
         Row(
@@ -121,16 +166,20 @@ fun FavoriteItemCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = item.title, style = MaterialTheme.typography.titleMedium)
-                Text(text = "Variant ID: ${item.variantId}")
+                Text(text = "Price: $${item.price}")
                 Text(text = "Quantity: ${item.quantity}")
             }
 
-            IconButton(onClick = onRemoveClick) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Remove",
-                    tint = MaterialTheme.colorScheme.error
-                )
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+            } else {
+                IconButton(onClick = onRemoveClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Remove",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
