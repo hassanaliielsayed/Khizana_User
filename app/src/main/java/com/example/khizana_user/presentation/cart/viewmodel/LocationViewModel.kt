@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
@@ -24,13 +23,5 @@ class LocationViewModel @Inject constructor() : ViewModel() {
         _selectedAddress.value = address
         _selectedLatLng.value = latLng
         isManualSelection = true
-    }
-
-    fun handleLocationUpdate(location: Location) {
-        if (!isManualSelection) {
-            // Only update if it's not a manual selection
-            _selectedLatLng.value = LatLng(location.latitude, location.longitude)
-            // You might want to geocode here as well
-        }
     }
 }
