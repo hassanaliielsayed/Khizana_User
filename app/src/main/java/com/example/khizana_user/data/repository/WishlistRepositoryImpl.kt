@@ -23,4 +23,5 @@ class WishlistRepositoryImpl @Inject constructor(
     override suspend fun deleteFavoritesDraft(customerId: Long): Result<Unit> {
         return remoteDataSource.deleteFavoritesDraft(customerId)
     }
+
 }

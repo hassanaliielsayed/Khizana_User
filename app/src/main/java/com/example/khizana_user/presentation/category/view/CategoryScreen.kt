@@ -238,7 +238,7 @@ fun ProductItem(product: ProductByCategory) {
             .padding(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = colorResource(id = R.color.dark_blue)
+            containerColor = colorResource(id = R.color.white)
         )
     ) {
         Row(
@@ -258,7 +258,7 @@ fun ProductItem(product: ProductByCategory) {
                     fontFamily = customFontFamily,
                 )
                 Text("Vendor: ${product.productVendor ?: "N/A"}", fontFamily = customFontFamily)
-                Text("Price: ${product.productPrice} EG", fontFamily = customFontFamily)
+                Text("Price: ${product.productPrice} EGP", fontFamily = customFontFamily)
                 Text("Product Type: ${product.product_type}", fontFamily = customFontFamily)
             }
         }

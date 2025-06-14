@@ -1,5 +1,6 @@
 package com.example.khizana_user.data.repository
 
+import androidx.room.FtsOptions
 import com.example.khizana_user.data.dataSource.remote.CartRemoteDataSourceImpl
 import com.example.khizana_user.data.repository.mapper.toDomain
 import com.example.khizana_user.domain.model.Coupon
@@ -9,7 +10,7 @@ import javax.inject.Inject
 
 class CartRepositoryImpl @Inject constructor(
     private val remote: CartRemoteDataSourceImpl,
-    private val remoteSource: RemoteDataSource
+    private val remoteSource: RemoteDataSource,
 ) : CartRepository {
     override suspend fun addToCart(customerId: Long, variantId: Long): Result<Unit> {
         return remote.addToCart(customerId, variantId)

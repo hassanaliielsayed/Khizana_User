@@ -2,6 +2,7 @@ package com.example.khizana_user.data.dataSource.remote
 
 import android.util.Log
 import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
+import com.example.khizana_user.data.dto.OrderDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderRequest
 import com.example.khizana_user.data.repository.OrderRemoteDataSource
@@ -98,5 +99,35 @@ class OrderRemoteDataSourceImpl @Inject constructor(
 
         Log.i("OrderRemote", "Draft updated successfully")
         return Response.success(response.code(), draft)
+    }
+
+    override suspend fun getOrdersByCustomerId(customerId: Long):List<OrderDto> {
+        val response = api.getOrdersByCustomerId(customerId)
+        val body = response.body()
+
+        if (response.isSuccessful && body != null) {
+
+            return body.orders
+
+        } else {
+
+            throw Exception("Error fetching brands: ${response.message()}")
+
+        }
+    }
+
+    override suspend fun getOrderById(orderId: Long): OrderDto {
+        val response = api.getOrderById(orderId)
+        val body = response.body()
+
+        if (response.isSuccessful && body != null) {
+
+            return body.order
+
+        } else {
+
+            throw Exception("Error fetching order details: ${response.message()}")
+
+        }
     }
 }
