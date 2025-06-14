@@ -1,8 +1,12 @@
 package com.example.khizana_user.presentation.cart.view
 
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.location.Geocoder
 import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,6 +41,7 @@ import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
 import com.example.khizana_user.utils.ConfirmationDialog
+import com.example.khizana_user.utils.LocationUtils
 import com.example.khizana_user.utils.PaymentMethod
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.toCurrentCurrency
@@ -47,7 +52,12 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
+import android.Manifest
+import android.provider.Settings
+import kotlinx.coroutines.flow.first
 
+
+@SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
@@ -62,6 +72,10 @@ fun CheckoutScreen(
     onAddressClick: () -> Unit,
     onPaymentMethodClick: () -> Unit
 ) {
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     var couponCode by remember { mutableStateOf("") }
     var showConfirmationDialog by remember { mutableStateOf(false) }
     var selectedPaymentMethod by remember { mutableStateOf(PaymentMethod.COD) }
@@ -70,6 +84,7 @@ fun CheckoutScreen(
     val cartState by viewModel.cartState.collectAsState()
     val orderState by orderViewModel.orderState.collectAsState()
     val invoiceUrlState by orderViewModel.invoiceUrl.collectAsState()
+    val connectionState by viewModel.networkState.collectAsState()
 
     val coupon = (couponState as? Result.Success)?.data
     val totalDiscount = if (coupon != null) totalPrice * (coupon.discount / 100.0) else 0.0
@@ -77,14 +92,75 @@ fun CheckoutScreen(
 
     val selectedAddress by locationViewModel.selectedAddress.collectAsState()
     val selectedLatLng by locationViewModel.selectedLatLng.collectAsState()
-    val context = LocalContext.current
+
+    val locationUtils = remember { LocationUtils(context) }
+
+    var locationPermissionGranted by remember { mutableStateOf(locationUtils.hasLocationPermission()) }
+    var locationEnabled by remember { mutableStateOf(locationUtils.isLocationEnabled()) }
+
+    var userSelectedLocation by remember { mutableStateOf(false) }
+
     val autocompleteLauncher = LaunchPlacesAutoComplete(context) { place ->
         val address = place.address ?: "Unknown"
         val latLng = place.latLng ?: LatLng(30.0, 31.0)
+        userSelectedLocation = true
         locationViewModel.updateAddress(address, latLng)
     }
 
-    val connectionState by viewModel.networkState.collectAsState()
+
+    // Fetch initial location only once when screen loads
+    LaunchedEffect(Unit) {
+        if (locationPermissionGranted && locationEnabled && selectedAddress.isEmpty()) {
+            try {
+                val location = locationUtils.getCurrentLocation().first()
+                val geocoder = Geocoder(context)
+                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                val address = addresses?.firstOrNull()?.getAddressLine(0) ?: "Unknown Address"
+                locationViewModel.updateAddress(
+                    address,
+                    LatLng(location.latitude, location.longitude)
+                )
+            } catch (e: Exception) {
+                Log.e("CheckoutScreen", "Error getting initial location: ${e.message}")
+            }
+        }
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    }
+
+    // Request location permission if not granted
+    if (!locationPermissionGranted) {
+        LaunchedEffect(Unit) {
+            launcher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    // Show location services dialog if disabled
+    if (!locationEnabled) {
+        AlertDialog(
+            onDismissRequest = { /* Don't allow dismiss */ },
+            title = { Text("Location Services Disabled") },
+            text = { Text("Please enable location services to get your current address") },
+            confirmButton = {
+                Button(onClick = {
+                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    locationEnabled = locationUtils.isLocationEnabled()
+                }) {
+                    Text("Enable Location")
+                }
+            }
+        )
+    }
 
     LaunchedEffect(customerId) {
         if (connectionState) {
@@ -132,36 +208,25 @@ fun CheckoutScreen(
                     Text("Shipping Address", color = Color(0xFFA1A6B0), fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))
                     Text("Address", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = selectedAddress,
+                        text = selectedAddress.ifBlank { "Please select a location" },
                         color = Color(0xFF929292),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row {
                         Button(onClick = autocompleteLauncher) {
                             Text("Search Address")
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = onAddressClick) {
+                        Button(onClick = {
+                            userSelectedLocation = true
+                            onAddressClick()
+                        }) {
                             Text("Select on Map")
                         }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    GoogleMap(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        cameraPositionState = rememberCameraPositionState {
-                            position = CameraPosition.fromLatLngZoom(selectedLatLng, 12f)
-                        }
-                    ) {
-                        Marker(
-                            state = MarkerState(position = selectedLatLng),
-                            title = "Your Address"
-                        )
                     }
                 }
             }
@@ -346,94 +411,46 @@ fun CheckoutScreen(
         }
     }
 
-    val coroutineScope = rememberCoroutineScope()
-
     ConfirmationDialog(
         showDialog = showConfirmationDialog,
         onDismiss = { showConfirmationDialog = false },
         onConfirm = {
             coroutineScope.launch {
-                Log.i("CheckoutScreen", "Cart State: $cartState")
                 val draftOrder = (cartState as? Result.Success)?.data
-                val draftOrderId = draftOrder?.draftOrderId
+                val draftOrderId = draftOrder?.draftOrderId ?: return@launch
 
-                if (draftOrderId != null) {
-                    Log.i("CheckoutScreen", "Draft ID: $draftOrderId")
-                    Log.i("CheckoutScreen", "Customer ID: $customerId")
-                    Log.i("CheckoutScreen", "Selected Payment Method: $selectedPaymentMethod")
-                    Log.i("CheckoutScreen", "Address: $selectedAddress")
-                    Log.i("CheckoutScreen", "atLng: $selectedLatLng")
+                val cityCountry = getCityAndCountryFromLatLng(context, selectedLatLng)
+                val shippingAddressDto = ShippingAddressDto(
+                    address1 = selectedAddress,
+                    city = cityCountry?.first ?: "Unknown",
+                    country = cityCountry?.second ?: "Unknown",
+                    zip = "00000"
+                )
 
-                    val cityCountry = getCityAndCountryFromLatLng(context, selectedLatLng)
-                    val city = cityCountry?.first ?: "Unknown"
-                    val country = cityCountry?.second ?: "Unknown"
-
-                    Log.i("CheckoutScreen", "City: $city, Country: $country")
-
-                    val shippingAddressDto = ShippingAddressDto(
-                        address1 = selectedAddress,
-                        city = city,
-                        country = country,
-                        zip = "00000"
+                val appliedDiscount = coupon?.let {
+                    AppliedDiscountDto(
+                        title = it.title,
+                        value = it.discount.toString(),
+                        valueType = "percentage",
+                        amount = (totalPrice * (it.discount / 100.0)).toString()
                     )
+                }
 
-                    val discountAmount = totalPrice * (coupon?.discount?.toDouble() ?: 0.0) / 100.0
-                    Log.i(
-                        "CheckoutScreen",
-                        "Discount: ${coupon?.discount}% (${discountAmount.toCurrentCurrency()})"
-                    )
+                val draftLineItems = draftOrder.items.filterNotNull().map {
+                    DraftOrderItem(variantId = it.variantId, quantity = it.quantity)
+                }
 
-                    val appliedDiscount = coupon?.let {
-                        AppliedDiscountDto(
-                            title = it.title,
-                            value = it.discount.toString(),
-                            valueType = "percentage",
-                            amount = (totalPrice * (it.discount / 100.0)).toString()
-                        )
-                    }
+                orderViewModel.updateDraftOrderBeforeCheckout(
+                    draftOrderId = draftOrderId,
+                    customerId = customerId,
+                    shippingAddress = shippingAddressDto,
+                    appliedDiscount = appliedDiscount,
+                    lineItems = draftLineItems
+                )
 
-                    val draftLineItems = draftOrder.items.filterNotNull().map {
-                        DraftOrderItem(variantId = it.variantId, quantity = it.quantity)
-                    }
-
-
-                    val draftRequest = DraftOrderRequest(
-                        draftOrder = DraftOrderData(
-                            line_items = draftLineItems,
-                            customer = CustomerData(customerId),
-                            note = "CART-$customerId",
-                            shipping_address = shippingAddressDto,
-                            applied_discount = appliedDiscount,
-                            use_customer_default_address = false
-                        )
-                    )
-
-
-                    Log.i("CheckoutScreen", "DraftOrderRequest Body:\n$draftRequest")
-
-                    orderViewModel.updateDraftOrderBeforeCheckout(
-                        draftOrderId = draftOrderId,
-                        customerId = customerId,
-                        shippingAddress = shippingAddressDto,
-                        appliedDiscount = appliedDiscount,
-                        lineItems = draftLineItems
-                    )
-
-
-
-                    when (selectedPaymentMethod) {
-                        PaymentMethod.COD -> {
-                            Log.i("CheckoutScreen", "placing COD order...")
-                            orderViewModel.completeCODOrder(draftOrderId)
-                        }
-
-                        PaymentMethod.ONLINE -> {
-                            Log.i("CheckoutScreen", "Initiating online payment...")
-                            orderViewModel.initiateOnlinePayment(draftOrderId)
-                        }
-                    }
-                } else {
-                    Log.e("CheckoutScreen", "Draft order ID is null.")
+                when (selectedPaymentMethod) {
+                    PaymentMethod.COD -> orderViewModel.completeCODOrder(draftOrderId)
+                    PaymentMethod.ONLINE -> orderViewModel.initiateOnlinePayment(draftOrderId)
                 }
             }
         },
