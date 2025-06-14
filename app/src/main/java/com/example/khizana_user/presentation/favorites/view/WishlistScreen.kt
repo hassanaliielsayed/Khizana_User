@@ -104,35 +104,42 @@ fun WishlistScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when {
-                favoritesState == null -> {
+            when (val state = favoritesState) {
+                null -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
-                items.isEmpty() -> {
-                    Text("No favorites found", modifier = Modifier.align(Alignment.Center))
-                }
-
                 else -> {
-                    LazyColumn {
-                        items(items, key = { it.variantId }) { item ->
-                            FavoriteItemCard(
-                                item = item,
-                                isLoading = removingIds.contains(item.variantId),
-                                onRemoveClick = { confirmRemoveItem = item },
-                                onItemClick = {
-                                    navController.navigate(
-                                        ScreenRoute.ProductDetails.createRoute(
-                                            variantId = item.variantId
+                    val items = state.items?.filterNotNull().orEmpty()
+
+                    if (items.isEmpty()) {
+                        Text(
+                            "No favorites found",
+                            modifier = Modifier.align(Alignment.Center),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    } else {
+                        LazyColumn {
+                            items(items, key = { it.variantId }) { item ->
+                                FavoriteItemCard(
+                                    item = item,
+                                    isLoading = removingIds.contains(item.variantId),
+                                    onRemoveClick = { confirmRemoveItem = item },
+                                    onItemClick = {
+                                        navController.navigate(
+                                            ScreenRoute.ProductDetails.createRoute(
+                                                variantId = item.variantId
+                                            )
                                         )
-                                    )
-                                }
-                            )
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+
     }
 }
 
