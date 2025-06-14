@@ -31,7 +31,9 @@ import androidx.compose.material3.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.nav.ScreenRoute
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,7 +41,8 @@ import com.example.khizana_user.R
 fun SearchScreen(
     viewModel: CategoryViewModel = hiltViewModel(),
     onNavigateToFavorites: () -> Unit,
-    onNavigateToCart: () -> Unit
+    onNavigateToCart: () -> Unit,
+    navController: NavHostController,
 ) {
 
     val products by viewModel.products.collectAsState()
@@ -105,7 +108,11 @@ fun SearchScreen(
 
             LazyColumn {
                 items(products) { product ->
-                    ProductItem(product = product)
+                    ProductItem(product = product,
+                        onClick = {
+                            navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                        }
+                    )
                 }
             }
 

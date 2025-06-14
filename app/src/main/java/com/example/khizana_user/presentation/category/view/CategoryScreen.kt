@@ -67,7 +67,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.*
+import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.utils.toCurrentCurrency
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,7 +79,8 @@ fun CategoryScreen(
     modifier: Modifier = Modifier,
     viewModel: CategoryViewModel = hiltViewModel(),
     onNavigateToFavorites: () -> Unit,
-    onNavigateToSearch: () -> Unit
+    onNavigateToSearch: () -> Unit,
+    navController: NavHostController,
 ) {
 
     val mainCategory = listOf(
@@ -263,7 +267,11 @@ fun CategoryScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(products) { product ->
-                            ProductItem(product = product)
+                            ProductItem(product = product,
+                                onClick = {
+                                    navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                                }
+                            )
                         }
                     }
                 }
@@ -273,11 +281,12 @@ fun CategoryScreen(
 }
 
 @Composable
-fun ProductItem(product: ProductByCategory) {
+fun ProductItem(product: ProductByCategory, onClick: () -> Unit,) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = colorResource(id = R.color.white)
@@ -300,7 +309,7 @@ fun ProductItem(product: ProductByCategory) {
                     fontFamily = customFontFamily,
                 )
                 Text("Vendor: ${product.productVendor ?: "N/A"}", fontFamily = customFontFamily)
-                Text("Price: ${product.productPrice} EGP", fontFamily = customFontFamily)
+                Text("Price: ${product.productPrice.toCurrentCurrency()}", fontFamily = customFontFamily)
                 Text("Product Type: ${product.product_type}", fontFamily = customFontFamily)
             }
         }

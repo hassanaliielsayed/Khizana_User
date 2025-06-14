@@ -102,6 +102,7 @@ fun AppNavGraph(
                     onNavigateToSearch = {
                         navController.navigate("search")
                                          },
+                    navController = navController
                 )
             }
         }
@@ -301,7 +302,9 @@ fun AppNavGraph(
                                         },
                 onNavigateToCart = {
                     navController.navigate(ScreenRoute.Cart.route)
-                })
+                },
+                navController = navController
+            )
         }
     }
 }
