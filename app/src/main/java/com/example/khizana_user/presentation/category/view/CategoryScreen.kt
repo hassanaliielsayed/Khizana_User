@@ -22,15 +22,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -39,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -83,6 +86,13 @@ fun CategoryScreen(
 
     val connectionState by viewModel.networkState.collectAsState()
 
+    var selectedPrice by remember { mutableStateOf(10000f) }
+
+    var isFilterVisible by remember { mutableStateOf(false) }
+
+    val minPrice = 0f
+    val maxPrice = 2000f
+
     if (!connectionState) {
         NoInternetConnectionView()
     } else {
@@ -99,25 +109,28 @@ fun CategoryScreen(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
                     actions = {
-                        IconButton(onClick = {}) {
+
+                        IconButton(onClick = onNavigateToCart) {
                             Icon(
                                 Icons.Default.Search,
-                                contentDescription = null,
+                                tint = Color.Black,
+                                contentDescription = stringResource(R.string.search_for_products),
+                            )
+                        }
+
+                        IconButton(onClick =  { isFilterVisible = !isFilterVisible }) {
+                            Icon(
+                                Icons.Default.FilterList,
+                                contentDescription = stringResource(R.string.filter),
                                 tint = Color.Black
                             )
                         }
+
                         IconButton(onClick = onNavigateToFavorites) {
                             Icon(
                                 Icons.Default.Favorite,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.favorites),
                                 tint = Color.Black
-                            )
-                        }
-                        IconButton(onClick = onNavigateToCart) {
-                            Icon(
-                                Icons.Default.ShoppingCart,
-                                tint = Color.Black,
-                                contentDescription = null,
                             )
                         }
                     }
@@ -210,6 +223,15 @@ fun CategoryScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                if (isFilterVisible) {
+                    FilterByPrice(minPrice, maxPrice) { price ->
+                        selectedPrice = price
+                        viewModel.filterProductsByPrice(price)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 if (products.isEmpty()) {
                     Text(
                         "No products found.",
@@ -291,3 +313,36 @@ fun CategoryChipImage(
         )
     }
 }
+
+@Composable
+fun FilterByPrice(
+    minPrice: Float,
+    maxPrice: Float,
+    onValueChange: (Float) -> Unit
+) {
+    var sliderPosition by remember { mutableFloatStateOf(minPrice) }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+    ) {
+        Text(text = "Price: ${sliderPosition.toInt()} EGP" , fontFamily = customFontFamily)
+
+        Slider(
+            value = sliderPosition,
+            onValueChange = {
+                sliderPosition = it
+                onValueChange(sliderPosition)
+            },
+            valueRange = minPrice..maxPrice,
+            modifier = Modifier.height(22.dp),
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.secondary,
+                activeTrackColor = MaterialTheme.colorScheme.secondary,
+                inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+            )
+        )
+    }
+}
+
+

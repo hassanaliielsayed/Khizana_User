@@ -21,4 +21,5 @@
     <string name="title_activity_profile">Profile</string>
     <string name="title_activity_profile_screen">ProfileScreen</string>
     <string name="title_activity_order_details">OrderDetails</string>
+    <string name="title_activity_search_screen">SearchScreen</string>
 </resources>

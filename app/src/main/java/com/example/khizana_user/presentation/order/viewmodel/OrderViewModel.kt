@@ -115,7 +115,6 @@ class OrderViewModel @Inject constructor(
                     Log.d("OrderVM", "Order: $order")
                 }
 
-                // _orders.value = Result.Success(orderList)
             } catch (e: Exception) {
                 val error = e.message ?: "Error fetching orders"
                 _orders.value = Result.Error(error)

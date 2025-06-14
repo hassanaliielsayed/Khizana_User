@@ -33,6 +33,9 @@ class CategoryViewModel @Inject constructor(
     private val _networkState = MutableStateFlow(true)
     val networkState: StateFlow<Boolean> = _networkState
 
+    private var currentPrice: Float = Float.MAX_VALUE
+
+
     init {
         observeNetworkState()
         getAllProducts()
@@ -70,7 +73,6 @@ class CategoryViewModel @Inject constructor(
 
     private fun filterProducts() {
         _products.value = _allProducts.value.filter { product ->
-
             val main = when (currentMainCategory) {
                 "All" -> true
                 else -> product.productTags.any { it.equals(currentMainCategory, ignoreCase = true) }
@@ -81,7 +83,14 @@ class CategoryViewModel @Inject constructor(
                 else -> product.product_type?.equals(currentSubCategory, ignoreCase = true) ?: false
             }
 
-            main && sub
+            val priceFilter = product.productPrice <= currentPrice
+
+            main && sub && priceFilter
         }
+    }
+
+    fun filterProductsByPrice(price: Float) {
+        currentPrice = price
+        filterProducts()
     }
 }
