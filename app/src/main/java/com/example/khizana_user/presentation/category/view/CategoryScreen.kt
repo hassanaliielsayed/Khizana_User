@@ -238,7 +238,7 @@ fun ProductItem(product: ProductByCategory) {
             .padding(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = colorResource(id = R.color.dark_blue)
+            containerColor = colorResource(id = R.color.white)
         )
     ) {
         Row(
