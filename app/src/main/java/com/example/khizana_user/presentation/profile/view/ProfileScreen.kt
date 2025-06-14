@@ -207,7 +207,7 @@ fun ProfileScreen(
                                             fontWeight = FontWeight.Bold
                                         )
 
-                                        if (result.data.size > 2) {
+                                        if (result.data.isNotEmpty()) {
                                             Text(
                                                 text = "See more",
                                                 color = colorResource(id = R.color.black),
