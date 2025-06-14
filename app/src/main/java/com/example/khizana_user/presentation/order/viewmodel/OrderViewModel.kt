@@ -46,18 +46,11 @@ class OrderViewModel @Inject constructor(
         viewModelScope.launch {
             _orderState.value = Result.Loading
             try {
-                Log.d("OrderVM", "Sending invoice for draft ID: $draftOrderId")
-                sendInvoiceUseCase(draftOrderId)
-
-                Log.d("OrderVM", "Invoice sent. Completing order...")
+                Log.d("OrderVM", "Completing order (COD) with receipt...")
                 completeOrderUseCase(draftOrderId)
-
                 _orderState.value = Result.Success(Unit)
-                Log.d("OrderVM", "COD order completed successfully")
             } catch (e: Exception) {
-                val error = e.message ?: "Order failed"
-                _orderState.value = Result.Error(error)
-                Log.e("OrderVM", "COD order failed: $error")
+                _orderState.value = Result.Error(e.message ?: "Order failed")
             }
         }
     }

@@ -83,7 +83,7 @@ fun SettingScreen(
 
             SettingItem(
                 title = "Address",
-                value = "7znnnnnnnnnnnnn",
+                value = "Cairo, Egypt",
                 onClick = { /* TODO */ }
             )
             Spacer(modifier = Modifier.height(32.dp))

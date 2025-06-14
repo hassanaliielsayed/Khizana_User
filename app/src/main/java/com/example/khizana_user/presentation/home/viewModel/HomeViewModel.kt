@@ -7,11 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.model.Product
-import com.example.khizana_user.domain.usecase.GetAllBrandsUseCase
-import com.example.khizana_user.domain.usecase.GetAllCouponsUseCase
-import com.example.khizana_user.domain.usecase.GetAllProductsUseCase
-import com.example.khizana_user.domain.usecase.GetCurrencyUseCase
-import com.example.khizana_user.domain.usecase.GetExchangeRateUseCase
+import com.example.khizana_user.domain.usecase.*
 import com.example.khizana_user.utils.ConnectionLiveData
 import com.example.khizana_user.utils.CurrencyHelper
 import com.example.khizana_user.utils.Result
@@ -20,6 +16,8 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+enum class SearchFocusType { BRAND, PRODUCT }
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
@@ -62,38 +60,18 @@ class HomeViewModel @Inject constructor(
     private val _networkState = MutableStateFlow(true)
     val networkState = _networkState.asStateFlow()
 
-    init {
-//        fetchBrands()
-//        fetchCoupons()
-//        fetchAllProducts()
-//
-//        viewModelScope.launch {
-//            _searchQuery
-//                .debounce(300)
-//                .distinctUntilChanged()
-//                .collect { query ->
-//                    handleSmartSearch(query)
-//                }
-//        }
-//
-//        viewModelScope.launch {
-//
-//            getCurrencyUseCase().collect { savedCurrency ->
-//                CurrencyHelper.currencyUnit = savedCurrency ?: "EGP"
-//                if (CurrencyHelper.currencyUnit != "EGP") {
-//                    CurrencyHelper.exchangeRates = getExchangeRateUseCase("EGP", CurrencyHelper.currencyUnit).rate
-//                } else {
-//                    CurrencyHelper.exchangeRates = 1.0
-//                }
-//            }
-//        }
+    private val _searchFocusType = MutableStateFlow<SearchFocusType?>(null)
+    val searchFocusType: StateFlow<SearchFocusType?> = _searchFocusType
 
+    fun setFocus(type: SearchFocusType?) {
+        _searchFocusType.value = type
+    }
+
+    init {
         observeNetworkState()
         fetchInitialData()
         setupSearchHandler()
         setupCurrencyObserver()
-
-
     }
 
     private fun observeNetworkState() {
@@ -104,7 +82,6 @@ class HomeViewModel @Inject constructor(
                 .collect { isConnected ->
                     _networkState.value = isConnected
                     if (isConnected) {
-                        // Automatically refresh data when connection is restored
                         fetchInitialData()
                     }
                 }
@@ -115,18 +92,14 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             getCurrencyUseCase().collect { savedCurrency ->
                 CurrencyHelper.currencyUnit = savedCurrency ?: "EGP"
-                if (CurrencyHelper.currencyUnit != "EGP" && _networkState.value) {
+                CurrencyHelper.exchangeRates = if (CurrencyHelper.currencyUnit != "EGP" && _networkState.value) {
                     try {
-                        CurrencyHelper.exchangeRates = getExchangeRateUseCase(
-                            "EGP",
-                            CurrencyHelper.currencyUnit
-                        ).rate
+                        getExchangeRateUseCase("EGP", CurrencyHelper.currencyUnit).rate
                     } catch (e: Exception) {
                         _error.value = "Failed to update exchange rates"
+                        1.0
                     }
-                } else {
-                    CurrencyHelper.exchangeRates = 1.0
-                }
+                } else 1.0
             }
         }
     }
@@ -177,13 +150,11 @@ class HomeViewModel @Inject constructor(
             it.productTitle.contains(query, ignoreCase = true)
         }
 
-        // Combine suggestions: "Brand: X" + product titles
         _suggestions.value = (matchedBrands.map { "Brand: ${it.title}" } +
                 matchedProducts.map { it.productTitle })
             .distinct()
             .take(5)
 
-        // If full brand name typed exactly
         val brandExact = _allBrands.value.find { it.title.equals(query, ignoreCase = true) }
         if (brandExact != null) {
             viewModelScope.launch {
@@ -195,7 +166,6 @@ class HomeViewModel @Inject constructor(
 
         _filteredProducts.value = matchedProducts
 
-        // Auto-navigate if only one exact product
         if (matchedProducts.size == 1) {
             viewModelScope.launch {
                 _navigateToProduct.emit(matchedProducts.first().id)
@@ -204,7 +174,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun fetchBrands() {
-
         if (!_networkState.value) {
             _error.value = "Cannot fetch brands offline"
             return
@@ -222,7 +191,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun fetchCoupons() {
-
         if (!_networkState.value) {
             _error.value = "Cannot fetch brands offline"
             return
@@ -268,5 +236,4 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
 }
