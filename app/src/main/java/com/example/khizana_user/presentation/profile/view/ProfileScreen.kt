@@ -1,9 +1,6 @@
 package com.example.khizana_user.presentation.profile.view
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import com.example.khizana_user.utils.Result
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -40,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -57,11 +55,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
+import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.order.view.OrderItem
+import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
 import com.example.khizana_user.presentation.profile.view.ui.theme.Khizana_UserTheme
 import com.example.khizana_user.utils.customFontFamily
 import com.google.firebase.Firebase
@@ -71,10 +73,18 @@ import com.google.firebase.auth.auth
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun ProfileScreen(
+    customerId: Long,
     modifier: Modifier = Modifier,
-    authViewModel: AuthViewModel = hiltViewModel()) {
-
+    authViewModel: AuthViewModel = hiltViewModel(),
+    orderViewModel: OrderViewModel = hiltViewModel(),
+    navController: NavHostController
+) {
     val currentCustomer by authViewModel.currentCustomer.collectAsState()
+    val orderState by orderViewModel.orders.collectAsState()
+
+    LaunchedEffect(Unit) {
+        orderViewModel.fetchOrders(customerId)
+    }
 
     Scaffold(
         topBar = {
@@ -119,82 +129,158 @@ fun ProfileScreen(
 
         if (Firebase.auth.currentUser != null && !Firebase.auth.currentUser!!.email.isNullOrBlank()) {  // when guest
 
-            if (currentCustomer!= null){
-                Column(
+            if (currentCustomer != null) {
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .padding(innerPadding)
                         .verticalScroll(rememberScrollState())
-                        .padding(innerPadding),
-                    Arrangement.SpaceAround,
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .padding(20.dp),
-                        Arrangement.Center
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.SpaceAround
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.person),
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier.size(100.dp)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .padding(top = 2.dp, start = 20.dp, end = 20.dp), Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Name : ${currentCustomer?.name ?: ""}",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(20.dp),
+                            Arrangement.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.person),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.size(100.dp)
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(top = 2.dp, start = 20.dp, end = 20.dp), Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Name : ${currentCustomer?.name ?: ""}",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
-                    val configuration = LocalConfiguration.current
-                    val screenWidth = configuration.screenWidthDp.dp
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .padding(
-                                top = if (screenWidth < 600.dp) 2.dp else 10.dp,
-                                start = if (screenWidth < 600.dp) 10.dp else 20.dp,
-                                end = if (screenWidth < 600.dp) 10.dp else 20.dp
-                            ),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Email : ${currentCustomer?.email?: "N/A"}",
-                            fontSize = if (screenWidth < 600.dp) 14.sp else 17.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    ProfieItem(
-                        t = "Orders",
-                        id = R.drawable.ordersicon
-                    )
-                    ProfieItem(
-                        t = "Favorites",
-                        id = R.drawable.favorite
-                    )
-                    ProfieItem(
-                        t = "Settings",
-                        id = R.drawable.settings
-                    )
+                        val configuration = LocalConfiguration.current
+                        val screenWidth = configuration.screenWidthDp.dp
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(
+                                    top = if (screenWidth < 600.dp) 2.dp else 10.dp,
+                                    start = if (screenWidth < 600.dp) 10.dp else 20.dp,
+                                    end = if (screenWidth < 600.dp) 10.dp else 20.dp
+                                ),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Email : ${currentCustomer?.email ?: "N/A"}",
+                                fontSize = if (screenWidth < 600.dp) 14.sp else 17.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
+                        Text(
+                            text = "Orders",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                        )
+
+                        when (val result = orderState) {
+                            is Result.Loading -> {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                            }
+
+                            is Result.Success -> {
+                                if (result.data.isEmpty()) {
+                                    Text(
+                                        text = "No orders yet.",
+                                        fontSize = 16.sp,
+                                        color = Color.Gray,
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                    )
+                                } else {
+                                    val ordersToShow = result.data.take(2)
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    ) {
+                                        ordersToShow.forEach { order ->
+                                            Card(
+                                                shape = RoundedCornerShape(12.dp),
+                                                elevation = CardDefaults.cardElevation(6.dp),
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = Color(
+                                                        0xFFE3F2FD
+                                                    )
+                                                ),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Column(modifier = Modifier.padding(12.dp)) {
+                                                    Text(
+                                                        "Order ID: ${order.id}",
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    Text(
+                                                        "Total: ${order.totalPrice} EGP",
+                                                        color = Color.DarkGray
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (result.data.size > 2) {
+                                        Button(
+                                            onClick = { navController.navigate(ScreenRoute.Orders.route) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = colorResource(
+                                                    id = R.color.dark_blue
+                                                )
+                                            ),
+                                            modifier = Modifier
+                                                .align(Alignment.CenterHorizontally)
+                                                .padding(top = 8.dp)
+                                        ) {
+                                            Text(text = "See more", color = Color.White)
+                                        }
+                                    }
+                                }
+                            }
+
+                            is Result.Error -> {
+                                Text(
+                                    text = "Failed to load orders.",
+                                    color = Color.Red,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+
+                    }
                 }
             }
-            else{
-                Box(Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                else{
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
         }
-
     }
 }
 

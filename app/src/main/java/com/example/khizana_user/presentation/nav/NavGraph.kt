@@ -29,7 +29,9 @@ import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.cart.view.MapScreen
+import com.example.khizana_user.presentation.order.view.OrdersScreen
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
+import com.example.khizana_user.presentation.profile.view.ProfileScreen
 import com.example.khizana_user.presentation.setting.view.AboutUs
 import com.example.khizana_user.presentation.setting.view.ContactsScreen
 import com.example.khizana_user.presentation.setting.view.SettingScreen
@@ -155,6 +157,17 @@ fun AppNavGraph(
             }
         }
 
+        composable(ScreenRoute.Profile.route) {
+            Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
+                ProfileScreen(
+                    customerId = 7858653888625,
+                    modifier = Modifier.padding(innerPadding),
+                    navController = navController
+                )
+            }
+        }
+
+
         composable(
             route = ScreenRoute.ProductDetails.route,
             arguments = listOf(
@@ -260,5 +273,10 @@ fun AppNavGraph(
                 }
             )
         }
+//https://mad45-sv-and4.myshopify.com/admin/api/2024-01/orders.json?customer_id=7858653888625&status=any
+        composable(ScreenRoute.Orders.route) {
+            OrdersScreen(customerId = 7858653888625)
+        }
+
     }
 }

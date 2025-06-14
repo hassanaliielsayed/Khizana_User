@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -26,6 +27,8 @@ sealed class ScreenRoute(
     @Serializable object Settings : ScreenRoute("settings", Icons.Default.Settings, "Settings")
     @Serializable object Category : ScreenRoute("category", Icons.Default.Category, "Category")
     @Serializable object Profile : ScreenRoute("profile", Icons.Default.Person, "Profile")
+    @Serializable object Orders : ScreenRoute("orders", Icons.Default.List, "Orders")
+
 
     @Serializable
     object ProductDetails : ScreenRoute("productDetails?productId={productId}&variantId={variantId}") {

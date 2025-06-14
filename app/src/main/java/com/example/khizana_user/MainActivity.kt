@@ -20,13 +20,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Khizana_UserTheme {
-//                val navController = rememberNavController()
-//                AppNavGraph(navController)
-//                https://mad45-sv-and4.myshopify.com/admin/api/2024-01/orders.json?customer_id=7858653888625&status=any
-                val authViewModel = hiltViewModel<AuthViewModel>()
-                val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
-                if (customer != null)
-                    OrdersScreen(customerId = 7858653888625)
+                val navController = rememberNavController()
+                AppNavGraph(navController)
+
+//                val authViewModel = hiltViewModel<AuthViewModel>()
+//                val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
+//                if (customer != null)
+//                    OrdersScreen(customerId = 7858653888625)
             }
         }
     }
