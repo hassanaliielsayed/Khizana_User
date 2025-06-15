@@ -64,9 +64,6 @@ import com.example.khizana_user.presentation.category.viewModel.CategoryViewMode
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.customFontFamily
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
 import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.*
 import com.example.khizana_user.presentation.nav.ScreenRoute

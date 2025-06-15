@@ -68,6 +68,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.khizana_user.R
+import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.domain.model.Orders
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
@@ -216,7 +217,7 @@ fun ProfileScreen(
                                         fontFamily = customFontFamily,
                                     )
 
-                                    if (result is Result.Success && result.data.isNotEmpty()) {
+                                    if ( result.data.size>2) {
                                         Text(
                                             text = "See more",
                                             color = colorResource(id = R.color.black),
@@ -253,27 +254,9 @@ fun ProfileScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp)
                                     ) {
                                         ordersToShow.forEach { order ->
-                                            Card(
-                                                shape = RoundedCornerShape(12.dp),
-                                                elevation = CardDefaults.cardElevation(6.dp),
-                                                colors = CardDefaults.cardColors(
-                                                    containerColor = Color(0xFFE3F2FD)
-                                                ),
-                                                modifier = Modifier.fillMaxWidth()
-                                            ) {
-                                                Column(modifier = Modifier.padding(12.dp)) {
-                                                    Text(
-                                                        "Order ID: ${order.id}",
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontFamily = customFontFamily,
-                                                    )
-                                                    Text(
-                                                        "Total: ${order.totalPrice} EGP",
-                                                        color = Color.DarkGray,
-                                                        fontFamily = customFontFamily,
-                                                    )
-                                                }
-                                            }
+                                            OrderCard(order = order, onClick = {
+                                                navController.navigate("${ScreenRoute.OrderDetails.route}/${order.id}")
+                                            })
                                         }
                                     }
                                 }
@@ -305,7 +288,7 @@ fun ProfileScreen(
                                 fontWeight = FontWeight.Bold
                             )
 
-                            if (favoritesState?.items?.isNotEmpty() == true) {
+                            if ((favoritesState?.items?.size ?: 0) > 4) {
                                 Text(
                                     text = "See more",
                                     color = colorResource(id = R.color.black),
@@ -340,35 +323,15 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             ) {
                                 favoritesToShow.forEach { fav ->
-                                    Card(
-                                        shape = RoundedCornerShape(12.dp),
-                                        elevation = CardDefaults.cardElevation(6.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = Color(0xFFFFF3E0)
-                                        ),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Row(modifier = Modifier.padding(8.dp)) {
-                                            GlideImage(
-                                                model = fav.imageUrl,
-                                                contentDescription = fav.title,
-                                                modifier = Modifier
-                                                    .size(80.dp)
-                                                    .padding(8.dp)
-                                                    .clip(RoundedCornerShape(8.dp)),
-                                                contentScale = ContentScale.Crop
+                                    FavoriteCard(fav = fav, onClick = {
+                                        navController.navigate(
+                                            ScreenRoute.ProductDetails.createRoute(
+                                                variantId = fav.variantId
                                             )
-                                            Text(
-                                                "Product: ${fav.title}",
-                                                fontWeight = FontWeight.Bold,
-                                                fontFamily = customFontFamily,
-                                                modifier = Modifier
-                                                    .align(Alignment.CenterVertically)
-                                                    .padding(start = 8.dp)
-                                            )
-                                        }
-                                    }
+                                        )
+                                    })
                                 }
+
                             }
                         }
                     }
@@ -424,6 +387,68 @@ fun ProfileScreen(
 
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun OrderCard(order: Orders, onClick: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFE3F2FD)
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                "Order ID: ${order.id}",
+                fontWeight = FontWeight.Bold,
+                fontFamily = customFontFamily,
+            )
+            Text(
+                "Total: ${order.totalPrice} EGP",
+                color = Color.DarkGray,
+                fontFamily = customFontFamily,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalGlideComposeApi::class)
+@Composable
+fun FavoriteCard(fav: FavoriteItem, onClick: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFFF3E0)
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Row(modifier = Modifier.padding(8.dp)) {
+            GlideImage(
+                model = fav.imageUrl,
+                contentDescription = fav.title,
+                modifier = Modifier
+                    .size(80.dp)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+            Text(
+                "Product: ${fav.title}",
+                fontWeight = FontWeight.Bold,
+                fontFamily = customFontFamily,
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(start = 8.dp)
+            )
         }
     }
 }
