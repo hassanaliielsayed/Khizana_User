@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,12 +46,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,11 +61,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.khizana_user.R
 import com.example.khizana_user.domain.model.Orders
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
+import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
 import com.example.khizana_user.utils.customFontFamily
@@ -77,13 +85,18 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel = hiltViewModel(),
     orderViewModel: OrderViewModel = hiltViewModel(),
-    navController: NavHostController
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
+    navController: NavHostController,
+    onNavigateToSetting: () -> Unit,
+    onNavigateToCart: () -> Unit
 ) {
     val currentCustomer by authViewModel.currentCustomer.collectAsState()
     val orderState by orderViewModel.orders.collectAsState()
+    val favoritesState by wishlistViewModel.favoritesState.collectAsState()
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchOrders(customerId)
+        wishlistViewModel.loadFavorites(customerId)
     }
 
     Scaffold(
@@ -99,14 +112,14 @@ fun ProfileScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
                 actions = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = onNavigateToSetting) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = stringResource(R.string.settings),
                             tint = Color.Black
                         )
                     }
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = onNavigateToCart) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
                             contentDescription = stringResource(R.string.shopping_cart),
@@ -257,6 +270,78 @@ fun ProfileScreen(
                                 )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        favoritesState?.let { favoriteList ->
+                            if (favoriteList.items.isNullOrEmpty()) {
+                                Text(
+                                    text = "No favorites yet.",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
+                            } else {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Favorites",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    if (favoriteList.items.isNotEmpty()) {
+                                        Text(
+                                            text = "See more",
+                                            color = colorResource(id = R.color.black),
+                                            fontSize = 14.sp,
+                                            modifier = Modifier.clickable {
+                                                navController.navigate(ScreenRoute.Favorites.route)
+                                            }
+                                        )
+                                    }
+                                }
+
+                                val favoritesToShow = favoriteList.items.filterNotNull().take(4)
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                ) {
+                                    favoritesToShow.forEach { fav ->
+                                        Card(
+                                            shape = RoundedCornerShape(12.dp),
+                                            elevation = CardDefaults.cardElevation(6.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = Color(0xFFFFF3E0)
+                                            ),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Row (modifier = Modifier.padding(8.dp)) {
+                                                GlideImage(
+                                                    model = fav.imageUrl,
+                                                    contentDescription = fav.title,
+                                                    modifier = Modifier
+                                                        .size(80.dp)
+                                                        .padding(8.dp)
+                                                        .clip(RoundedCornerShape(8.dp)),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                                Text(
+                                                    "Product: ${fav.title}",
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             } else {
@@ -267,6 +352,46 @@ fun ProfileScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
+                }
+            }
+        }else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    LottieAnimation(
+                        composition = rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.login_animation)).value,
+                        iterations = LottieConstants.IterateForever,
+                        modifier = Modifier
+                            .size(270.dp)
+                            .padding(bottom = 16.dp)
+                    )
+
+                    Text(
+                        text = "Please sign in or register to access your profile.",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Button(
+                        onClick = {
+                            navController.navigate(ScreenRoute.Login.route)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
+                    ) {
+                        Text(text = "Sign In / Register", color = Color.Black)
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
                 }
             }
         }

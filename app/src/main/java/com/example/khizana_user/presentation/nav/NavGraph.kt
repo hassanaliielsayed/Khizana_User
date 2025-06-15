@@ -167,7 +167,14 @@ fun AppNavGraph(
                     ProfileScreen(
                         customerId = customer.id,
                         modifier = Modifier.padding(innerPadding),
-                        navController = navController
+                        navController = navController,
+                        onNavigateToSetting = {
+                            navController.navigate(ScreenRoute.Settings.route)
+                        },
+                        onNavigateToCart = {
+                            navController.navigate(ScreenRoute.Cart.route)
+                        }
+
                     )
                 }
             }

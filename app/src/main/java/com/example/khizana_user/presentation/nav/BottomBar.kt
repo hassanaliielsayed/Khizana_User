@@ -11,9 +11,7 @@ fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
         ScreenRoute.Home,
         ScreenRoute.Category,
-        ScreenRoute.Favorites,
-        ScreenRoute.Cart,
-        ScreenRoute.Settings,
+        //ScreenRoute.Settings,
         ScreenRoute.Profile,
     )
 

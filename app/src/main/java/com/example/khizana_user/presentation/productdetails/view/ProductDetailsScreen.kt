@@ -205,7 +205,7 @@ fun ProductDetailsContent(
                 onClick = onToggleFavorite,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(12.dp)
+                    .padding(22.dp)
                     .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
             ) {
                 if (isToggling) {
