@@ -248,8 +248,6 @@ fun CategoryScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (products.isEmpty()) {
-                    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.no_data))
-                    val progress by animateLottieCompositionAsState(composition)
 
                     Box(
                         modifier = Modifier
@@ -258,8 +256,11 @@ fun CategoryScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         LottieAnimation(
-                            composition = composition,
-                            progress = progress
+                            composition = rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.no_data)).value,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier
+                                .size(270.dp)
+                                .padding(bottom = 16.dp)
                         )
                     }
                 } else {
