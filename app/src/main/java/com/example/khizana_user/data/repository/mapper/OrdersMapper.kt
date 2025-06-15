@@ -13,11 +13,14 @@ fun OrderDto.toDomain() = Orders(
     financialStatus = financial_status,
     items = line_items?.map {
         OrderItem(
+            id = it.id,
+            productId = it.productId,
+            variantId = it.variantId,
             title = it.title,
             quantity = it.quantity,
             price = it.price,
             sku = it.sku,
-            imageUrl = it.image_url
+            vendor = it.vendor
         )
     } ?: emptyList()
 )

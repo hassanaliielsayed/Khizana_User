@@ -9,6 +9,7 @@ import com.example.khizana_user.data.dto.draftorderDto.ShippingAddressDto
 import com.example.khizana_user.domain.model.Orders
 import com.example.khizana_user.domain.usecase.GetOrderByIdUseCase
 import com.example.khizana_user.domain.usecase.GetOrdersByCustomerIdUseCase
+import com.example.khizana_user.domain.usecase.getProductImageUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
 import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
@@ -17,6 +18,7 @@ import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +29,8 @@ class OrderViewModel @Inject constructor(
     private val sendInvoiceUseCase: SendInvoiceUseCase,
     private val updateDraftOrderUseCase: UpdateDraftOrderUseCase,
     private val getOrdersByCustomerIdUseCase: GetOrdersByCustomerIdUseCase,
-    private val getOrderByIdUseCase: GetOrderByIdUseCase
+    private val getOrderByIdUseCase: GetOrderByIdUseCase,
+    private val getProductImageUseCase: getProductImageUseCase
 ) : ViewModel() {
 
     private val _orderState = MutableStateFlow<Result<Unit>>(Result.Loading)
@@ -41,6 +44,9 @@ class OrderViewModel @Inject constructor(
 
     private val _orderDetails = MutableStateFlow<Result<Orders>>(Result.Loading)
     val orderDetails: StateFlow<Result<Orders>> = _orderDetails
+
+    private val _productImages = MutableStateFlow<Map<Long, String>>(emptyMap())
+    val productImages: StateFlow<Map<Long, String>> = _productImages
 
     fun completeCODOrder(draftOrderId: Long) {
         viewModelScope.launch {
@@ -131,6 +137,19 @@ class OrderViewModel @Inject constructor(
                 _orderDetails.value = Result.Success(order)
             } catch (e: Exception) {
                 _orderDetails.value = Result.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun fetchProductImage(productId: Long) {
+        viewModelScope.launch {
+            try {
+                val images = getProductImageUseCase(productId)
+
+                val src = images.firstOrNull()?.src.orEmpty()
+                _productImages.update { it + (productId to src) }
+            } catch (e: Exception) {
+
             }
         }
     }

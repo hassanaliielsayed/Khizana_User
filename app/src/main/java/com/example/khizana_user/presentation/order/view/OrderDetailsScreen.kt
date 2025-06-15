@@ -58,6 +58,8 @@ fun OrderDetailsScreen(
 ) {
     val state by viewModel.orderDetails.collectAsState()
 
+    val productImages by viewModel.productImages.collectAsState()
+
     LaunchedEffect(orderId) {
         viewModel.fetchOrderDetails(orderId)
     }
@@ -145,6 +147,11 @@ fun OrderDetailsScreen(
                         }
 
                         items(order.items) { item ->
+
+                            LaunchedEffect(item.productId) {
+                                viewModel.fetchProductImage(item.productId)
+                            }
+
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -161,9 +168,11 @@ fun OrderDetailsScreen(
                                     modifier = Modifier.padding(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    if (!item.imageUrl.isNullOrEmpty()) {
+                                    val imageUrl = productImages[item.productId]
+
+                                    if (!imageUrl.isNullOrEmpty()) {
                                         AsyncImage(
-                                            model = item.imageUrl,
+                                            model = imageUrl,
                                             contentDescription = item.title,
                                             modifier = Modifier
                                                 .size(64.dp)
@@ -178,7 +187,11 @@ fun OrderDetailsScreen(
                                                 .background(Color.LightGray),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray)
+                                            Icon(
+                                                imageVector = Icons.Default.Image,
+                                                contentDescription = null,
+                                                tint = Color.Gray
+                                            )
                                         }
                                     }
 
@@ -192,6 +205,10 @@ fun OrderDetailsScreen(
                                             overflow = TextOverflow.Ellipsis
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            "Brand: ${item.vendor} ",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
                                         Text(
                                             "Price: ${item.price} ${order.currency}",
                                             style = MaterialTheme.typography.bodySmall

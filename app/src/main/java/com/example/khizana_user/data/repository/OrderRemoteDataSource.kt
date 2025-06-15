@@ -3,6 +3,7 @@ package com.example.khizana_user.data.repository
 import com.example.khizana_user.data.dto.OrderDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderRequest
+import com.example.khizana_user.data.dto.draftorderDto.ProductImageDto
 import retrofit2.Response
 
 interface OrderRemoteDataSource {
@@ -17,4 +18,6 @@ interface OrderRemoteDataSource {
     suspend fun getOrdersByCustomerId(customerId: Long):List<OrderDto>
 
     suspend fun getOrderById(orderId: Long): OrderDto
+
+    suspend fun getProductImage(productId: Long): List<ProductImageDto>
 }

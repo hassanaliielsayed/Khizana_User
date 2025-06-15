@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
 import com.example.khizana_user.utils.customFontFamily
@@ -93,11 +95,21 @@ fun OrdersScreen(
                 }
 
                 is Result.Success -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(result.data) { order ->
-                            OrderItem(order, navController)
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            "Your Orders",
+                            fontFamily = customFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(16.dp),
+                            textAlign = TextAlign.Center
+                        )
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(result.data) { order ->
+                                OrderItem(order, navController)
+                            }
                         }
                     }
                 }
@@ -107,7 +119,7 @@ fun OrdersScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Error: ${result.message}", color = Color.Red)
+                        Text(text = "Error: ${result.message}", color = Color.Red,  fontFamily = customFontFamily,)
                     }
                 }
             }
@@ -121,7 +133,7 @@ fun OrderItem(order: Orders, navController: NavHostController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(12.dp)
             .clickable {
                 navController.navigate("${ScreenRoute.OrderDetails.route}/${order.id}")
             },
@@ -134,8 +146,9 @@ fun OrderItem(order: Orders, navController: NavHostController) {
         )
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
-            Text("Order ID: ${order.id}")
-            Text("Price: ${order.totalPrice} ${order.currency}")
+            Text("Order ID: ${order.id}",  fontFamily = customFontFamily,  fontWeight = FontWeight.Bold,)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Price: ${order.totalPrice} ${order.currency}",  fontFamily = customFontFamily,)
         }
     }
 }

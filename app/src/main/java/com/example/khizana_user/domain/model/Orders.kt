@@ -11,10 +11,13 @@ data class Orders(
 )
 
 data class OrderItem(
+    val id: Long,
+    val productId: Long,
+    val variantId: Long,
     val title: String,
     val quantity: Int,
     val price: String,
     val sku: String?,
-    val imageUrl: String?
+    val vendor: String?,
 )
 

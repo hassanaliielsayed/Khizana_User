@@ -3,8 +3,10 @@ package com.example.khizana_user.data.repository
 import com.example.khizana_user.data.dto.draftorderDto.*
 import com.example.khizana_user.data.repository.mapper.toDomain
 import com.example.khizana_user.data.repository.mapper.toOrder
+import com.example.khizana_user.data.repository.mapper.toProductImageDomain
 import com.example.khizana_user.domain.model.Order
 import com.example.khizana_user.domain.model.Orders
+import com.example.khizana_user.domain.model.ProductImage
 import com.example.khizana_user.domain.repository.OrderRepository
 import javax.inject.Inject
 
@@ -49,5 +51,9 @@ class OrderRepositoryImpl @Inject constructor(
 
     override suspend fun getOrder(orderId: Long): Orders {
         return remote.getOrderById(orderId).toDomain()
+    }
+
+    override suspend fun getProductImage(productId: Long): List<ProductImage> {
+        return remote.getProductImage(productId).map { it.toProductImageDomain() }
     }
 }
