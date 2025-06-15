@@ -290,7 +290,13 @@ fun AppNavGraph(
       composable(ScreenRoute.Orders.route) {
           val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
           if(customer != null) {
-              OrdersScreen(customerId = customer.id, navController = navController)
+              OrdersScreen(customerId = customer.id, navController = navController,
+                  onNavigateToSetting = {
+                      navController.navigate(ScreenRoute.Settings.route)
+                  },
+                  onNavigateToCart = {
+                      navController.navigate(ScreenRoute.Cart.route)
+                  },)
           }
         }
 
@@ -299,7 +305,13 @@ fun AppNavGraph(
             arguments = listOf(navArgument("orderId") { type = NavType.LongType })
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getLong("orderId") ?: -1
-            OrderDetailsScreen(orderId = orderId)
+            OrderDetailsScreen(orderId = orderId,
+                onNavigateToSetting = {
+                    navController.navigate(ScreenRoute.Settings.route)
+                },
+                onNavigateToCart = {
+                    navController.navigate(ScreenRoute.Cart.route)
+                })
         }
 
         composable("search") {
