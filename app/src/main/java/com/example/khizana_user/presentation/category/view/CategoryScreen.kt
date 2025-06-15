@@ -310,7 +310,7 @@ fun ProductItem(product: ProductByCategory, onClick: () -> Unit,) {
                 )
                 Text("Vendor: ${product.productVendor ?: "N/A"}", fontFamily = customFontFamily)
                 Text("Price: ${product.productPrice.toCurrentCurrency()}", fontFamily = customFontFamily)
-               // Text("Product Type: ${product.product_type}", fontFamily = customFontFamily)
+                Text("Product Type: ${product.product_type}", fontFamily = customFontFamily)
             }
         }
     }
