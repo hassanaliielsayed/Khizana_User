@@ -55,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -211,9 +212,12 @@ fun CheckoutScreen(
                     onClick = {
                         context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
                 ) {
-                    Text("Enable Location")
+                    Text(
+                        "Enable Location",
+                        color = Color.Black
+                    )
                 }
             },
             dismissButton = {
@@ -221,9 +225,12 @@ fun CheckoutScreen(
                     onClick = {
                         locationEnabled = locationUtils.isLocationEnabled()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
                 ) {
-                    Text("Cancel")
+                    Text(
+                        "Cancel",
+                        color = Color.Black
+                    )
                 }
             }
         )
@@ -286,11 +293,12 @@ fun CheckoutScreen(
                     Row {
                         Button(
                             onClick = { autocompleteLauncher() },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1E88E5)
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
                         ) {
-                            Text("Change Address")
+                            Text(
+                                "Change Address",
+                                color = Color.Black
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -300,11 +308,12 @@ fun CheckoutScreen(
                                 userSelectedLocation = true
                                 onAddressClick()
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1E88E5)
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
                         ) {
-                            Text("Select on Map")
+                            Text(
+                                "Select on Map",
+                                color = Color.Black
+                            )
                         }
                     }
                 }
@@ -443,9 +452,12 @@ fun CheckoutScreen(
                         Button(
                             onClick = { viewModel.validateCoupon(couponCode) },
                             shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
                         ) {
-                            Text("Validate")
+                            Text(
+                                "Validate",
+                                color = Color.Black
+                            )
                         }
                     }
                 }
@@ -504,10 +516,13 @@ fun CheckoutScreen(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue)),
                 elevation = ButtonDefaults.buttonElevation(8.dp),
             ) {
-                Text("Place Order")
+                Text(
+                    "Place Order",
+                    color = Color.Black
+                )
             }
 
         }
@@ -561,7 +576,7 @@ fun CheckoutScreen(
         text = "Please confirm your order:\n\nShipping Address: $selectedAddress\nTotal Amount: ${grandTotal.toCurrentCurrency()}",
         confirmText = "Place Order",
         dismissText = "Cancel",
-        confirmButtonColor = Color(0xFF1E88E5),
-        dismissButtonColor = Color(0xFF1E88E5)
+        confirmButtonColor = colorResource(R.color.dark_blue),
+        dismissButtonColor = colorResource(R.color.dark_blue)
     )
 }

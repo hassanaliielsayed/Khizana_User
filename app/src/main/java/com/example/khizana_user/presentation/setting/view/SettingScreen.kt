@@ -32,12 +32,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.example.khizana_user.R
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.setting.viewmodel.SettingViewModel
 import com.example.khizana_user.utils.isGuestUser
@@ -121,11 +123,17 @@ fun SettingScreen(
                         .height(48.dp)
                         .clip(RoundedCornerShape(24.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E88E5), // Blue color like in ProductDetails
-                        contentColor = Color.White
+                        containerColor = colorResource(
+                            id = R.color.dark_blue
+                        )
                     )
                 ) {
-                    Text(text = "Login")
+                    Text(
+                        text = "Login",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                    )
                 }
             } else {
                 // Show Logout button for logged-in users

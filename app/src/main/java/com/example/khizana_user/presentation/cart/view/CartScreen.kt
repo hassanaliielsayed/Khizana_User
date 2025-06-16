@@ -155,11 +155,14 @@ fun CartScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1E88E5)
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
                         ) {
-                            Text("Proceed to Checkout", fontSize = 16.sp)
+                            Text(
+                                "Proceed to Checkout",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
                         }
                     }
                 }
