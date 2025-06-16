@@ -156,5 +156,8 @@ dependencies {
 
     implementation("androidx.webkit:webkit:1.14.0")
 
+    implementation ("androidx.compose.foundation:foundation:1.5.0")
+
+
 
 }
