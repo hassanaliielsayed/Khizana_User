@@ -111,40 +111,35 @@ fun WishlistScreen(
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                when (val state = favoritesState) {
-                    null -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
+                val items = favoritesState?.items?.filterNotNull().orEmpty()
 
-                    else -> {
-                        val items = state.items?.filterNotNull().orEmpty()
-
-                        if (items.isEmpty()) {
-                            Text(
-                                "No favorites found",
-                                modifier = Modifier.align(Alignment.Center),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        } else {
-                            LazyColumn {
-                                items(items, key = { it.variantId }) { item ->
-                                    FavoriteItemCard(
-                                        item = item,
-                                        isLoading = removingIds.contains(item.variantId),
-                                        onRemoveClick = { confirmRemoveItem = item },
-                                        onItemClick = {
-                                            navController.navigate(
-                                                ScreenRoute.ProductDetails.createRoute(
-                                                    variantId = item.variantId
-                                                )
-                                            )
-                                        }
+                if (favoritesState == null && items.isEmpty()) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                } else if (items.isEmpty()) {
+                    Text(
+                        "No favorites found",
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                } else {
+                    LazyColumn {
+                        items(items, key = { it.variantId }) { item ->
+                            FavoriteItemCard(
+                                item = item,
+                                isLoading = removingIds.contains(item.variantId),
+                                onRemoveClick = { confirmRemoveItem = item },
+                                onItemClick = {
+                                    navController.navigate(
+                                        ScreenRoute.ProductDetails.createRoute(
+                                            variantId = item.variantId
+                                        )
                                     )
                                 }
-                            }
+                            )
                         }
                     }
                 }
+
             }
         }
     }
