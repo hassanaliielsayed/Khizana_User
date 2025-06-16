@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.setting.viewmodel.SettingViewModel
+import com.example.khizana_user.utils.isGuestUser
 
 @Composable
 fun SettingScreen(
@@ -108,21 +109,44 @@ fun SettingScreen(
 
             Spacer(modifier = Modifier.height(144.dp))
 
-            Button(
-                onClick = { showLogoutDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(24.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Gray,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(text = "Logout")
+            if (isGuestUser()) {
+                Button(
+                    onClick = {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true } // Clears backstack
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(24.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1E88E5), // Blue color like in ProductDetails
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = "Login")
+                }
+            } else {
+                // Show Logout button for logged-in users
+                Button(
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(24.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Gray,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = "Logout")
+                }
             }
         }
     }
+
+
 
     if (showCurrencyDialog) {
         AlertDialog(

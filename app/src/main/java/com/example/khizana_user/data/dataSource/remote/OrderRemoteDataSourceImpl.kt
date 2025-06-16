@@ -32,7 +32,7 @@ class OrderRemoteDataSourceImpl @Inject constructor(
         Log.i("OrderRemote", "Draft completed. completedAt: ${completedDraft.completedAt}")
 
         if (completedDraft.completedAt == null) {
-            Log.e("OrderRemote", "❌ Shopify did not mark draft as completed")
+            Log.e("OrderRemote", " Shopify did not mark draft as completed")
             throw Exception("Draft not marked as completed by Shopify")
         }
     }

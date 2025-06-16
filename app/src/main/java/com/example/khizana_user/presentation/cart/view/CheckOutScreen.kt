@@ -207,16 +207,22 @@ fun CheckoutScreen(
             title = { Text("Location Services Disabled") },
             text = { Text("Please enable location services to get your current address") },
             confirmButton = {
-                Button(onClick = {
-                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                }) {
+                Button(
+                    onClick = {
+                        context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                ) {
                     Text("Enable Location")
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    locationEnabled = locationUtils.isLocationEnabled()
-                }) {
+                TextButton(
+                    onClick = {
+                        locationEnabled = locationUtils.isLocationEnabled()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                ) {
                     Text("Cancel")
                 }
             }
@@ -236,7 +242,6 @@ fun CheckoutScreen(
     LaunchedEffect(invoiceUrlState) {
         if (invoiceUrlState is Result.Success) {
             val url = (invoiceUrlState as Result.Success).data
-            // Open the URL in a web view
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
     }
@@ -512,6 +517,7 @@ fun CheckoutScreen(
         showDialog = showConfirmationDialog,
         onDismiss = { showConfirmationDialog = false },
         onConfirm = {
+            showConfirmationDialog = false
             coroutineScope.launch {
                 val draftOrder = (cartState as? Result.Success)?.data
                 val draftOrderId = draftOrder?.draftOrderId ?: return@launch
