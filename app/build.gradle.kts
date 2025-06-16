@@ -154,6 +154,8 @@ dependencies {
 
     implementation ("com.google.accompanist:accompanist-permissions:0.34.0")
 
+    implementation("androidx.webkit:webkit:1.14.0")
+
     implementation ("androidx.compose.foundation:foundation:1.5.0")
 
 

@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -65,8 +66,13 @@ fun OrderSuccessScreen(
             Button(
                 onClick = onBackToHomeClick,
                 shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue)),
             ) {
-                Text("Back to Home", fontSize = 16.sp)
+                Text(
+                    "Back to Home",
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -74,8 +80,13 @@ fun OrderSuccessScreen(
             Button(
                 onClick = onContactUsClick,
                 shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue)),
             ) {
-                Text("Contact Us", fontSize = 16.sp)
+                Text(
+                    "Contact Us",
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
             }
 
         }

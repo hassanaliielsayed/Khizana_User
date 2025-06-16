@@ -48,6 +48,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.customFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,156 +58,179 @@ fun OrderDetailsScreen(
     viewModel: OrderViewModel = hiltViewModel()
 ) {
     val state by viewModel.orderDetails.collectAsState()
+    val connectionState by viewModel.networkState.collectAsState()
 
     LaunchedEffect(orderId) {
-        viewModel.fetchOrderDetails(orderId)
+        if (connectionState) {
+            viewModel.fetchOrderDetails(orderId)
+        }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.project_name),
-                        fontFamily = customFontFamily,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
-                actions = {
-
-                    IconButton(onClick = {
-
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Favorites",
-                            tint = Color.Black
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            stringResource(R.string.project_name),
+                            fontFamily = customFontFamily,
+                            fontSize = 20.sp,
+                            color = Color.Black
                         )
-                    }
-                    IconButton(onClick = {
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
+                    actions = {
 
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Cart",
-                            tint = Color.Black
-                        )
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            when (val result = state) {
-                is Result.Loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
+                        IconButton(onClick = {
 
-                is Result.Success -> {
-                    val order = result.data
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                    ) {
-                        item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                elevation = CardDefaults.cardElevation(6.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(
-                                        0xFFE3F2FD
-                                    )
-                                )
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text("Order #${order.id}", style = MaterialTheme.typography.titleMedium)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Date: ${order.createdAt}", style = MaterialTheme.typography.bodySmall)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Status: ${order.financialStatus}", style = MaterialTheme.typography.bodySmall)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        "Total: ${order.totalPrice} ${order.currency}",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("Items", style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(8.dp))
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = "Favorites",
+                                tint = Color.Black
+                            )
                         }
+                        IconButton(onClick = {
 
-                        items(order.items) { item ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                elevation = CardDefaults.cardElevation(6.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(
-                                        0xFFE3F2FD
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = "Cart",
+                                tint = Color.Black
+                            )
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                when (val result = state) {
+                    is Result.Loading -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+
+                    is Result.Success -> {
+                        val order = result.data
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    elevation = CardDefaults.cardElevation(6.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(
+                                            0xFFE3F2FD
+                                        )
                                     )
-                                )
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    if (!item.imageUrl.isNullOrEmpty()) {
-                                        AsyncImage(
-                                            model = item.imageUrl,
-                                            contentDescription = item.title,
-                                            modifier = Modifier
-                                                .size(64.dp)
-                                                .clip(RoundedCornerShape(8.dp)),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    } else {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(64.dp)
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(Color.LightGray),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(Icons.Default.Image, contentDescription = null, tint = Color.Gray)
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                    Column(modifier = Modifier.weight(1f)) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
                                         Text(
-                                            item.title,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            "Order #${order.id}",
+                                            style = MaterialTheme.typography.titleMedium
                                         )
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            "Price: ${item.price} ${order.currency}",
+                                            "Date: ${order.createdAt}",
                                             style = MaterialTheme.typography.bodySmall
                                         )
-                                        Text("Quantity: ${item.quantity}", style = MaterialTheme.typography.bodySmall)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            "Status: ${order.financialStatus}",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            "Total: ${order.totalPrice} ${order.currency}",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text("Items", style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+
+                            items(order.items) { item ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 2.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    elevation = CardDefaults.cardElevation(6.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(
+                                            0xFFE3F2FD
+                                        )
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        if (!item.imageUrl.isNullOrEmpty()) {
+                                            AsyncImage(
+                                                model = item.imageUrl,
+                                                contentDescription = item.title,
+                                                modifier = Modifier
+                                                    .size(64.dp)
+                                                    .clip(RoundedCornerShape(8.dp)),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        } else {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(64.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(Color.LightGray),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Image,
+                                                    contentDescription = null,
+                                                    tint = Color.Gray
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                item.title,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                "Price: ${item.price} ${order.currency}",
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                            Text(
+                                                "Quantity: ${item.quantity}",
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                is Result.Error -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Error: ${result.message}", color = Color.Red)
+                    is Result.Error -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Error: ${result.message}", color = Color.Red)
+                        }
                     }
                 }
             }

@@ -130,10 +130,18 @@ fun HomeScreen(
                         )
                     }
                     IconButton(onClick = onNavigateToFavorites) {
-                        Icon(Icons.Default.Favorite, contentDescription = "Favorites", tint = Color.Black)
+                        Icon(
+                            Icons.Default.Favorite,
+                            contentDescription = "Favorites",
+                            tint = Color.Black
+                        )
                     }
                     IconButton(onClick = onNavigateToCart) {
-                        Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = Color.Black)
+                        Icon(
+                            Icons.Default.ShoppingCart,
+                            contentDescription = "Cart",
+                            tint = Color.Black
+                        )
                     }
                 }
             )
@@ -184,7 +192,9 @@ fun HomeScreen(
                                 expanded = true
                             },
                             placeholder = { Text("Search for products or brands") },
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(24.dp)),
                             trailingIcon = {
                                 if (searchQuery.isNotBlank()) {
                                     IconButton(onClick = {
@@ -219,19 +229,25 @@ fun HomeScreen(
                                     suggestions.forEach { suggestion ->
                                         Text(
                                             text = suggestion,
-                                            modifier = Modifier.fillMaxWidth().clickable {
-                                                if (suggestion.startsWith("Brand: ")) {
-                                                    val brandName = suggestion.removePrefix("Brand: ").trim()
-                                                    viewModel.updateSearchQuery(brandName)
-                                                    viewModel.fetchProductsByVendor(brandName)
-                                                    viewModel.setFocus(SearchFocusType.BRAND)
-                                                } else {
-                                                    viewModel.updateSearchQuery(suggestion)
-                                                    viewModel.setFocus(SearchFocusType.PRODUCT)
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    if (suggestion.startsWith("Brand: ")) {
+                                                        val brandName =
+                                                            suggestion
+                                                                .removePrefix("Brand: ")
+                                                                .trim()
+                                                        viewModel.updateSearchQuery(brandName)
+                                                        viewModel.fetchProductsByVendor(brandName)
+                                                        viewModel.setFocus(SearchFocusType.BRAND)
+                                                    } else {
+                                                        viewModel.updateSearchQuery(suggestion)
+                                                        viewModel.setFocus(SearchFocusType.PRODUCT)
+                                                    }
+                                                    expanded = false
+                                                    focusManager.clearFocus()
                                                 }
-                                                expanded = false
-                                                focusManager.clearFocus()
-                                            }.padding(horizontal = 16.dp, vertical = 10.dp),
+                                                .padding(horizontal = 16.dp, vertical = 10.dp),
                                             fontSize = 16.sp
                                         )
                                     }
@@ -249,7 +265,9 @@ fun HomeScreen(
                     fontFamily = customFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     color = colorResource(id = R.color.black),
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp).bringIntoViewRequester(brandFocusRequester)
+                    modifier = Modifier
+                        .padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
+                        .bringIntoViewRequester(brandFocusRequester)
                 )
 
                 LazyRow(
@@ -268,7 +286,11 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 when (couponState) {
-                    is Result.Error -> Text("Error loading coupons", color = MaterialTheme.colorScheme.error)
+                    is Result.Error -> Text(
+                        "Error loading coupons",
+                        color = MaterialTheme.colorScheme.error
+                    )
+
                     is Result.Loading -> CircularProgressIndicator()
                     is Result.Success -> CouponCarousel((couponState as Result.Success<List<Coupon>>).data)
                 }
@@ -281,15 +303,23 @@ fun HomeScreen(
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = customFontFamily,
                     color = colorResource(id = R.color.black),
-                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp).bringIntoViewRequester(productFocusRequester)
+                    modifier = Modifier
+                        .padding(start = 16.dp, bottom = 8.dp)
+                        .bringIntoViewRequester(productFocusRequester)
                 )
 
                 if (filteredProducts.isEmpty()) {
-                    Text("No matching products found.", modifier = Modifier.padding(16.dp), color = Color.Gray)
+                    Text(
+                        "No matching products found.",
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.Gray
+                    )
                 } else {
                     val productRows = groupProductsInRows(filteredProducts)
                     Column(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         productRows.forEach { row ->
@@ -302,7 +332,11 @@ fun HomeScreen(
                                         modifier = Modifier.weight(1f),
                                         product = product,
                                         onClick = {
-                                            navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                                            navController.navigate(
+                                                ScreenRoute.ProductDetails.createRoute(
+                                                    product.id
+                                                )
+                                            )
                                         }
                                     )
                                 }
@@ -381,17 +415,6 @@ fun Brands(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-
-//            Text(
-//                text = brands.title,
-//                fontSize = 18.sp,
-//                fontFamily = customFontFamily,
-//                fontWeight = FontWeight.Bold,
-//                color = Color.Black,
-//                maxLines = 1,
-//                overflow = TextOverflow.Ellipsis
-//            )
-
         }
     }
 }
@@ -538,21 +561,37 @@ fun CouponCarousel(copuons: List<Coupon>) {
             text = { Text("Use coupon code: ${selectedCoupon?.title}") },
             confirmButton = {
                 Row {
-                    TextButton(onClick = {
-                        val clip = ClipData.newPlainText(
-                            "Coupon Code",
-                            selectedCoupon?.title ?: ""
+                    TextButton(
+                        onClick = { showDialog = false },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF1E88E5)
                         )
-                        clipboardManager.setPrimaryClip(clip)
-                        Toast.makeText(context, "Coupon copied to clipboard", Toast.LENGTH_SHORT)
-                            .show()
-                        showDialog = false
-                    }) {
-                        Text("Copy")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(onClick = { showDialog = false }) {
+                    ) {
                         Text("Close")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    TextButton(
+                        onClick = {
+                            val clip = ClipData.newPlainText(
+                                "Coupon Code",
+                                selectedCoupon?.title ?: ""
+                            )
+                            clipboardManager.setPrimaryClip(clip)
+                            Toast.makeText(
+                                context,
+                                "Coupon copied to clipboard",
+                                Toast.LENGTH_SHORT
+                            )
+                                .show()
+                            showDialog = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF1E88E5)
+                        )
+                    ) {
+                        Text("Copy")
                     }
                 }
             }
