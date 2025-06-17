@@ -201,7 +201,8 @@ fun AppNavGraph(
                 ProductDetailsScreen(
                     productId = productId,
                     variantId = variantId,
-                    customerId = customer.id
+                    customerId = customer.id,
+                    navController = navController
                 )
             } else {
                 Text("User not logged in")

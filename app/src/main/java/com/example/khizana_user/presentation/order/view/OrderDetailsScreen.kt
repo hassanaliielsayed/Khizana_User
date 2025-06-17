@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.profile.view.StatusBadge
 import com.example.khizana_user.utils.customFontFamily
 import com.example.khizana_user.utils.toCurrentCurrency
@@ -60,272 +61,279 @@ fun OrderDetailsScreen(
 ) {
     val state by viewModel.orderDetails.collectAsState()
     val productImages by viewModel.productImages.collectAsState()
+    val connectionState by viewModel.networkState.collectAsState()
 
     LaunchedEffect(orderId) {
-        viewModel.fetchOrderDetails(orderId)
+        if (connectionState) {
+            viewModel.fetchOrderDetails(orderId)
+        }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.project_name),
-                        fontFamily = customFontFamily,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorResource(id = R.color.dark_blue)
-                ),
-                actions = {
-                    IconButton(onClick = onNavigateToSetting) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Favorites",
-                            tint = Color.Black
-                        )
-                    }
-                    IconButton(onClick = onNavigateToCart) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Cart",
-                            tint = Color.Black
-                        )
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            when (val result = state) {
-                is Result.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            strokeWidth = 4.dp,
-                            color = colorResource(id = R.color.dark_blue)
-                        )
-                    }
-                }
-
-                is Result.Success -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        val order = result.data
-
-
+    if (!connectionState) {
+        NoInternetConnectionView()
+    } else {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
                         Text(
-                            text = "Order Details",
-                            fontFamily = customFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp,
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            color = colorResource(id = R.color.black)
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.cardElevation(8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFE3F2FD)
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(20.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Order #${order.id}",
-                                        fontFamily = customFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 22.sp,
-                                        color = colorResource(id = R.color.white)
-                                    )
-
-                                    Text(
-                                        text = order.createdAt.formatAsShortDate(),
-                                        fontFamily = customFontFamily,
-                                        fontSize = 16.sp,
-                                        color = Color.Gray
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = "Total Amount",
-                                            fontFamily = customFontFamily,
-                                            fontSize = 16.sp,
-                                            color = Color.DarkGray
-                                        )
-                                        Text(
-                                            text = order.totalPrice.toCurrentCurrency(),
-                                            fontFamily = customFontFamily,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 20.sp,
-                                            color = colorResource(id = R.color.black)
-                                        )
-                                    }
-
-                                    StatusBadge(status = order.financialStatus)
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Text(
-                            text = "Order Items",
-                            style = MaterialTheme.typography.titleLarge,
+                            text = stringResource(R.string.project_name),
                             fontFamily = customFontFamily,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = colorResource(id = R.color.black)
+                            color = Color.White
                         )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Column(
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colorResource(id = R.color.dark_blue)
+                    ),
+                    actions = {
+                        IconButton(onClick = onNavigateToSetting) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Favorites",
+                                tint = Color.Black
+                            )
+                        }
+                        IconButton(onClick = onNavigateToCart) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = "Cart",
+                                tint = Color.Black
+                            )
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                when (val result = state) {
+                    is Result.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            order.items.forEach { item ->
-                                LaunchedEffect(item.productId) {
-                                    viewModel.fetchProductImage(item.productId)
-                                }
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                strokeWidth = 4.dp,
+                                color = colorResource(id = R.color.dark_blue)
+                            )
+                        }
+                    }
 
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(6.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFFE3F2FD)
-                                    )
-                                ) {
+                    is Result.Success -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            val order = result.data
+
+
+                            Text(
+                                text = "Order Details",
+                                fontFamily = customFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 28.sp,
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                color = colorResource(id = R.color.black)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                elevation = CardDefaults.cardElevation(8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFE3F2FD)
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
                                     Row(
-                                        modifier = Modifier.padding(16.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        val imageUrl = productImages[item.productId]
+                                        Text(
+                                            text = "Order #${order.id}",
+                                            fontFamily = customFontFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 22.sp,
+                                            color = colorResource(id = R.color.white)
+                                        )
 
-                                        if (!imageUrl.isNullOrEmpty()) {
-                                            AsyncImage(
-                                                model = imageUrl,
-                                                contentDescription = item.title,
-                                                modifier = Modifier
-                                                    .size(80.dp)
-                                                    .clip(RoundedCornerShape(12.dp)),
-                                                contentScale = ContentScale.Crop
+                                        Text(
+                                            text = order.createdAt.formatAsShortDate(),
+                                            fontFamily = customFontFamily,
+                                            fontSize = 16.sp,
+                                            color = Color.Gray
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = "Total Amount",
+                                                fontFamily = customFontFamily,
+                                                fontSize = 16.sp,
+                                                color = Color.DarkGray
                                             )
-                                        } else {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(80.dp)
-                                                    .clip(RoundedCornerShape(12.dp))
-                                                    .background(Color.LightGray),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Image,
-                                                    contentDescription = null,
-                                                    tint = Color.Gray,
-                                                    modifier = Modifier.size(32.dp)
-                                                )
-                                            }
+                                            Text(
+                                                text = order.totalPrice.toCurrentCurrency(),
+                                                fontFamily = customFontFamily,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 20.sp,
+                                                color = colorResource(id = R.color.black)
+                                            )
                                         }
 
-                                        Spacer(modifier = Modifier.width(16.dp))
+                                        StatusBadge(status = order.financialStatus)
+                                    }
+                                }
+                            }
 
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = item.title,
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontSize = 20.sp,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis,
-                                                fontFamily = customFontFamily,
-                                                fontWeight = FontWeight.Bold
-                                            )
+                            Spacer(modifier = Modifier.height(24.dp))
 
-                                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Order Items",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontFamily = customFontFamily,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = colorResource(id = R.color.black)
+                            )
 
-                                            OrderDetailRow(
-                                                label = "Brand:",
-                                                value = item.vendor?:"",
-                                                fontSize = 16.sp
-                                            )
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                                            OrderDetailRow(
-                                                label = "Price:",
-                                                value = "${item.price} ${order.currency}",
-                                                fontSize = 16.sp
-                                            )
+                            Column(
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            ) {
+                                order.items.forEach { item ->
+                                    LaunchedEffect(item.productId) {
+                                        viewModel.fetchProductImage(item.productId)
+                                    }
 
-                                            OrderDetailRow(
-                                                label = "Quantity:",
-                                                value = item.quantity.toString(),
-                                                fontSize = 16.sp
-                                            )
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp),
+                                        shape = RoundedCornerShape(16.dp),
+                                        elevation = CardDefaults.cardElevation(6.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = Color(0xFFE3F2FD)
+                                        )
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            val imageUrl = productImages[item.productId]
+
+                                            if (!imageUrl.isNullOrEmpty()) {
+                                                AsyncImage(
+                                                    model = imageUrl,
+                                                    contentDescription = item.title,
+                                                    modifier = Modifier
+                                                        .size(80.dp)
+                                                        .clip(RoundedCornerShape(12.dp)),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                            } else {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(80.dp)
+                                                        .clip(RoundedCornerShape(12.dp))
+                                                        .background(Color.LightGray),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Image,
+                                                        contentDescription = null,
+                                                        tint = Color.Gray,
+                                                        modifier = Modifier.size(32.dp)
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.width(16.dp))
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = item.title,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontSize = 20.sp,
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    fontFamily = customFontFamily,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+
+                                                Spacer(modifier = Modifier.height(8.dp))
+
+                                                OrderDetailRow(
+                                                    label = "Brand:",
+                                                    value = item.vendor ?: "",
+                                                    fontSize = 16.sp
+                                                )
+
+                                                OrderDetailRow(
+                                                    label = "Price:",
+                                                    value = "${item.price} ${order.currency}",
+                                                    fontSize = 16.sp
+                                                )
+
+                                                OrderDetailRow(
+                                                    label = "Quantity:",
+                                                    value = item.quantity.toString(),
+                                                    fontSize = 16.sp
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
+
+                            Spacer(modifier = Modifier.height(24.dp))
                         }
-
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
-                }
 
-                is Result.Error -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(16.dp)
+                    is Result.Error -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Error,
-                                contentDescription = "Error",
-                                tint = Color.Red,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Error: ${result.message}",
-                                color = Color.Red,
-                                fontFamily = customFontFamily,
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Error,
+                                    contentDescription = "Error",
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Error: ${result.message}",
+                                    color = Color.Red,
+                                    fontFamily = customFontFamily,
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }
@@ -356,4 +364,3 @@ fun OrderDetailRow(label: String, value: String, fontSize: TextUnit) {
         )
     }
 }
-

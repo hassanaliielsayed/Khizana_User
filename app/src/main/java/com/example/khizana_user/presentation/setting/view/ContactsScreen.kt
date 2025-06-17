@@ -18,9 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.khizana_user.R
 
 @Composable
 fun ContactsScreen() {
@@ -43,7 +45,7 @@ fun ContactsScreen() {
                 text = "Contact Us",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Magenta,
+                color = Color(0xFF1E88E5),
             )
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
