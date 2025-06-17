@@ -71,6 +71,7 @@ import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
+import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.presentation.order.view.formatAsShortDate
 import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
@@ -149,11 +150,11 @@ fun ProfileScreen(
                                 elevation = CardDefaults.cardElevation(8.dp),
                                 modifier = Modifier.size(120.dp)
                             ) {
+
                                 Image(
                                     painter = painterResource(id = R.drawable.user),
                                     contentDescription = stringResource(R.string.user_image),
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = SharedModifiers.circleImageModifier(150.dp)
                                 )
                             }
 

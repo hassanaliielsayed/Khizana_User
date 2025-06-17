@@ -49,6 +49,7 @@ import com.example.khizana_user.R
 import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
+import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.profile.view.StatusBadge
 import com.example.khizana_user.utils.customFontFamily
 import com.example.khizana_user.utils.toCurrentCurrency
@@ -241,9 +242,7 @@ fun OrderDetailsScreen(
                                                 AsyncImage(
                                                     model = imageUrl,
                                                     contentDescription = item.title,
-                                                    modifier = Modifier
-                                                        .size(80.dp)
-                                                        .clip(RoundedCornerShape(12.dp)),
+                                                    modifier = SharedModifiers.circleImageModifier(100.dp),
                                                     contentScale = ContentScale.Crop
                                                 )
                                             } else {

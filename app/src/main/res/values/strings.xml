@@ -79,4 +79,20 @@
     <string name="order_items">Order Items</string>
     <string name="price">Price:</string>
     <string name="quantity">Quantity:</string>
+    <string name="address">Address</string>
+    <string name="cairo_egypt">Cairo, Egypt</string>
+    <string name="currency">Currency</string>
+    <string name="contact_us">Contact us</string>
+    <string name="about_us">About us</string>
+    <string name="login">login</string>
+    <string name="logout">Logout</string>
+    <string name="select_currency">Select Currency</string>
+    <string name="egp">EGP</string>
+    <string name="usd">USD</string>
+    <string name="egp2">EGP</string>
+    <string name="currency_updated">Currency Updated</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm_logout">Confirm Logout</string>
+    <string name="are_you_sure_you_want_to_logout">Are you sure you want to logout?</string>
+    <string name="arrow">Arrow</string>
 </resources>
