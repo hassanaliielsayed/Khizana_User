@@ -33,7 +33,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -47,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -66,6 +66,8 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.example.khizana_user.R
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.domain.model.Orders
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
@@ -77,7 +79,7 @@ import com.example.khizana_user.utils.toCurrentCurrency
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     customerId: Long,
@@ -108,32 +110,22 @@ fun ProfileScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = stringResource(R.string.project_name),
-                            fontFamily = customFontFamily,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        AppLogo()
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorResource(id = R.color.dark_blue)
+                        containerColor = colorResource(id = R.color.light_blue)
                     ),
                     actions = {
-                        IconButton(onClick = onNavigateToSetting) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings),
-                                tint = Color.Black
-                            )
-                        }
-                        IconButton(onClick = onNavigateToCart) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = stringResource(R.string.shopping_cart),
-                                tint = Color.Black
-                            )
-                        }
+                        TopBarIconButton(
+                            icon = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.favorites),
+                            onClick = onNavigateToSetting
+                        )
+                        TopBarIconButton(
+                            icon = Icons.Default.ShoppingCart,
+                            contentDescription = stringResource(R.string.shopping_cart),
+                            onClick = onNavigateToCart
+                        )
                     }
                 )
             },
@@ -158,8 +150,8 @@ fun ProfileScreen(
                                 modifier = Modifier.size(120.dp)
                             ) {
                                 Image(
-                                    painter = painterResource(id = R.drawable.person),
-                                    contentDescription = "Profile Picture",
+                                    painter = painterResource(id = R.drawable.user),
+                                    contentDescription = stringResource(R.string.user_image),
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
@@ -188,8 +180,8 @@ fun ProfileScreen(
                         }
 
                         SectionHeader(
-                            title = "Recent Orders",
-                            seeMoreVisible = (orderState as? Result.Success)?.data?.size ?: 0 > 2,
+                            title = stringResource(R.string.recent_orders),
+                            seeMoreVisible = ((orderState as? Result.Success)?.data?.size ?: 0) > 2,
                             onSeeMoreClick = { navController.navigate(ScreenRoute.Orders.route) }
                         )
 
@@ -213,7 +205,7 @@ fun ProfileScreen(
                                 if (result.data.isEmpty()) {
                                     EmptyState(
                                         animationRes = R.raw.no_data,
-                                        message = "You haven't placed any orders yet"
+                                        message = stringResource(R.string.you_haven_t_placed_any_orders_yet)
                                     )
                                 } else {
                                     Column(
@@ -230,14 +222,17 @@ fun ProfileScreen(
                             }
 
                             is Result.Error -> {
-                                ErrorState(message = "Failed to load orders: ${result.message}")
+                                ErrorState(message = stringResource(
+                                    R.string.failed_to_load_orders,
+                                    result.message
+                                ))
                             }
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         SectionHeader(
-                            title = "Your Favorites",
+                            title = stringResource(R.string.your_favorites),
                             seeMoreVisible = (favoritesState?.items?.size ?: 0) > 4,
                             onSeeMoreClick = { navController.navigate(ScreenRoute.Favorites.route) }
                         )
@@ -247,7 +242,7 @@ fun ProfileScreen(
                             favoritesState?.items.isNullOrEmpty() -> {
                                 EmptyState(
                                     animationRes = R.raw.no_data,
-                                    message = "You don't have any favorites yet"
+                                    message = stringResource(R.string.you_don_t_have_any_favorites_yet)
                                 )
                             }
 
@@ -309,7 +304,7 @@ private fun SectionHeader(
 
         if (seeMoreVisible) {
             Text(
-                text = "See All",
+                text = stringResource(R.string.see_all),
                 color = colorResource(id = R.color.black),
                 fontSize = 12.sp,
                 fontFamily = customFontFamily,
@@ -324,11 +319,12 @@ private fun SectionHeader(
 
 @Composable
 private fun OrderCard(order: Orders, onClick: () -> Unit) {
+    val context = LocalContext.current
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFE3F2FD)
+            containerColor = colorResource(R.color.dark_blue)
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -340,14 +336,14 @@ private fun OrderCard(order: Orders, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Order #${order.id}",
+                    text = stringResource(R.string.order, order.id),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = customFontFamily,
                 )
 
                 Text(
-                    text = order.createdAt.formatAsShortDate(),
+                    text = order.createdAt.formatAsShortDate(context),
                     fontSize = 14.sp,
                     color = Color.Gray,
                     fontFamily = customFontFamily,
@@ -363,7 +359,7 @@ private fun OrderCard(order: Orders, onClick: () -> Unit) {
             ) {
                 Column {
                     Text(
-                        text = "Total Amount",
+                        text = stringResource(R.string.total_amount),
                         fontSize = 14.sp,
                         color = Color.DarkGray,
                         fontFamily = customFontFamily,
@@ -385,8 +381,8 @@ private fun OrderCard(order: Orders, onClick: () -> Unit) {
 @Composable
 fun StatusBadge(status: String) {
     val (backgroundColor, textColor) = when (status.lowercase()) {
-        "paid" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-        "pending" -> Color(0xFFFFF8E1) to Color(0xFFF57F17)
+        stringResource(R.string.paid) -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+        stringResource(R.string.pending) -> Color(0xFFFFF8E1) to Color(0xFFF57F17)
         else -> Color(0xFFFFEBEE) to Color(0xFFC62828)
     }
 
@@ -413,7 +409,7 @@ private fun FavoriteCard(fav: FavoriteItem, onClick: () -> Unit) {
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFFF3E0)
+            containerColor = colorResource(R.color.fav_card)
         ),
         modifier = Modifier
             .width(280.dp)
@@ -451,7 +447,7 @@ private fun FavoriteCard(fav: FavoriteItem, onClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = fav.price?.toCurrentCurrency() ?: "Price not available",
+                    text = fav.price.toCurrentCurrency(),
                     fontSize = 14.sp,
                     color = colorResource(id = R.color.dark_blue),
                     fontFamily = customFontFamily,
@@ -463,7 +459,7 @@ private fun FavoriteCard(fav: FavoriteItem, onClick: () -> Unit) {
 }
 
 @Composable
-private fun EmptyState(animationRes: Int, message: String) {
+fun EmptyState(animationRes: Int, message: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -499,7 +495,7 @@ private fun ErrorState(message: String) {
     ) {
         Icon(
             imageVector = Icons.Default.Error,
-            contentDescription = "Error",
+            contentDescription = stringResource(R.string.error),
             tint = Color.Red,
             modifier = Modifier.size(48.dp)
         )
@@ -546,7 +542,7 @@ private fun UnauthenticatedState(onLoginClick: () -> Unit) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Please sign in to access your profile",
+            text = stringResource(R.string.please_sign_in_to_access_your_profile),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Gray,
@@ -570,7 +566,7 @@ private fun UnauthenticatedState(onLoginClick: () -> Unit) {
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(
-                text = "Sign In / Register",
+                text = stringResource(R.string.sign_in_register),
                 fontSize = 18.sp,
                 fontFamily = customFontFamily,
                 fontWeight = FontWeight.Bold

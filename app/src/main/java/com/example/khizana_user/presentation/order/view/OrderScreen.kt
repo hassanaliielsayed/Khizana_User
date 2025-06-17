@@ -1,7 +1,7 @@
 
 package com.example.khizana_user.presentation.order.view
 
-import androidx.compose.foundation.background
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,12 +28,15 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.profile.view.StatusBadge
 import com.example.khizana_user.utils.customFontFamily
@@ -66,32 +69,22 @@ fun OrdersScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = stringResource(R.string.project_name),
-                            fontFamily = customFontFamily,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        AppLogo()
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorResource(id = R.color.dark_blue)
+                        containerColor = colorResource(id = R.color.light_blue)
                     ),
                     actions = {
-                        IconButton(onClick = onNavigateToSetting) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Favorites",
-                                tint = Color.Black
-                            )
-                        }
-                        IconButton(onClick = onNavigateToCart) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = "Cart",
-                                tint = Color.Black
-                            )
-                        }
+                        TopBarIconButton(
+                            icon = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.favorites),
+                            onClick = onNavigateToSetting
+                        )
+                        TopBarIconButton(
+                            icon = Icons.Default.ShoppingCart,
+                            contentDescription = stringResource(R.string.shopping_cart),
+                            onClick = onNavigateToCart
+                        )
                     }
                 )
             }
@@ -118,7 +111,7 @@ fun OrdersScreen(
                                 .padding(horizontal = 8.dp)
                         ) {
                             Text(
-                                text = "Your Orders",
+                                text = stringResource(R.string.your_orders),
                                 fontFamily = customFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 28.sp,
@@ -140,13 +133,13 @@ fun OrdersScreen(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.ShoppingBag,
-                                            contentDescription = "No orders",
+                                            contentDescription = stringResource(R.string.no_orders),
                                             tint = Color.LightGray,
                                             modifier = Modifier.size(64.dp)
                                         )
                                         Spacer(modifier = Modifier.height(16.dp))
                                         Text(
-                                            text = "No orders yet",
+                                            text = stringResource(R.string.no_orders_yet),
                                             fontFamily = customFontFamily,
                                             fontSize = 20.sp,
                                             color = Color.Gray
@@ -177,13 +170,13 @@ fun OrdersScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Error,
-                                    contentDescription = "Error",
+                                    contentDescription = stringResource(R.string.error),
                                     tint = Color.Red,
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Error: ${result.message}",
+                                    text = stringResource(R.string.error, result.message),
                                     color = Color.Red,
                                     fontFamily = customFontFamily,
                                     fontSize = 20.sp,
@@ -200,6 +193,7 @@ fun OrdersScreen(
 
 @Composable
 fun OrderItem(order: Orders, navController: NavHostController) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -221,7 +215,7 @@ fun OrderItem(order: Orders, navController: NavHostController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Order #${order.id}",
+                    text = stringResource(R.string.order, order.id),
                     fontFamily = customFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 22.sp,
@@ -229,7 +223,7 @@ fun OrderItem(order: Orders, navController: NavHostController) {
                 )
 
                 Text(
-                    text = order.createdAt.formatAsShortDate(),
+                    text = order.createdAt.formatAsShortDate(context),
                     fontFamily = customFontFamily,
                     fontSize = 16.sp,
                     color = Color.Gray
@@ -245,7 +239,7 @@ fun OrderItem(order: Orders, navController: NavHostController) {
             ) {
                 Column {
                     Text(
-                        text = "Total Amount",
+                        text = stringResource(R.string.total_amount),
                         fontFamily = customFontFamily,
                         fontSize = 16.sp,
                         color = Color.DarkGray
@@ -265,13 +259,16 @@ fun OrderItem(order: Orders, navController: NavHostController) {
     }
 }
 
-fun String.formatAsShortDate(): String {
+fun String.formatAsShortDate(context: Context): String {
     return try {
-        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            .parse(this)?.let { date ->
-                SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(date)
-            } ?: this
+        val inputFormat = SimpleDateFormat(context.getString(R.string.yyyy_mm_dd), Locale.getDefault())
+        val outputFormat = SimpleDateFormat(context.getString(R.string.mmm_dd_yyyy), Locale.getDefault())
+
+        inputFormat.parse(this)?.let { date ->
+            outputFormat.format(date)
+        } ?: this
     } catch (e: Exception) {
         this
     }
 }
+

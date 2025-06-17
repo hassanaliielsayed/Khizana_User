@@ -112,7 +112,13 @@ fun AppNavGraph(
                 if (customer != null && !isGuestUser()) {
                     WishlistScreen(
                         customerId = customer.id,
-                        navController = navController
+                        navController = navController,
+                        onNavigateToHome = {
+                            navController.navigate(ScreenRoute.Home.route)
+                        },
+                        onNavigateToCart = {
+                            navController.navigate(ScreenRoute.Cart.route)
+                        }
                     )
                 } else {
                     LaunchedEffect(Unit) {
@@ -136,6 +142,12 @@ fun AppNavGraph(
                         modifier = Modifier.padding(innerPadding),
                         onCheckoutClick = { totalPrice ->
                             navController.navigate("checkout/${customer.id}/$totalPrice")
+                        },
+                        onNavigateToHome = {
+                            navController.navigate(ScreenRoute.Home.route)
+                        },
+                        onNavigateToFavorite = {
+                            navController.navigate(ScreenRoute.Favorites.route)
                         }
                     )
                 } else {
