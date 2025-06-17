@@ -122,13 +122,6 @@ fun HomeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
                 actions = {
-                    IconButton(onClick = { }) {
-                        Image(
-                            painter = painterResource(R.drawable.filter2),
-                            contentDescription = "Filter",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
                     IconButton(onClick = onNavigateToFavorites) {
                         Icon(
                             Icons.Default.Favorite,

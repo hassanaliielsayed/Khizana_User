@@ -17,6 +17,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.khizana_user.presentation.SearchScreen
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
 import com.example.khizana_user.presentation.auth.view.VerifyEmailScreen
@@ -98,9 +99,10 @@ fun AppNavGraph(
                     onNavigateToFavorites = {
                         navController.navigate(ScreenRoute.Favorites.route)
                     },
-                    onNavigateToCart = {
-                        navController.navigate(ScreenRoute.Cart.route)
-                    }
+                    onNavigateToSearch = {
+                        navController.navigate("search")
+                                         },
+                    navController = navController
                 )
             }
         }
@@ -165,7 +167,14 @@ fun AppNavGraph(
                     ProfileScreen(
                         customerId = customer.id,
                         modifier = Modifier.padding(innerPadding),
-                        navController = navController
+                        navController = navController,
+                        onNavigateToSetting = {
+                            navController.navigate(ScreenRoute.Settings.route)
+                        },
+                        onNavigateToCart = {
+                            navController.navigate(ScreenRoute.Cart.route)
+                        }
+
                     )
                 }
             }
@@ -282,7 +291,13 @@ fun AppNavGraph(
       composable(ScreenRoute.Orders.route) {
           val customer = authViewModel.currentCustomer.collectAsStateWithLifecycle().value
           if(customer != null) {
-              OrdersScreen(customerId = customer.id, navController = navController)
+              OrdersScreen(customerId = customer.id, navController = navController,
+                  onNavigateToSetting = {
+                      navController.navigate(ScreenRoute.Settings.route)
+                  },
+                  onNavigateToCart = {
+                      navController.navigate(ScreenRoute.Cart.route)
+                  },)
           }
         }
 
@@ -291,8 +306,25 @@ fun AppNavGraph(
             arguments = listOf(navArgument("orderId") { type = NavType.LongType })
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getLong("orderId") ?: -1
-            OrderDetailsScreen(orderId = orderId)
+            OrderDetailsScreen(orderId = orderId,
+                onNavigateToSetting = {
+                    navController.navigate(ScreenRoute.Settings.route)
+                },
+                onNavigateToCart = {
+                    navController.navigate(ScreenRoute.Cart.route)
+                })
         }
 
+        composable("search") {
+            SearchScreen(
+                onNavigateToFavorites = {
+                navController.navigate(ScreenRoute.Favorites.route)
+                                        },
+                onNavigateToCart = {
+                    navController.navigate(ScreenRoute.Cart.route)
+                },
+                navController = navController
+            )
+        }
     }
 }

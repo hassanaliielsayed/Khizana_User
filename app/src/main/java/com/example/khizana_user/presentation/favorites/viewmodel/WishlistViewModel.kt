@@ -111,5 +111,4 @@ class WishlistViewModel @Inject constructor(
         }
     }
 
-
 }

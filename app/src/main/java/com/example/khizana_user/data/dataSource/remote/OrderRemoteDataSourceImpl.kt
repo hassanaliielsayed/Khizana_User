@@ -5,6 +5,7 @@ import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderServ
 import com.example.khizana_user.data.dto.OrderDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderRequest
+import com.example.khizana_user.data.dto.draftorderDto.ProductImageDto
 import com.example.khizana_user.data.repository.OrderRemoteDataSource
 import retrofit2.Response
 import javax.inject.Inject
@@ -130,4 +131,21 @@ class OrderRemoteDataSourceImpl @Inject constructor(
 
         }
     }
+
+    override suspend fun getProductImage(productId: Long): List<ProductImageDto> {
+        val response = api.getProductImages(productId)
+        val body = response.body()
+
+        if (response.isSuccessful && body != null) {
+
+            return body.images
+
+        } else {
+
+            throw Exception("Error fetching order images: ${response.message()}")
+
+        }
+    }
+
+
 }

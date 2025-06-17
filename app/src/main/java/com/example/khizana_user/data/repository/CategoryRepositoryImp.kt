@@ -11,7 +11,7 @@ class CategoryRepositoryImp @Inject constructor(private val remoteDateSource: Re
     override suspend fun getAllProducts(): List<ProductByCategory> {
 
         val response =  remoteDateSource.fetchAllProducts()
-            .map { it.toProductByCategoryModel() }
+            .map { it.toProductByCategoryModel() }.distinctBy { it.productTitle }
 
         return response
     }

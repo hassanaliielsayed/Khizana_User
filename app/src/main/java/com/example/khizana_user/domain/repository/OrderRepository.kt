@@ -5,6 +5,7 @@ import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItem
 import com.example.khizana_user.data.dto.draftorderDto.ShippingAddressDto
 import com.example.khizana_user.domain.model.Order
 import com.example.khizana_user.domain.model.Orders
+import com.example.khizana_user.domain.model.ProductImage
 
 interface OrderRepository {
     suspend fun completeDraftOrder(id: Long)
@@ -22,4 +23,7 @@ interface OrderRepository {
     suspend fun getOrders(customerId: Long): List<Orders>
 
     suspend fun getOrder(orderId: Long): Orders
+
+    suspend fun getProductImage(productId: Long): List<ProductImage>
+
 }
