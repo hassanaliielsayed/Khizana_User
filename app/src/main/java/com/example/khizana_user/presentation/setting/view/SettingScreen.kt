@@ -102,7 +102,7 @@ fun SettingScreen(
                     textAlign = TextAlign.Center
                 ),
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = colorResource(id = R.color.content_color),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 32.dp, bottom = 24.dp),

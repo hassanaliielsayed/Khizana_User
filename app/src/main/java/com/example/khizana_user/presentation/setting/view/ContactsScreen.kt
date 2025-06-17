@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.utils.customFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +61,7 @@ fun ContactsScreen() {
                 Icon(
                     imageVector = Icons.Default.Phone,
                     contentDescription = stringResource(R.string.contact_icon),
-                    tint = colorResource(id = R.color.primary_color),
+                    tint = colorResource(id = R.color.content_color),
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
@@ -68,7 +69,8 @@ fun ContactsScreen() {
                     text = stringResource(R.string.contact_us),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = colorResource(id = R.color.primary_color)
+                    color = colorResource(id = R.color.content_color),
+                    fontFamily = customFontFamily
                 )
             }
 
@@ -149,13 +151,15 @@ private fun ContactInfoRow(label: String, value: String, icon: ImageVector) {
             text = label,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = Color.DarkGray
+            color = Color.DarkGray,
+            fontFamily = customFontFamily
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
-            color = Color.Black
+            color = Color.Black,
+            fontFamily = customFontFamily
         )
     }
 }

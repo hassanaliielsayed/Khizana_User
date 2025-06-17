@@ -106,4 +106,10 @@
     <string name="hassan_phone">01555379365</string>
     <string name="email">Email:</string>
     <string name="phone">Phone:</string>
+    <string name="project_description">It is an m-Commerce Application that presents products from different vendors and enables the authenticated users to add/remove products to/from their shopping carts and complete the whole shopping cycle online through the app.</string>
+    <string name="our_team">Our Team</string>
+    <string name="aya_ahmed">Aya Ahmed</string>
+    <string name="esraa_mohammed">Esraa Mohammed</string>
+    <string name="yousef_ghaoneim">Yousef Ghaoneim</string>
+    <string name="hassan_ali">Hassan Ali</string>
 </resources>
