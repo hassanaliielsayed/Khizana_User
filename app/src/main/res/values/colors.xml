@@ -35,4 +35,7 @@
     <color name="onboarding_button_text">#FFFFFF</color>
     <color name="onboarding_skip_text">#757575</color>
 
+    <color name="splash_text">#2E3B4E</color>
+    <color name="splash_subtitle">#757575</color>
+
 </resources>

@@ -162,4 +162,9 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-pager:0.28.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.28.0")
 
+    implementation ("androidx.core:core-ktx:1.7.0")
+    implementation ("androidx.compose.ui:ui:1.4.0")
+    implementation ("androidx.compose.material:material:1.4.0")
+    implementation ("com.airbnb.android:lottie-compose:6.0.0")
+
 }

@@ -23,4 +23,14 @@
     <string name="title_activity_order_details">OrderDetails</string>
     <string name="title_activity_search_screen">SearchScreen</string>
     <string name="title_activity_onboarding_screen">OnboardingScreen</string>
+    <string name="splash_subtitle">Your shopping companion</string>
+    <string name="onboarding_title_one">Welcome to Khizana App</string>
+    <string name="onboarding_description_one">Discover amazing products from various vendors.</string>
+    <string name="onboarding_title_two">Easy Shopping</string>
+    <string name="onboarding_title_three">Fast Delivery</string>
+    <string name="onboarding_tdescription_two">Add to cart and complete your shopping seamlessly.</string>
+    <string name="onboarding_description_three">Your orders delivered fast and safe.</string>
+    <string name="skip">Skip</string>
+    <string name="get_started">Get Started</string>
+    <string name="next">Next</string>
 </resources>

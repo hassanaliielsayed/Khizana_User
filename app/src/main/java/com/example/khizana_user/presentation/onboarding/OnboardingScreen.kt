@@ -7,13 +7,24 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+//noinspection UsingMaterialAndMaterial3Libraries
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +36,7 @@ import com.example.khizana_user.utils.customFontFamily
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.launch
 
+
 class OnboardingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +44,9 @@ class OnboardingActivity : ComponentActivity() {
             Khizana_UserTheme {
                 OnboardingScreen(
                     onFinish = {
+                        val sharedPreferences = getSharedPreferences("khizana_prefs", MODE_PRIVATE)
+                        sharedPreferences.edit().putBoolean("isFirstTime", false).apply()
+
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     }
@@ -41,7 +56,7 @@ class OnboardingActivity : ComponentActivity() {
     }
 }
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingScreen(onFinish: () -> Unit) {
     val pagerState = rememberPagerState()
@@ -49,18 +64,18 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
     val pages = listOf(
         OnboardingPage(
-            title = "Welcome to Khizana App",
-            description = "Discover amazing products from various vendors.",
+            title = stringResource(R.string.onboarding_title_one),
+            description = stringResource(R.string.onboarding_description_one),
             imageRes = R.drawable.onboarding_bg1
         ),
         OnboardingPage(
-            title = "Easy Shopping",
-            description = "Add to cart and complete your shopping seamlessly.",
+            title = stringResource(R.string.onboarding_title_two),
+            description = stringResource(R.string.onboarding_tdescription_two),
             imageRes = R.drawable.onboarding_bg2
         ),
         OnboardingPage(
-            title = "Fast Delivery",
-            description = "Your orders delivered fast and safe.",
+            title = stringResource(R.string.onboarding_title_three),
+            description = stringResource(R.string.onboarding_description_three),
             imageRes = R.drawable.onboarding_bg3
         )
     )
@@ -71,6 +86,35 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             .background(colorResource(R.color.white)),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        TopAppBar(
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.app_logo1),
+                        contentDescription = stringResource(R.string.project_name),
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                    )
+
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Text(
+                        text = stringResource(R.string.project_name),
+                        fontFamily = customFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = colorResource(R.color.black)
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = colorResource(R.color.white),
+                titleContentColor = colorResource(R.color.black)
+            )
+        )
+
         HorizontalPager(
             count = pages.size,
             state = pagerState,
@@ -111,7 +155,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
                         Text(
-                            "Skip",
+                            stringResource(R.string.skip),
                             color = colorResource(R.color.text_secondary),
                             fontFamily = customFontFamily,
                             fontSize = 18.sp
@@ -136,12 +180,14 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                         .weight(if (pagerState.currentPage < pages.lastIndex) 0.7f else 1f),
                     shape = MaterialTheme.shapes.medium,
                     colors = ButtonDefaults.buttonColors(
-                        backgroundColor = colorResource(R.color.dark_blue),
+                        containerColor = colorResource(R.color.dark_blue),
                         contentColor = colorResource(R.color.black)
                     )
                 ) {
                     Text(
-                        if (pagerState.currentPage == pages.lastIndex) "Get Started" else "Next",
+                        if (pagerState.currentPage == pages.lastIndex) stringResource(R.string.get_started) else stringResource(
+                            R.string.next
+                        ),
                         fontFamily = customFontFamily,
                         fontSize = 20.sp
                     )
