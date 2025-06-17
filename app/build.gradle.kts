@@ -76,13 +76,13 @@ dependencies {
     //Retrofit
     implementation ("com.squareup.retrofit2:retrofit:2.11.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.11.0")
-    //Room
-    val room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    // Kotlin Symbol Processing (KSP)
-    ksp("androidx.room:room-compiler:$room_version")
-    // optional - Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:$room_version")
+//    //Room
+//    val room_version = "2.6.1"
+//    implementation("androidx.room:room-runtime:$room_version")
+//    // Kotlin Symbol Processing (KSP)
+//    ksp("androidx.room:room-compiler:$room_version")
+//    // optional - Kotlin Extensions and Coroutines support for Room
+//    implementation("androidx.room:room-ktx:$room_version")
     //Glide
     implementation ("com.github.bumptech.glide:compose:1.0.0-beta01")
     //LiveData & Compose
@@ -98,7 +98,7 @@ dependencies {
     implementation ("org.osmdroid:osmdroid-android:6.1.20")
 
     //Work Manager
-    implementation ("androidx.work:work-runtime-ktx:2.10.0")
+//    implementation ("androidx.work:work-runtime-ktx:2.10.0")
 
     //MockK
     testImplementation ("io.mockk:mockk-android:1.13.17")
@@ -158,6 +158,8 @@ dependencies {
 
     implementation ("androidx.compose.foundation:foundation:1.5.0")
 
-
+    //pager
+    implementation ("com.google.accompanist:accompanist-pager:0.28.0")
+    implementation ("com.google.accompanist:accompanist-pager-indicators:0.28.0")
 
 }

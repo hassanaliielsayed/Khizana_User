@@ -22,4 +22,5 @@
     <string name="title_activity_profile_screen">ProfileScreen</string>
     <string name="title_activity_order_details">OrderDetails</string>
     <string name="title_activity_search_screen">SearchScreen</string>
+    <string name="title_activity_onboarding_screen">OnboardingScreen</string>
 </resources>

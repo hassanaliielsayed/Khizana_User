@@ -1,4 +1,4 @@
-package com.example.khizana_user.presentation
+package com.example.khizana_user.presentation.search.view
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items

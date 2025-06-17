@@ -33,6 +33,9 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieConstants
 import com.example.khizana_user.MainActivity
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.onboarding.OnboardingActivity
+import com.example.khizana_user.presentation.onboarding.OnboardingPageContent
+import com.example.khizana_user.presentation.onboarding.OnboardingScreen
 import com.example.khizana_user.utils.customFontFamily
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.firstOrNull
@@ -54,7 +57,7 @@ class SplashScreen : ComponentActivity() {
                     SplashContent(
                         onFinish = {
                             sharedPreferences.edit().putBoolean("isFirstTime", false).apply()
-                            startActivity(Intent(this, MainActivity::class.java))
+                            startActivity(Intent(this, OnboardingActivity::class.java))
                             finish()
                         }
                     )

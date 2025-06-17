@@ -1,4 +1,4 @@
-package com.example.khizana_user.ui.theme
+package com.example.khizana_user.presentation.onboarding.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -10,17 +10,15 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
-import com.example.khizana_user.R
 
 private val DarkColorScheme = darkColorScheme(
-    primary = DarkBlue,
+    primary = Purple80,
     secondary = PurpleGrey80,
     tertiary = Pink80
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = DarkBlue,
+    primary = Purple40,
     secondary = PurpleGrey40,
     tertiary = Pink40
 
