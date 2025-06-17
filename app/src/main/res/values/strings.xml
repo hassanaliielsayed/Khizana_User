@@ -95,4 +95,15 @@
     <string name="confirm_logout">Confirm Logout</string>
     <string name="are_you_sure_you_want_to_logout">Are you sure you want to logout?</string>
     <string name="arrow">Arrow</string>
+    <string name="contact_icon">Contact Icon</string>
+    <string name="ayaahmed111_gmail_com">ayaahmed111@gmail.com</string>
+    <string name="aya_phone">01014505674</string>
+    <string name="esraamohammed_gmail_com">esraamohammed@gmail.com</string>
+    <string name="esraa_phone">01015291294</string>
+    <string name="yousefghoneim2_gmail_com">yousefghoneim2@gmail.com</string>
+    <string name="yousef_phone">01001395368</string>
+    <string name="hassanaliielsayed_gmail_com">hassanaliielsayed@gmail.com</string>
+    <string name="hassan_phone">01555379365</string>
+    <string name="email">Email:</string>
+    <string name="phone">Phone:</string>
 </resources>

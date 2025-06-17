@@ -32,6 +32,9 @@
     <color name="success_green">#4CAF50</color>
     <color name="error_red">#F44336</color>
 
+    <color name="light_background">#F5F5F5</color>
+    <color name="primary_color">#1E88E5</color>
+
     <color name="onboarding_indicator_active">#3F51B5</color>
     <color name="onboarding_indicator_inactive">#BDBDBD</color>
     <color name="onboarding_button_background">#3F51B5</color>
