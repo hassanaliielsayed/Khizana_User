@@ -7,7 +7,6 @@
     <string name="shopping_cart">ShoppingCart</string>
     <string name="background_image">Background Image</string>
     <string name="user_image">User Image</string>
-    <string name="welcome_message">Hi, Aya \nWelcome To Khizana Store</string>
     <string name="search_for_products">Search For products</string>
     <string name="brands">Brands</string>
     <string name="products">Products</string>
@@ -33,4 +32,20 @@
     <string name="skip">Skip</string>
     <string name="get_started">Get Started</string>
     <string name="next">Next</string>
+    <string name="title_activity_app_logo">AppLogo</string>
+    <string name="title_activity_home_screen_top_section">HomeScreenTopSection</string>
+    <string name="welcome">Welcome %1$s</string>
+    <string name="search">Search for products or brands</string>
+    <string name="clear">Clear</string>
+    <string name="brand">"Brand: "</string>
+    <string name="error_loading_coupons">Error loading coupons</string>
+    <string name="no_internet_connection">No Internet Connection</string>
+    <string name="please_check_your_connection">Please check your connection</string>
+    <string name="congrats">🎉 Congrats!</string>
+    <string name="close">Close</string>
+    <string name="coupon_code">Coupon Code</string>
+    <string name="coupon_copied_to_clipboard">Coupon copied to clipboard</string>
+    <string name="copy">Copy</string>
+    <string name="use_coupon_code">Use coupon code: %1$s</string>
+    <string name="title_activity_top_bar_icon_button">TopBarIconButton</string>
 </resources>

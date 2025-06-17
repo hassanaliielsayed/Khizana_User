@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.MainActivity
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.category.view.ui.theme.Khizana_UserTheme
 import com.example.khizana_user.utils.customFontFamily
 import com.google.accompanist.pager.*
@@ -88,26 +89,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     ) {
         TopAppBar(
             title = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.app_logo1),
-                        contentDescription = stringResource(R.string.project_name),
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                    )
-
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        text = stringResource(R.string.project_name),
-                        fontFamily = customFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = colorResource(R.color.black)
-                    )
-                }
+                AppLogo()
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = colorResource(R.color.white),
