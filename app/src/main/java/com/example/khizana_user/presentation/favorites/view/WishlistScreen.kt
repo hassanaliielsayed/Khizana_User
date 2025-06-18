@@ -7,21 +7,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -35,6 +32,7 @@ import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.presentation.profile.view.EmptyState
 import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.customFontFamily
 import com.example.khizana_user.utils.toCurrentCurrency
 import kotlinx.coroutines.launch
 
@@ -69,18 +67,18 @@ fun WishlistScreen(
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text(stringResource(R.string.clear_all_favorites)) },
-            text = { Text(stringResource(R.string.are_you_sure_you_want_to_remove_all_items)) },
+            title = { Text(stringResource(R.string.clear_all_favorites), fontFamily = customFontFamily) },
+            text = { Text(stringResource(R.string.are_you_sure_you_want_to_remove_all_items),fontFamily = customFontFamily) },
             confirmButton = {
                 TextButton(onClick = {
                     showClearDialog = false
                     coroutineScope.launch {
                         viewModel.clearFavorites(customerId)
                     }
-                }) { Text(stringResource(R.string.yes)) }
+                }) { Text(stringResource(R.string.yes),fontFamily = customFontFamily) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.no)) }
+                TextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.no),fontFamily = customFontFamily) }
             }
         )
     }
@@ -89,8 +87,8 @@ fun WishlistScreen(
     confirmRemoveItem?.let { item ->
         AlertDialog(
             onDismissRequest = { confirmRemoveItem = null },
-            title = { Text(stringResource(R.string.remove_item)) },
-            text = { Text(stringResource(R.string.do_you_want_to_remove, item.title)) },
+            title = { Text(stringResource(R.string.remove_item),fontFamily = customFontFamily) },
+            text = { Text(stringResource(R.string.do_you_want_to_remove, item.title),fontFamily = customFontFamily) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmRemoveItem = null
@@ -103,10 +101,10 @@ fun WishlistScreen(
                             println(context.getString(R.string.failed_to_remove_item, result.message))
                         }
                     }
-                }) { Text(stringResource(R.string.yes)) }
+                }) { Text(stringResource(R.string.yes),fontFamily = customFontFamily) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmRemoveItem = null }) { Text(stringResource(R.string.no)) }
+                TextButton(onClick = { confirmRemoveItem = null }) { Text(stringResource(R.string.no),fontFamily = customFontFamily) }
             }
         )
     }
@@ -144,42 +142,75 @@ fun WishlistScreen(
                     .padding(padding)
                     .background(MaterialTheme.colorScheme.background)
             ) {
+
                 val items = favoritesState?.items?.filterNotNull().orEmpty()
 
-                when {
-                    isLoading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
-                    items.isEmpty() -> {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            stringResource(R.string.your_favorites),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontFamily = customFontFamily
+                        )
+
+                        TextButton(
+                            onClick = { showClearDialog = true }
                         ) {
-                            EmptyState(
-                                animationRes = R.raw.no_data,
-                                message = "Your Favorite is empty\nAdd items you love to see them here"
+                            Text(
+                                stringResource(R.string.clear_all_favorites),
+                                fontFamily = customFontFamily
                             )
                         }
                     }
-                    else -> {
-                        FavoritesList(
-                            items = items,
-                            removingIds = removingIds,
-                            onRemoveClick = { confirmRemoveItem = it },
-                            onItemClick = {
-                                navController.navigate(
-                                    ScreenRoute.ProductDetails.createRoute(
-                                        variantId = it.variantId
-                                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    when {
+                        isLoading -> {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                            }
+                        }
+                        items.isEmpty() -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                EmptyState(
+                                    animationRes = R.raw.no_data,
+                                    message = stringResource(R.string.your_favorite_is_empty_add_items_you_love_to_see_them_here)
                                 )
                             }
-                        )
+                        }
+                        else -> {
+                            FavoritesList(
+                                items = items,
+                                removingIds = removingIds,
+                                onRemoveClick = { confirmRemoveItem = it },
+                                onItemClick = {
+                                    navController.navigate(
+                                        ScreenRoute.ProductDetails.createRoute(
+                                            variantId = it.variantId
+                                        )
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
+
         }
     }
 }
@@ -193,7 +224,8 @@ private fun FavoritesList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 8.dp)
+        contentPadding = PaddingValues(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(items, key = { it.variantId }) { item ->
             FavoriteItemCard(
@@ -220,7 +252,9 @@ fun FavoriteItemCard(
             .clickable(enabled = !isLoading) { onItemClick() },
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.dark_blue))
+        colors = CardDefaults.cardColors(
+            containerColor = colorResource(R.color.dark_blue).copy(alpha = 0.9f)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -253,19 +287,25 @@ fun FavoriteItemCard(
                     text = item.title,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    fontFamily = customFontFamily,
+                    fontSize = 20.sp,
+                    color = Color.White
                 )
 
                 Text(
                     text = stringResource(R.string.price, item.price.toCurrentCurrency()),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    fontFamily = customFontFamily,
+                    fontSize = 18.sp
                 )
 
                 Text(
                     text = stringResource(R.string.quantity, item.quantity),
                     style = MaterialTheme.typography.bodySmall,
-                    color = colorResource(R.color.content_color)
+                    color = colorResource(R.color.content_color),
+                    fontFamily = customFontFamily,
+                    fontSize = 16.sp
                 )
             }
 
@@ -283,7 +323,7 @@ fun FavoriteItemCard(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.remove_item),
-                        tint = MaterialTheme.colorScheme.error
+                        tint = colorResource(R.color.content_color)
                     )
                 }
             }
