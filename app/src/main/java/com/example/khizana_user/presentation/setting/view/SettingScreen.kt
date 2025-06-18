@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -162,7 +164,7 @@ fun SettingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(25.dp))
 
             if (isGuestUser()) {
                 Button(
@@ -174,6 +176,12 @@ fun SettingScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 32.dp)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(24.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(
+                            id = R.color.content_color)
+                    )
                 ) {
                     Text(
                         text = stringResource(R.string.login),
@@ -189,11 +197,11 @@ fun SettingScreen(
                         .fillMaxWidth()
                         .padding(bottom = 32.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
+                        contentColor = colorResource(R.color.content_color)
                     ),
                     border = BorderStroke(
                         1.dp,
-                        MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                        colorResource(R.color.content_color).copy(alpha = 0.5f)
                     )
                 ) {
                     Text(
@@ -201,11 +209,13 @@ fun SettingScreen(
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         fontFamily = customFontFamily,
+                        fontSize = 20.sp
                     )
                 }
             }
         }
     }
+
     if (showCurrencyDialog) {
         AlertDialog(
             onDismissRequest = { showCurrencyDialog = false },

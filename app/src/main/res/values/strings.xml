@@ -63,7 +63,7 @@
     <string name="your_favorites">Your Favorites</string>
     <string name="you_don_t_have_any_favorites_yet">You don\'t have any favorites yet</string>
     <string name="see_all">See All</string>
-    <string name="total_amount">Total Amount</string>
+    <string name="total_amount">Total Amount: %s</string>
     <string name="paid">paid</string>
     <string name="pending">pending</string>
     <string name="error">Error</string>
@@ -131,4 +131,16 @@
     <string name="you_need_to_log_in_to_use_this_feature_do_you_want_to_log_in_now">You need to log in to use this feature. Do you want to log in now?</string>
     <string name="continue_as_guest">Continue as Guest</string>
     <string name="added_to_cart">Added to cart</string>
+    <string name="home">Home</string>
+    <string name="your_favourite_is_empty_add_items_you_love_to_see_them_here">Your Favourite is empty\nAdd items you love to see them here</string>
+    <string name="decrease_quantity">Decrease quantity</string>
+    <string name="increase_quantity">Increase quantity</string>
+    <string name="failed_to_load_cart">Failed to load cart: %1$s</string>
+    <string name="your_cart_is_empty_add_items_to_see_them_here">Your Cart is empty\nAdd items to see them here</string>
+    <string name="your_cart">🛒 Your Cart</string>
+    <string name="clear_cart">Clear cart</string>
+    <string name="total">Total:</string>
+    <string name="proceed_to_checkout">Proceed to Checkout</string>
+    <string name="are_you_sure_you_want_to_clear_your_cart">Are you sure you want to clear your cart?</string>
+    <string name="are_you_sure_you_want_to_remove_this_item_from_your_cart">Are you sure you want to remove this item from your cart?</string>
 </resources>

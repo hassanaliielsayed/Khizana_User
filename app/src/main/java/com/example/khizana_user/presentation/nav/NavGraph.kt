@@ -116,7 +116,7 @@ fun AppNavGraph(
                         onNavigateToHome = {
                             navController.navigate(ScreenRoute.Home.route)
                         },
-                        onNavigateToCart = {
+                        onNavigateToCard = {
                             navController.navigate(ScreenRoute.Cart.route)
                         }
                     )
