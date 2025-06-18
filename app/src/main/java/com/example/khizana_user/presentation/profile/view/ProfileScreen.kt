@@ -360,7 +360,7 @@ private fun OrderCard(order: Orders, onClick: () -> Unit) {
             ) {
                 Column {
                     Text(
-                        text = stringResource(R.string.total_amount),
+                        text = stringResource(R.string.total_amount1),
                         fontSize = 14.sp,
                         color = Color.DarkGray,
                         fontFamily = customFontFamily,
@@ -450,7 +450,7 @@ private fun FavoriteCard(fav: FavoriteItem, onClick: () -> Unit) {
                 Text(
                     text = fav.price.toCurrentCurrency(),
                     fontSize = 14.sp,
-                    color = colorResource(id = R.color.dark_blue),
+                    color = colorResource(id = R.color.content_color),
                     fontFamily = customFontFamily,
                     fontWeight = FontWeight.SemiBold
                 )

@@ -239,7 +239,7 @@ fun OrderItem(order: Orders, navController: NavHostController) {
             ) {
                 Column {
                     Text(
-                        text = stringResource(R.string.total_amount),
+                        text = stringResource(R.string.total_amount1),
                         fontFamily = customFontFamily,
                         fontSize = 16.sp,
                         color = Color.DarkGray

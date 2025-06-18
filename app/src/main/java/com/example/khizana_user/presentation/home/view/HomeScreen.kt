@@ -400,7 +400,7 @@ fun CouponCarousel(copuons: List<Coupon>) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .height(270.dp)
             .padding(horizontal = 16.dp)
     ) {
         HorizontalPager(

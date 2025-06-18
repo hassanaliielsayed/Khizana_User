@@ -7,14 +7,12 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.ui.draw.clip
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -29,6 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.khizana_user.MainActivity
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.AppLogo
@@ -67,12 +69,12 @@ fun OnboardingScreen(onFinish: () -> Unit) {
         OnboardingPage(
             title = stringResource(R.string.onboarding_title_one),
             description = stringResource(R.string.onboarding_description_one),
-            imageRes = R.drawable.onboarding_bg1
+            lottieRes = R.raw.spalsh_lottie_animation
         ),
         OnboardingPage(
             title = stringResource(R.string.onboarding_title_two),
             description = stringResource(R.string.onboarding_tdescription_two),
-            imageRes = R.drawable.onboarding_bg2
+            imageRes = R.drawable.onboarding_bg1
         ),
         OnboardingPage(
             title = stringResource(R.string.onboarding_title_three),
@@ -80,7 +82,6 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             imageRes = R.drawable.onboarding_bg3
         )
     )
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -188,15 +189,26 @@ fun OnboardingPageContent(page: OnboardingPage) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            painter = painterResource(id = page.imageRes),
-            contentDescription = page.title,
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .aspectRatio(1f)
-                .padding(bottom = 16.dp),
-            contentScale = ContentScale.Fit
-        )
+        page.lottieRes?.let { lottie ->
+            LottieAnimation(
+                composition = rememberLottieComposition(LottieCompositionSpec.RawRes(lottie)).value,
+                iterations = LottieConstants.IterateForever,
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .aspectRatio(1f)
+            )
+        }
+
+        page.imageRes?.let { image ->
+            Image(
+                painter = painterResource(id = image),
+                contentDescription = page.title,
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .aspectRatio(1f),
+                contentScale = ContentScale.Fit
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -227,5 +239,7 @@ fun OnboardingPageContent(page: OnboardingPage) {
 data class OnboardingPage(
     val title: String,
     val description: String,
-    val imageRes: Int
+    val lottieRes: Int? = null,
+    val imageRes: Int? = null
 )
+

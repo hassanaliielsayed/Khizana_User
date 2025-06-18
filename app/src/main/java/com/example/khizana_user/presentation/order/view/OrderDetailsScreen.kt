@@ -181,7 +181,7 @@ fun OrderDetailsScreen(
                                     ) {
                                         Column {
                                             Text(
-                                                text = stringResource(R.string.total_amount),
+                                                text = stringResource(R.string.total_amount1),
                                                 fontFamily = customFontFamily,
                                                 fontSize = 16.sp,
                                                 color = Color.DarkGray
@@ -284,7 +284,7 @@ fun OrderDetailsScreen(
                                                 )
 
                                                 OrderDetailRow(
-                                                    label = stringResource(R.string.price),
+                                                    label = stringResource(R.string.price1),
                                                     value = "${item.price} ${order.currency}",
                                                     fontSize = 16.sp
                                                 )
