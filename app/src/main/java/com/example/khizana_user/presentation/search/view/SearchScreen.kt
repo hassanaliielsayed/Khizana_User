@@ -1,5 +1,7 @@
 package com.example.khizana_user.presentation.search.view
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.OutlinedTextField
@@ -25,15 +27,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.example.khizana_user.presentation.category.view.ProductItem
 import com.example.khizana_user.presentation.category.viewModel.CategoryViewModel
-import com.example.khizana_user.utils.customFontFamily
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.profile.view.EmptyState
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +48,6 @@ fun SearchScreen(
     onNavigateToCart: () -> Unit,
     navController: NavHostController,
 ) {
-
     val products by viewModel.products.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
@@ -56,68 +59,114 @@ fun SearchScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = stringResource(R.string.project_name),
-                        fontFamily = customFontFamily,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
+                    AppLogo()
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
                 actions = {
-                    IconButton(onClick = onNavigateToCart) {
-                        Icon(
-                            Icons.Default.ShoppingCart,
-                            tint = Color.Black,
-                            contentDescription = stringResource(R.string.shopping_cart)
-                        )
-                    }
-
-                    IconButton(onClick = onNavigateToFavorites) {
-                        Icon(
-                            Icons.Default.Favorite,
-                            contentDescription = stringResource(R.string.favorites),
-                            tint = Color.Black
-                        )
-                    }
+                    TopBarIconButton(
+                        icon = Icons.Default.Favorite,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToFavorites
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.ShoppingCart,
+                        contentDescription = stringResource(R.string.shopping_cart),
+                        onClick = onNavigateToCart
+                    )
                 }
             )
         }
-
     ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
 
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)) {
-
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { query ->
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { query ->
                     searchQuery = query
                     viewModel.filterProductsBySearch(query)
                 },
-
-                label = { Text("Search For Products") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            LazyColumn {
-                items(products) { product ->
-                    ProductItem(product = product,
-                        onClick = {
-                            navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
-                        }
+
+            if (products.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    EmptyState(
+                        animationRes = R.raw.no_data,
+                        message = stringResource(R.string.no_product_found)
                     )
                 }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(products) { product ->
+                        ProductItem(
+                            product = product,
+                            onClick = {
+                                navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                            }
+                        )
+                    }
+                }
             }
-
         }
-
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        label = {
+            Text(
+                text = stringResource(R.string.search_for_products),
+                style = MaterialTheme.typography.bodyLarge
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        },
+        shape = MaterialTheme.shapes.large,
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+            focusedBorderColor = MaterialTheme.colorScheme.primary
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge
+    )
+}

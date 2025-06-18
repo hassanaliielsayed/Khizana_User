@@ -70,6 +70,7 @@ import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.profile.view.EmptyState
 import com.example.khizana_user.utils.toCurrentCurrency
 
 
@@ -238,19 +239,16 @@ fun CategoryScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (products.isEmpty()) {
-
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LottieAnimation(
-                            composition = rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.no_data)).value,
-                            iterations = LottieConstants.IterateForever,
-                            modifier = Modifier
-                                .size(270.dp)
-                                .padding(bottom = 16.dp)
+                        EmptyState(
+                            animationRes = R.raw.no_data,
+                            message = stringResource(R.string.no_product_found_in_this_category)
                         )
                     }
                 } else {

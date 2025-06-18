@@ -120,4 +120,6 @@
     <string name="kids">Kids</string>
     <string name="men">Men</string>
     <string name="women">Women</string>
+    <string name="no_product_found_in_this_category">No Product Found in this category</string>
+    <string name="no_product_found">No Product Found</string>
 </resources>
