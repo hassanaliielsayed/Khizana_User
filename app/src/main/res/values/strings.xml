@@ -144,4 +144,12 @@
     <string name="are_you_sure_you_want_to_remove_this_item_from_your_cart">Are you sure you want to remove this item from your cart?</string>
     <string name="your_favorite_is_empty_add_items_you_love_to_see_them_here">Your Favorite is empty\nAdd items you love to see them here</string>
     <string name="your_favorites">" 🩵 Your Favorites"</string>
+    <string name="select_a_location_on_map">Select a location on map</string>
+    <string name="unknown">Unknown</string>
+    <string name="search_location">Search Location</string>
+    <string name="selected_location">Selected Location</string>
+    <string name="selected_address">Selected Address:</string>
+    <string name="save_location">Save Location</string>
+    <string name="unknown_address">Unknown Address</string>
+    <string name="error_resolving_address">Error resolving address</string>
 </resources>
