@@ -112,4 +112,12 @@
     <string name="esraa_mohammed">Esraa Mohammed</string>
     <string name="yousef_ghaoneim">Yousef Ghaoneim</string>
     <string name="hassan_ali">Hassan Ali</string>
+    <string name="all">All</string>
+    <string name="accessories">ACCESSORIES</string>
+    <string name="shoes">SHOES</string>
+    <string name="t_shirts">T-SHIRTS</string>
+    <string name="vendor">Vendor: %1$s</string>
+    <string name="kids">Kids</string>
+    <string name="men">Men</string>
+    <string name="women">Women</string>
 </resources>

@@ -34,11 +34,18 @@ object SharedModifiers {
         .border(1.dp, Color.Gray, CircleShape)
         .padding(4.dp)
 
+    fun circleImageModifierWithWhiteBorder(size: Dp) = Modifier
+        .size(size)
+        .clip(CircleShape)
+        .background(Color.White)
+        .border(1.dp, Color.White, CircleShape)
+        .padding(4.dp)
+
     @Composable
     fun cardModifier(height: Dp) = Modifier
         .height(height)
         .clip(RoundedCornerShape(16.dp))
-        .border(1.dp, colorResource(id = R.color.black))
+        .border(1.dp, colorResource(id = R.color.content_color))
 
 
     fun couponImageModifier() = Modifier

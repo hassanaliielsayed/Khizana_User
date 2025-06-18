@@ -178,7 +178,13 @@ fun HomeScreen(
                         fontFamily = customFontFamily,
                     )
 
-                    is Result.Loading -> CircularProgressIndicator()
+                    is Result.Loading -> Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+
                     is Result.Success -> CouponCarousel((couponState as Result.Success<List<Coupon>>).data)
                 }
 
@@ -333,9 +339,11 @@ fun ProductItem(
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp),
+        border = BorderStroke(1.dp, colorResource(R.color.content_color)),
         modifier = modifier
             .then(SharedModifiers.cardModifier(100.dp))
             .clickable { onClick() }
+
     ) {
         Row(
             modifier = Modifier
@@ -363,14 +371,9 @@ fun ProductItem(
             Spacer(modifier = Modifier.width(12.dp))
 
             Text(
-                text = product.productTitle.substringAfter("|").trim(),
-                fontSize = 16.sp,
+                product.productTitle,
+                fontWeight = FontWeight.Bold,
                 fontFamily = customFontFamily,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
             )
         }
     }
