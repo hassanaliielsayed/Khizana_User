@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
+import com.example.khizana_user.utils.customFontFamily
 
 @Composable
 fun OrderSuccessScreen(
@@ -50,7 +51,8 @@ fun OrderSuccessScreen(
             text = "Order Placed Successfully!",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = Color.Black,
+            fontFamily = customFontFamily,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -58,7 +60,8 @@ fun OrderSuccessScreen(
         Text(
             text = "Your order will arrive in 3 days, If You have any Problems Please Contact Us",
             fontSize = 18.sp,
-            color = Color.Gray
+            color = Color.Gray,
+            fontFamily = customFontFamily,
         )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -71,7 +74,8 @@ fun OrderSuccessScreen(
                 Text(
                     "Back to Home",
                     fontSize = 16.sp,
-                    color = Color.Black
+                    color = Color.Black,
+                    fontFamily = customFontFamily,
                 )
             }
 
@@ -85,7 +89,8 @@ fun OrderSuccessScreen(
                 Text(
                     "Contact Us",
                     fontSize = 16.sp,
-                    color = Color.Black
+                    color = Color.Black,
+                    fontFamily = customFontFamily,
                 )
             }
 

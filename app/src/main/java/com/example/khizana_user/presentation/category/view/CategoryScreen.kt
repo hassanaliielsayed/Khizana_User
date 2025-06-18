@@ -7,16 +7,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -27,7 +26,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
@@ -55,7 +53,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.khizana_user.R
@@ -64,9 +61,16 @@ import com.example.khizana_user.presentation.category.viewModel.CategoryViewMode
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.customFontFamily
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.*
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
+import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.profile.view.EmptyState
 import com.example.khizana_user.utils.toCurrentCurrency
 
 
@@ -81,10 +85,10 @@ fun CategoryScreen(
 ) {
 
     val mainCategory = listOf(
-        "All" to "All",
-        "Women" to "Women",
-        "Men" to "Men",
-        "Kid" to "Kids"
+        "All" to stringResource(R.string.all),
+        "Women" to stringResource(R.string.women),
+        "Men" to stringResource(R.string.men),
+        "Kid" to stringResource(R.string.kids)
     )
 
     var selectedMainCategory by remember { mutableStateOf("All") }
@@ -98,7 +102,7 @@ fun CategoryScreen(
 
     val connectionState by viewModel.networkState.collectAsState()
 
-    var selectedPrice by remember { mutableStateOf(10000f) }
+    var selectedPrice by remember { mutableFloatStateOf(10000f) }
 
     var isFilterVisible by remember { mutableStateOf(false) }
 
@@ -112,39 +116,28 @@ fun CategoryScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            stringResource(R.string.project_name),
-                            fontFamily = customFontFamily,
-                            fontSize = 20.sp,
-                            color = Color.Black
-                        )
+                        AppLogo()
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colorResource(id = R.color.light_blue)
+                    ),
                     actions = {
-
-                        IconButton(onClick = onNavigateToSearch) {
-                            Icon(
-                                Icons.Default.Search,
-                                tint = Color.Black,
-                                contentDescription = stringResource(R.string.search_for_products),
-                            )
-                        }
-
-                        IconButton(onClick =  { isFilterVisible = !isFilterVisible }) {
-                            Icon(
-                                Icons.Default.FilterList,
-                                contentDescription = stringResource(R.string.filter),
-                                tint = Color.Black
-                            )
-                        }
-
-                        IconButton(onClick = onNavigateToFavorites) {
-                            Icon(
-                                Icons.Default.Favorite,
-                                contentDescription = stringResource(R.string.favorites),
-                                tint = Color.Black
-                            )
-                        }
+                        TopBarIconButton(
+                            icon = Icons.Default.Search,
+                            contentDescription = stringResource(R.string.search),
+                            onClick = onNavigateToSearch
+                        )
+                        TopBarIconButton(
+                            icon = Icons.Default.FilterList,
+                            contentDescription = stringResource(R.string.filter),
+                            tint = Color.Black,
+                            onClick =  { isFilterVisible = !isFilterVisible }
+                        )
+                        TopBarIconButton(
+                            icon = Icons.Default.Favorite,
+                            contentDescription = stringResource(R.string.favorites),
+                            onClick = onNavigateToFavorites
+                        )
                     }
                 )
             },
@@ -157,10 +150,10 @@ fun CategoryScreen(
                                 .clip(RoundedCornerShape(12.dp))
                         ) {
                             val subCategoryImages = mapOf(
-                                "All" to R.drawable.all,
-                                "ACCESSORIES" to R.drawable.accessories,
-                                "SHOES" to R.drawable.shoes,
-                                "T-SHIRTS" to R.drawable.tshirt
+                                stringResource(R.string.all) to R.drawable.all,
+                                stringResource(R.string.accessories) to R.drawable.accessories,
+                                stringResource(R.string.shoes) to R.drawable.shoes,
+                                stringResource(R.string.t_shirts) to R.drawable.tshirt
                             )
 
                             Column(
@@ -194,7 +187,7 @@ fun CategoryScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filter",
+                            contentDescription = stringResource(R.string.filter),
                             tint = Color.White
                         )
                     }
@@ -225,7 +218,8 @@ fun CategoryScreen(
                                 Text(
                                     text = displayValue,
                                     color = if (selectedMainCategory == tagValue) Color.Black else Color.Gray,
-                                    fontWeight = if (selectedMainCategory == tagValue) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (selectedMainCategory == tagValue) FontWeight.Bold else FontWeight.Normal,
+                                    fontFamily = customFontFamily
                                 )
                             },
                             modifier = Modifier.background(colorResource(id = R.color.white))
@@ -245,27 +239,28 @@ fun CategoryScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (products.isEmpty()) {
-
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LottieAnimation(
-                            composition = rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.no_data)).value,
-                            iterations = LottieConstants.IterateForever,
-                            modifier = Modifier
-                                .size(270.dp)
-                                .padding(bottom = 16.dp)
+                        EmptyState(
+                            animationRes = R.raw.no_data,
+                            message = stringResource(R.string.no_product_found_in_this_category)
                         )
                     }
                 } else {
-                    LazyColumn(
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp)
                     ) {
                         items(products) { product ->
-                            ProductItem(product = product,
+                            ProductItem(
+                                product = product,
                                 onClick = {
                                     navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
                                 }
@@ -277,39 +272,62 @@ fun CategoryScreen(
         }
     }
 }
-
 @Composable
-fun ProductItem(product: ProductByCategory, onClick: () -> Unit,) {
+fun ProductItem(product: ProductByCategory, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colorResource(id = R.color.white)
-        )
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
+        border = BorderStroke(1.dp, colorResource(R.color.content_color)),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+
             AsyncImage(
                 model = product.productImage,
                 contentDescription = product.productTitle,
-                modifier = Modifier.size(80.dp)
+                modifier = SharedModifiers.circleImageModifier(150.dp),
+                contentScale = ContentScale.Crop
             )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    product.productTitle,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = customFontFamily,
-                )
-                Text("Vendor: ${product.productVendor ?: "N/A"}", fontFamily = customFontFamily)
-                Text("Price: ${product.productPrice.toCurrentCurrency()}", fontFamily = customFontFamily)
-                Text("Product Type: ${product.product_type}", fontFamily = customFontFamily)
-            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = product.productTitle,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(R.string.vendor, product.productVendor ?: "N/A"),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Price: ${product.productPrice.toCurrentCurrency()}",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -323,7 +341,7 @@ fun CategoryChipImage(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) Color(0xFFFDE6EE) else Color.White,
+        color = if (isSelected) colorResource(R.color.content_color) else Color.White,
         border = BorderStroke(1.dp, Color.Gray),
         modifier = Modifier
             .padding(4.dp)
@@ -353,7 +371,7 @@ fun FilterByPrice(
             .fillMaxWidth()
             .padding(10.dp)
     ) {
-        Text(text = "Price: ${sliderPosition.toInt()} EGP" , fontFamily = customFontFamily)
+       Text(text = "Price: ${sliderPosition.toInt()} EGP" , fontFamily = customFontFamily, fontSize = 20.sp)
 
         Slider(
             value = sliderPosition,
@@ -364,9 +382,9 @@ fun FilterByPrice(
             valueRange = minPrice..maxPrice,
             modifier = Modifier.height(22.dp),
             colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.secondary,
-                activeTrackColor = MaterialTheme.colorScheme.secondary,
-                inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                thumbColor = colorResource(R.color.dark_blue),
+                activeTrackColor = colorResource(R.color.content_color),
+                inactiveTrackColor = colorResource(R.color.dark_blue)
             )
         )
     }

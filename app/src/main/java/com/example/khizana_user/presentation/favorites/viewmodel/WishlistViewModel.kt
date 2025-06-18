@@ -35,6 +35,9 @@ class WishlistViewModel @Inject constructor(
     private val _networkState = MutableStateFlow(true)
     val networkState: StateFlow<Boolean> = _networkState
 
+    private val _loading = MutableStateFlow(true)
+    val loading: StateFlow<Boolean> = _loading
+
     init {
         observeNetworkState()
     }
@@ -49,14 +52,19 @@ class WishlistViewModel @Inject constructor(
 
     fun loadFavorites(customerId: Long) {
         viewModelScope.launch {
+            _loading.value = true
             getFavoritesUseCase(customerId)
-                .onSuccess { _favoritesState.value = it }
+                .onSuccess {
+                    _favoritesState.value = it
+                }
                 .onFailure {
                     Log.e("WishlistViewModel", "Failed to load favorites: ${it.message}")
                     _favoritesState.value = null
                 }
+            _loading.value = false
         }
     }
+
 
     fun clearFavorites(customerId: Long) {
         viewModelScope.launch {

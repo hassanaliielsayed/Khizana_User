@@ -21,6 +21,26 @@
         android:theme="@style/Theme.Khizana_User"
         tools:targetApi="31">
         <activity
+            android:name=".presentation.TopBarIconButton"
+            android:exported="false"
+            android:label="@string/title_activity_top_bar_icon_button"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
+            android:name=".presentation.home.view.HomeScreenTopSection"
+            android:exported="false"
+            android:label="@string/title_activity_home_screen_top_section"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
+            android:name=".presentation.AppLogo"
+            android:exported="false"
+            android:label="@string/title_activity_app_logo"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
+            android:name=".presentation.onboarding.OnboardingScreen"
+            android:exported="false"
+            android:label="@string/title_activity_onboarding_screen"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
             android:name=".presentation.SearchScreen"
             android:exported="false"
             android:label="@string/title_activity_search_screen"
@@ -35,11 +55,7 @@
             android:exported="false"
             android:label="@string/title_activity_profile_screen"
             android:theme="@style/Theme.Khizana_User" />
-        <activity
-            android:name=".presentation.profile.Profile"
-            android:exported="false"
-            android:label="@string/title_activity_profile"
-            android:theme="@style/Theme.Khizana_User" />
+        <activity android:name=".presentation.onboarding.OnboardingActivity" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
