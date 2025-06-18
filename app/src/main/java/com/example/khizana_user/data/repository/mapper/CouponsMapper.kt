@@ -18,11 +18,17 @@ fun Price_rulesItemEntity.toDomain(): Coupon {
         .trim()
         .toDoubleOrNull() ?: 0.0
 
+    val images = listOf(
+        R.drawable.add2,
+        R.drawable.add1,
+    )
+    val randomImage = images.random()
+
     return Coupon(
         title = title,
         id = id,
         discount = discount,
-        img = R.drawable.test_add
+        img = randomImage
     )
 }
 

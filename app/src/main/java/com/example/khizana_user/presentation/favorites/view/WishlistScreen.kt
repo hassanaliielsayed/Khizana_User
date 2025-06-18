@@ -1,24 +1,45 @@
 package com.example.khizana_user.presentation.favorites.view
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.khizana_user.R
 import com.example.khizana_user.domain.model.FavoriteItem
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
+import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.profile.view.EmptyState
 import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.customFontFamily
+import com.example.khizana_user.utils.toCurrentCurrency
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,7 +47,9 @@ import kotlinx.coroutines.launch
 fun WishlistScreen(
     customerId: Long,
     navController: NavController,
-    viewModel: WishlistViewModel = hiltViewModel()
+    viewModel: WishlistViewModel = hiltViewModel(),
+    onNavigateToHome: () -> Unit,
+    onNavigateToCard: () -> Unit
 ) {
     val favoritesState by viewModel.favoritesState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
@@ -37,6 +60,10 @@ fun WishlistScreen(
 
     val connectionState by viewModel.networkState.collectAsState()
 
+    val context = LocalContext.current
+
+    val isLoading by viewModel.loading.collectAsState()
+
     LaunchedEffect(customerId) {
         if (connectionState) {
             viewModel.loadFavorites(customerId)
@@ -46,18 +73,18 @@ fun WishlistScreen(
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text("Clear All Favorites") },
-            text = { Text("Are you sure you want to remove all items?") },
+            title = { Text(stringResource(R.string.clear_all_favorites), fontFamily = customFontFamily) },
+            text = { Text(stringResource(R.string.are_you_sure_you_want_to_remove_all_items),fontFamily = customFontFamily) },
             confirmButton = {
                 TextButton(onClick = {
                     showClearDialog = false
                     coroutineScope.launch {
                         viewModel.clearFavorites(customerId)
                     }
-                }) { Text("Yes") }
+                }) { Text(stringResource(R.string.yes),fontFamily = customFontFamily) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) { Text("No") }
+                TextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.no),fontFamily = customFontFamily) }
             }
         )
     }
@@ -66,8 +93,8 @@ fun WishlistScreen(
     confirmRemoveItem?.let { item ->
         AlertDialog(
             onDismissRequest = { confirmRemoveItem = null },
-            title = { Text("Remove Item") },
-            text = { Text("Do you want to remove ${item.title}?") },
+            title = { Text(stringResource(R.string.remove_item),fontFamily = customFontFamily) },
+            text = { Text(stringResource(R.string.do_you_want_to_remove, item.title),fontFamily = customFontFamily) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmRemoveItem = null
@@ -77,61 +104,152 @@ fun WishlistScreen(
                         removingIds.remove(item.variantId)
 
                         if (result is Result.Error) {
-                            println("Failed to remove item: ${result.message}")
+                            println(context.getString(R.string.failed_to_remove_item, result.message))
                         }
                     }
-                }) { Text("Yes") }
+                }) { Text(stringResource(R.string.yes),fontFamily = customFontFamily) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmRemoveItem = null }) { Text("No") }
+                TextButton(onClick = { confirmRemoveItem = null }) { Text(stringResource(R.string.no),fontFamily = customFontFamily) }
             }
         )
     }
+
     if (!connectionState) {
         NoInternetConnectionView()
     } else {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("My Wishlist") },
+                    title = {
+                        AppLogo()
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colorResource(id = R.color.light_blue)
+                    ),
                     actions = {
-                        if (!favoritesState?.items.isNullOrEmpty()) {
-                            TextButton(onClick = { showClearDialog = true }) {
-                                Text("Clear All")
-                            }
-                        }
+                        TopBarIconButton(
+                            icon = Icons.Default.Home,
+                            contentDescription = stringResource(R.string.home),
+                            onClick = onNavigateToHome
+                        )
+                        TopBarIconButton(
+                            icon = Icons.Default.ShoppingCart,
+                            contentDescription = stringResource(R.string.shopping_cart),
+                            onClick = onNavigateToCard
+                        )
                     }
                 )
             }
         ) { padding ->
-            val items = favoritesState?.items?.filterNotNull().orEmpty()
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .background(MaterialTheme.colorScheme.background)
             ) {
+
                 val items = favoritesState?.items?.filterNotNull().orEmpty()
 
-                if (favoritesState == null && items.isEmpty()) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                } else if (items.isEmpty()) {
-                    Text(
-                        "No favorites found",
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                } else {
-                    LazyColumn {
-                        items(items, key = { it.variantId }) { item ->
-                            FavoriteItemCard(
-                                item = item,
-                                isLoading = removingIds.contains(item.variantId),
-                                onRemoveClick = { confirmRemoveItem = item },
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            stringResource(R.string.your_favorites),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontFamily = customFontFamily
+                        )
+
+                        if (items.isNotEmpty()) {
+
+                            var isPressed by remember { mutableStateOf(false) }
+
+                            Button(
+                                onClick = { showClearDialog = true  },
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .padding(horizontal = 4.dp)
+                                    .shadow(
+                                        elevation = if (isPressed) 0.dp else 4.dp,
+                                        shape = MaterialTheme.shapes.medium,
+                                        clip = false
+                                    ),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(R.color.dark_blue),
+                                    contentColor = Color.White
+                                ),
+                                shape = MaterialTheme.shapes.medium,
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = Color.White
+                                ),
+                                elevation = ButtonDefaults.buttonElevation(
+                                    defaultElevation = 0.dp,
+                                    pressedElevation = 0.dp
+                                ),
+                                interactionSource = remember { MutableInteractionSource() }.also { interactionSource ->
+                                    isPressed = interactionSource.collectIsPressedAsState().value
+                                }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Delete,
+                                        contentDescription = stringResource(R.string.clear_cart),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(2.dp))
+                                    Text(
+                                        stringResource(R.string.clear_all_favorites),
+                                        fontFamily = customFontFamily,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    when {
+                        isLoading -> {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                            }
+                        }
+                        items.isEmpty() -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                EmptyState(
+                                    animationRes = R.raw.no_data,
+                                    message = stringResource(R.string.your_favorite_is_empty_add_items_you_love_to_see_them_here)
+                                )
+                            }
+                        }
+                        else -> {
+                            FavoritesList(
+                                items = items,
+                                removingIds = removingIds,
+                                onRemoveClick = { confirmRemoveItem = it },
                                 onItemClick = {
                                     navController.navigate(
                                         ScreenRoute.ProductDetails.createRoute(
-                                            variantId = item.variantId
+                                            variantId = it.variantId
                                         )
                                     )
                                 }
@@ -139,8 +257,31 @@ fun WishlistScreen(
                         }
                     }
                 }
-
             }
+
+        }
+    }
+}
+
+@Composable
+private fun FavoritesList(
+    items: List<FavoriteItem>,
+    removingIds: List<Long>,
+    onRemoveClick: (FavoriteItem) -> Unit,
+    onItemClick: (FavoriteItem) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(items, key = { it.variantId }) { item ->
+            FavoriteItemCard(
+                item = item,
+                isLoading = removingIds.contains(item.variantId),
+                onRemoveClick = { onRemoveClick(item) },
+                onItemClick = { onItemClick(item) }
+            )
         }
     }
 }
@@ -155,9 +296,13 @@ fun FavoriteItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable(enabled = !isLoading) { onItemClick() },
-        elevation = CardDefaults.cardElevation()
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colorResource(R.color.dark_blue).copy(alpha = 0.9f)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -168,25 +313,65 @@ fun FavoriteItemCard(
             AsyncImage(
                 model = item.imageUrl,
                 contentDescription = item.title,
-                modifier = Modifier.size(64.dp)
+                modifier = SharedModifiers.circleImageModifier(80.dp)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = item.title, style = MaterialTheme.typography.titleMedium)
-                Text(text = "Price: $${item.price}")
-                Text(text = "Quantity: ${item.quantity}")
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(60.dp)
+                    .background(colorResource(R.color.white))
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    fontFamily = customFontFamily,
+                    fontSize = 20.sp,
+                    color = Color.White
+                )
+
+                Text(
+                    text = stringResource(R.string.price, item.price.toCurrentCurrency()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontFamily = customFontFamily,
+                    fontSize = 18.sp
+                )
+
+                Text(
+                    text = stringResource(R.string.quantity1, item.quantity),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorResource(R.color.content_color),
+                    fontFamily = customFontFamily,
+                    fontSize = 16.sp
+                )
             }
 
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
             } else {
-                IconButton(onClick = onRemoveClick) {
+                IconButton(
+                    onClick = onRemoveClick,
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Remove",
-                        tint = MaterialTheme.colorScheme.error
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.remove_item),
+                        tint = colorResource(R.color.content_color)
                     )
                 }
             }

@@ -17,7 +17,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.khizana_user.presentation.SearchScreen
+import com.example.khizana_user.presentation.search.view.SearchScreen
 import com.example.khizana_user.presentation.auth.view.LoginScreen
 import com.example.khizana_user.presentation.auth.view.RegisterScreen
 import com.example.khizana_user.presentation.auth.view.VerifyEmailScreen
@@ -112,7 +112,13 @@ fun AppNavGraph(
                 if (customer != null && !isGuestUser()) {
                     WishlistScreen(
                         customerId = customer.id,
-                        navController = navController
+                        navController = navController,
+                        onNavigateToHome = {
+                            navController.navigate(ScreenRoute.Home.route)
+                        },
+                        onNavigateToCard = {
+                            navController.navigate(ScreenRoute.Cart.route)
+                        }
                     )
                 } else {
                     LaunchedEffect(Unit) {
@@ -136,6 +142,12 @@ fun AppNavGraph(
                         modifier = Modifier.padding(innerPadding),
                         onCheckoutClick = { totalPrice ->
                             navController.navigate("checkout/${customer.id}/$totalPrice")
+                        },
+                        onNavigateToHome = {
+                            navController.navigate(ScreenRoute.Home.route)
+                        },
+                        onNavigateToFavorite = {
+                            navController.navigate(ScreenRoute.Favorites.route)
                         }
                     )
                 } else {

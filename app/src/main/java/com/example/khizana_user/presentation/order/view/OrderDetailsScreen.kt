@@ -39,13 +39,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
+import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.profile.view.StatusBadge
 import com.example.khizana_user.utils.customFontFamily
 import com.example.khizana_user.utils.toCurrentCurrency
@@ -63,6 +67,8 @@ fun OrderDetailsScreen(
     val productImages by viewModel.productImages.collectAsState()
     val connectionState by viewModel.networkState.collectAsState()
 
+    val context = LocalContext.current
+
     LaunchedEffect(orderId) {
         if (connectionState) {
             viewModel.fetchOrderDetails(orderId)
@@ -76,32 +82,22 @@ fun OrderDetailsScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = stringResource(R.string.project_name),
-                            fontFamily = customFontFamily,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        AppLogo()
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorResource(id = R.color.dark_blue)
+                        containerColor = colorResource(id = R.color.light_blue)
                     ),
                     actions = {
-                        IconButton(onClick = onNavigateToSetting) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Favorites",
-                                tint = Color.Black
-                            )
-                        }
-                        IconButton(onClick = onNavigateToCart) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = "Cart",
-                                tint = Color.Black
-                            )
-                        }
+                        TopBarIconButton(
+                            icon = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.favorites),
+                            onClick = onNavigateToSetting
+                        )
+                        TopBarIconButton(
+                            icon = Icons.Default.ShoppingCart,
+                            contentDescription = stringResource(R.string.shopping_cart),
+                            onClick = onNavigateToCart
+                        )
                     }
                 )
             }
@@ -131,7 +127,7 @@ fun OrderDetailsScreen(
 
 
                             Text(
-                                text = "Order Details",
+                                text = stringResource(R.string.order_details),
                                 fontFamily = customFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 28.sp,
@@ -161,7 +157,7 @@ fun OrderDetailsScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "Order #${order.id}",
+                                            text = stringResource(R.string.order, order.id),
                                             fontFamily = customFontFamily,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 22.sp,
@@ -169,7 +165,7 @@ fun OrderDetailsScreen(
                                         )
 
                                         Text(
-                                            text = order.createdAt.formatAsShortDate(),
+                                            text = order.createdAt.formatAsShortDate(context),
                                             fontFamily = customFontFamily,
                                             fontSize = 16.sp,
                                             color = Color.Gray
@@ -185,7 +181,7 @@ fun OrderDetailsScreen(
                                     ) {
                                         Column {
                                             Text(
-                                                text = "Total Amount",
+                                                text = stringResource(R.string.total_amount1),
                                                 fontFamily = customFontFamily,
                                                 fontSize = 16.sp,
                                                 color = Color.DarkGray
@@ -207,7 +203,7 @@ fun OrderDetailsScreen(
                             Spacer(modifier = Modifier.height(24.dp))
 
                             Text(
-                                text = "Order Items",
+                                text = stringResource(R.string.order_items),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontFamily = customFontFamily,
                                 fontSize = 24.sp,
@@ -233,7 +229,7 @@ fun OrderDetailsScreen(
                                         shape = RoundedCornerShape(16.dp),
                                         elevation = CardDefaults.cardElevation(6.dp),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = Color(0xFFE3F2FD)
+                                            containerColor = colorResource(R.color.dark_blue)
                                         )
                                     ) {
                                         Row(
@@ -246,9 +242,7 @@ fun OrderDetailsScreen(
                                                 AsyncImage(
                                                     model = imageUrl,
                                                     contentDescription = item.title,
-                                                    modifier = Modifier
-                                                        .size(80.dp)
-                                                        .clip(RoundedCornerShape(12.dp)),
+                                                    modifier = SharedModifiers.circleImageModifier(100.dp),
                                                     contentScale = ContentScale.Crop
                                                 )
                                             } else {
@@ -284,19 +278,19 @@ fun OrderDetailsScreen(
                                                 Spacer(modifier = Modifier.height(8.dp))
 
                                                 OrderDetailRow(
-                                                    label = "Brand:",
+                                                    label = stringResource(R.string.brand),
                                                     value = item.vendor ?: "",
                                                     fontSize = 16.sp
                                                 )
 
                                                 OrderDetailRow(
-                                                    label = "Price:",
+                                                    label = stringResource(R.string.price1),
                                                     value = "${item.price} ${order.currency}",
                                                     fontSize = 16.sp
                                                 )
 
                                                 OrderDetailRow(
-                                                    label = "Quantity:",
+                                                    label = stringResource(R.string.quantity),
                                                     value = item.quantity.toString(),
                                                     fontSize = 16.sp
                                                 )
@@ -321,13 +315,13 @@ fun OrderDetailsScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Error,
-                                    contentDescription = "Error",
+                                    contentDescription = stringResource(R.string.error),
                                     tint = Color.Red,
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Error: ${result.message}",
+                                    text = stringResource(R.string.error, result.message),
                                     color = Color.Red,
                                     fontFamily = customFontFamily,
                                     fontSize = 20.sp,
