@@ -2,11 +2,15 @@ package com.example.khizana_user.presentation.cart.view
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -18,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -110,50 +115,91 @@ fun CartScreen(
                     val cart = result.data
                     totalPrice = cart.items.sumOf { (it?.price ?: 0.0) * (it?.quantity ?: 0) }
 
-                    if (cart.items.isEmpty()) {
-                        Column(
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(start = 16.dp, end = 16.dp, top = 110.dp)
+                    ) {
+                        Row(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .fillMaxWidth()
+                                .padding(top = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            EmptyState(
-                                animationRes = R.raw.empity_cart,
-                                message = stringResource(R.string.your_cart_is_empty_add_items_to_see_them_here)
+                            Text(
+                                stringResource(R.string.your_cart),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontFamily = customFontFamily
                             )
-                        }
-                    } else {
+                            if (cart.items.isNotEmpty()) {
+                                var isPressed by remember { mutableStateOf(false) }
 
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                        ) {
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(stringResource(R.string.your_cart), style = MaterialTheme.typography.titleLarge,  fontFamily = customFontFamily)
                                 Button(
                                     onClick = { showClearCartDialog = true },
-                                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(R.color.content_color))
+                                    modifier = Modifier
+                                        .height(40.dp)
+                                        .padding(horizontal = 4.dp)
+                                        .shadow(
+                                            elevation = if (isPressed) 0.dp else 4.dp,
+                                            shape = MaterialTheme.shapes.medium,
+                                            clip = false
+                                        ),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = colorResource(R.color.dark_blue),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = MaterialTheme.shapes.medium,
+                                    border = BorderStroke(
+                                        width = 1.dp,
+                                        color = Color.White
+                                    ),
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = 0.dp,
+                                        pressedElevation = 0.dp
+                                    ),
+                                    interactionSource = remember { MutableInteractionSource() }.also { interactionSource ->
+                                        isPressed = interactionSource.collectIsPressedAsState().value
+                                    }
                                 ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = stringResource(R.string.clear_cart)
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(stringResource(R.string.clear_cart), fontFamily = customFontFamily)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = stringResource(R.string.clear_all_favorites),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.clear_cart),
+                                            fontFamily = customFontFamily,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
                                 }
                             }
+                        }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
+                        if (cart.items.isEmpty()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                EmptyState(
+                                    animationRes = R.raw.empity_cart,
+                                    message = stringResource(R.string.your_cart_is_empty_add_items_to_see_them_here)
+                                )
+                            }
+                        } else {
                             LazyColumn(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -260,6 +306,7 @@ fun CartScreen(
         confirmText = stringResource(R.string.remove_item)
     )
 }
+
 @Composable
 fun CartItemColumn(
     item: FavoriteItem,
@@ -335,7 +382,10 @@ fun CartItemColumn(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
-                    text = stringResource(R.string.total_amount, (item.price * item.quantity).toCurrentCurrency()),
+                    text = stringResource(
+                        R.string.total_amount,
+                        (item.price * item.quantity).toCurrentCurrency()
+                    ),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,

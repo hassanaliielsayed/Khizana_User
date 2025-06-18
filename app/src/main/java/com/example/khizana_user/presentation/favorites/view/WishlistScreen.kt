@@ -1,22 +1,28 @@
 package com.example.khizana_user.presentation.favorites.view
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -161,17 +167,59 @@ fun WishlistScreen(
                             fontFamily = customFontFamily
                         )
 
-                        TextButton(
-                            onClick = { showClearDialog = true }
-                        ) {
-                            Text(
-                                stringResource(R.string.clear_all_favorites),
-                                fontFamily = customFontFamily
-                            )
+                        if (items.isNotEmpty()) {
+
+                            var isPressed by remember { mutableStateOf(false) }
+
+                            Button(
+                                onClick = { showClearDialog = true  },
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .padding(horizontal = 4.dp)
+                                    .shadow(
+                                        elevation = if (isPressed) 0.dp else 4.dp,
+                                        shape = MaterialTheme.shapes.medium,
+                                        clip = false
+                                    ),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(R.color.dark_blue),
+                                    contentColor = Color.White
+                                ),
+                                shape = MaterialTheme.shapes.medium,
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = Color.White
+                                ),
+                                elevation = ButtonDefaults.buttonElevation(
+                                    defaultElevation = 0.dp,
+                                    pressedElevation = 0.dp
+                                ),
+                                interactionSource = remember { MutableInteractionSource() }.also { interactionSource ->
+                                    isPressed = interactionSource.collectIsPressedAsState().value
+                                }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Delete,
+                                        contentDescription = stringResource(R.string.clear_cart),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(2.dp))
+                                    Text(
+                                        stringResource(R.string.clear_all_favorites),
+                                        fontFamily = customFontFamily,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     when {
                         isLoading -> {
@@ -301,7 +349,7 @@ fun FavoriteItemCard(
                 )
 
                 Text(
-                    text = stringResource(R.string.quantity, item.quantity),
+                    text = stringResource(R.string.quantity1, item.quantity),
                     style = MaterialTheme.typography.bodySmall,
                     color = colorResource(R.color.content_color),
                     fontFamily = customFontFamily,
