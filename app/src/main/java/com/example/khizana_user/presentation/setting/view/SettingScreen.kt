@@ -58,103 +58,93 @@ fun SettingScreen(
 
     val selectedCurrency by viewModel.state.collectAsStateWithLifecycle()
 
-    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
-
-    if (!connectionState) {
-        NoInternetConnectionView()
-        return
-    } else {
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        listOf(Color(0xFFF0F0F0), Color(0xFFE6E6E6))
-                    )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    listOf(Color(0xFFF0F0F0), Color(0xFFE6E6E6))
                 )
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Settings",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+            )
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Settings",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 32.dp, bottom = 16.dp)
+        )
+
+        SettingItem(
+            title = "Address",
+            value = "Cairo, Egypt",
+            onClick = { /* TODO */ }
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+
+        SettingItem(
+            title = "Currency",
+            value = selectedCurrency,
+            onClick = { showCurrencyDialog = true }
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+
+        SettingItem(
+            title = "Contact us",
+            onClick = onContactUsClick
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+
+        SettingItem(
+            title = "About us",
+            onClick = onAboutUsClick
+        )
+
+        Spacer(modifier = Modifier.height(144.dp))
+
+        if (isGuestUser()) {
+            Button(
+                onClick = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true } // Clears backstack
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 32.dp, bottom = 16.dp)
-            )
-
-            SettingItem(
-                title = "Address",
-                value = "Cairo, Egypt",
-                onClick = { /* TODO */ }
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            SettingItem(
-                title = "Currency",
-                value = selectedCurrency,
-                onClick = { showCurrencyDialog = true }
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            SettingItem(
-                title = "Contact us",
-                onClick = onContactUsClick
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            SettingItem(
-                title = "About us",
-                onClick = onAboutUsClick
-            )
-
-            Spacer(modifier = Modifier.height(144.dp))
-
-            if (isGuestUser()) {
-                Button(
-                    onClick = {
-                        navController.navigate("login") {
-                            popUpTo(0) { inclusive = true } // Clears backstack
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(24.dp)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(
-                            id = R.color.dark_blue
-                        )
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(24.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(
+                        id = R.color.dark_blue
                     )
-                ) {
-                    Text(
-                        text = "Login",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                    )
-                }
-            } else {
-                // Show Logout button for logged-in users
-                Button(
-                    onClick = { showLogoutDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(24.dp)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Gray,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text(text = "Logout")
-                }
+                )
+            ) {
+                Text(
+                    text = "Login",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                )
+            }
+        } else {
+            // Show Logout button for logged-in users
+            Button(
+                onClick = { showLogoutDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(24.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(text = "Logout")
             }
         }
     }
-
-
 
     if (showCurrencyDialog) {
         AlertDialog(

@@ -26,8 +26,6 @@ class SettingViewModel @Inject constructor(
     private val saveCurrencyUseCase: SaveCurrencyUseCase,
     private val getCurrencyUseCase: GetCurrencyUseCase,
     private val logoutUseCase: LogoutUseCase,
-    private val connectionLiveData: ConnectionLiveData
-
     ) : ViewModel() {
 
     private val _state = MutableStateFlow("EGP")
@@ -37,22 +35,11 @@ class SettingViewModel @Inject constructor(
     val networkState: StateFlow<Boolean> = _networkState
 
     init {
-
-        observeNetworkState()
         viewModelScope.launch {
             getCurrencyUseCase().collect { savedCurrency ->
                 CurrencyHelper.currencyUnit = savedCurrency ?: "EGP"
                 _state.value = CurrencyHelper.currencyUnit
                 Log.i("taag", ": ${CurrencyHelper.currencyUnit} ")
-            }
-        }
-
-    }
-
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
             }
         }
     }
