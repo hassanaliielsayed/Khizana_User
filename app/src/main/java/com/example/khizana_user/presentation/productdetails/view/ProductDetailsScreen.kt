@@ -55,7 +55,6 @@ fun ProductDetailsScreen(
     val productState by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val connectionState by viewModel.networkState.collectAsState()
 
     var isFavorite by remember { mutableStateOf<Boolean?>(null) }
     var isToggling by remember { mutableStateOf(false) }
@@ -67,23 +66,18 @@ fun ProductDetailsScreen(
     var selectedSize by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(customerId) {
-        if (connectionState) {
-            wishlistViewModel.loadFavorites(customerId)
-        }
+        wishlistViewModel.loadFavorites(customerId)
+
     }
 
     LaunchedEffect(productId, variantId) {
-        if (connectionState) {
-            when {
+        when {
                 productId != null -> viewModel.loadProduct(productId)
                 variantId != null -> viewModel.loadProductByVariant(variantId)
-            }
         }
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
+
         Box(modifier = Modifier.fillMaxSize()) {
             when (val result = productState) {
                 is ProductDetailsViewModel.Result.Loading -> {
@@ -175,7 +169,7 @@ fun ProductDetailsScreen(
             }
         }
     }
-}
+
 
 @Composable
 fun ProductDetailsContent(
