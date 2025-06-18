@@ -15,7 +15,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductDetailsViewModel @Inject constructor(
     private val useCase: GetProductDetailsUseCase,
-    private val connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<Result>(Result.Loading)
@@ -24,17 +23,6 @@ class ProductDetailsViewModel @Inject constructor(
     private val _networkState = MutableStateFlow(true)
     val networkState: StateFlow<Boolean> = _networkState
 
-    init {
-        observeNetworkState()
-    }
-
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
-    }
 
     fun loadProduct(productId: Long) {
         viewModelScope.launch {
