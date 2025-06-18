@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +78,7 @@ import com.example.khizana_user.utils.ConfirmationDialog
 import com.example.khizana_user.utils.LocationUtils
 import com.example.khizana_user.utils.PaymentMethod
 import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.customFontFamily
 import com.example.khizana_user.utils.toCurrentCurrency
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.first
@@ -128,11 +130,13 @@ fun CheckoutScreen(
     var userSelectedLocation by remember { mutableStateOf(false) }
 
     val autocompleteLauncher = LaunchPlacesAutoComplete(context) { place ->
-        val address = place.address ?: "Unknown"
+        val address = place.address ?: context.getString(R.string.unknown)
         val latLng = place.latLng ?: LatLng(30.0, 31.0)
         userSelectedLocation = true
         locationViewModel.updateAddress(address, latLng)
     }
+
+    val contect = LocalContext.current
 
     DisposableEffect(lifecycleOwner) {
         val observer = object : DefaultLifecycleObserver {
@@ -154,7 +158,7 @@ fun CheckoutScreen(
                 val location = locationUtils.getCurrentLocation().first()
                 val geocoder = Geocoder(context)
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                val address = addresses?.firstOrNull()?.getAddressLine(0) ?: "Unknown Address"
+                val address = addresses?.firstOrNull()?.getAddressLine(0) ?: contect.getString(R.string.unknown_address)
                 locationViewModel.updateAddress(
                     address,
                     LatLng(location.latitude, location.longitude)
@@ -205,8 +209,8 @@ fun CheckoutScreen(
                 // Allow dismiss now, but you might want to handle this case
                 locationEnabled = locationUtils.isLocationEnabled()
             },
-            title = { Text("Location Services Disabled") },
-            text = { Text("Please enable location services to get your current address") },
+            title = { Text(stringResource(R.string.location_services_disabled)) },
+            text = { Text(stringResource(R.string.please_enable_location_services_to_get_your_current_address)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -215,7 +219,7 @@ fun CheckoutScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
                 ) {
                     Text(
-                        "Enable Location",
+                        stringResource(R.string.enable_location),
                         color = Color.Black
                     )
                 }
@@ -228,7 +232,7 @@ fun CheckoutScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
                 ) {
                     Text(
-                        "Cancel",
+                        stringResource(R.string.cancel),
                         color = Color.Black
                     )
                 }
@@ -262,10 +266,10 @@ fun CheckoutScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             TopAppBar(
-                title = { Text("Checkout") },
+                title = { Text(stringResource(R.string.checkout)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -279,25 +283,26 @@ fun CheckoutScreen(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Column(Modifier.padding(10.dp)) {
-                    Text("Shipping Address", color = Color(0xFFA1A6B0), fontSize = 14.sp)
+                    Text(stringResource(R.string.shipping_address), color = Color(0xFFA1A6B0), fontSize = 14.sp,fontFamily = customFontFamily,)
                     Spacer(Modifier.height(8.dp))
-                    Text("Address", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.address), fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = selectedAddress.ifBlank { "Please select a location" },
-                        color = Color(0xFF929292),
+                        text = selectedAddress.ifBlank { stringResource(R.string.please_select_a_location) },
+                        color = colorResource(R.color.content_color),
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = customFontFamily,
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Row {
                         Button(
                             onClick = { autocompleteLauncher() },
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.content_color))
                         ) {
                             Text(
-                                "Change Address",
-                                color = Color.Black
+                                stringResource(R.string.change_address),
+                                color = Color.Black,fontFamily = customFontFamily,
                             )
                         }
 
@@ -308,11 +313,12 @@ fun CheckoutScreen(
                                 userSelectedLocation = true
                                 onAddressClick()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
+                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.content_color))
                         ) {
                             Text(
-                                "Select on Map",
-                                color = Color.Black
+                                stringResource(R.string.select_on_map),
+                                color = Color.Black,fontFamily = customFontFamily,
+
                             )
                         }
                     }
@@ -330,7 +336,7 @@ fun CheckoutScreen(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Payment Method", color = Color(0xFFA1A6B0), fontSize = 14.sp)
+                    Text("Payment Method", color = Color(0xFFA1A6B0), fontSize = 14.sp,fontFamily = customFontFamily,)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 8.dp)
@@ -352,7 +358,8 @@ fun CheckoutScreen(
                                     PaymentMethod.ONLINE -> "Online Payment"
                                 },
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = customFontFamily,
                             )
                         }
 
@@ -374,14 +381,14 @@ fun CheckoutScreen(
                                 onDismissRequest = { expanded = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Cash on Delivery (COD)") },
+                                    text = { Text("Cash on Delivery (COD)",fontFamily = customFontFamily,) },
                                     onClick = {
                                         selectedPaymentMethod = PaymentMethod.COD
                                         expanded = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Online Payment") },
+                                    text = { Text("Online Payment",fontFamily = customFontFamily,) },
                                     onClick = {
                                         selectedPaymentMethod = PaymentMethod.ONLINE
                                         expanded = false
@@ -409,8 +416,8 @@ fun CheckoutScreen(
                             .padding(top = 16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Sub Total", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text(totalPrice.toCurrentCurrency(), color = Color(0xFF929292))
+                        Text("Sub Total", fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
+                        Text(totalPrice.toCurrentCurrency(), color = Color(0xFF929292),fontFamily = customFontFamily,)
                     }
                     Row(
                         Modifier
@@ -418,8 +425,8 @@ fun CheckoutScreen(
                             .padding(top = 16.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Shipping Fees", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text("0.0 EGP", color = Color(0xFF929292))
+                        Text("Shipping Fees", fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
+                        Text("0.0 EGP", color = Color(0xFF929292),fontFamily = customFontFamily,)
                     }
                 }
             }
@@ -434,7 +441,7 @@ fun CheckoutScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Coupon", color = Color(0xFFA1A6B0), fontSize = 14.sp)
+                    Text("Coupon", color = Color(0xFFA1A6B0), fontSize = 14.sp,fontFamily = customFontFamily,)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -456,7 +463,7 @@ fun CheckoutScreen(
                         ) {
                             Text(
                                 "Validate",
-                                color = Color.Black
+                                color = Color.Black,fontFamily = customFontFamily,
                             )
                         }
                     }
@@ -473,15 +480,15 @@ fun CheckoutScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Discount", color = Color(0xFFA1A6B0), fontSize = 14.sp)
+                    Text("Discount", color = Color(0xFFA1A6B0), fontSize = 14.sp,fontFamily = customFontFamily,)
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .padding(top = 16.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Discount", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text(totalDiscount.toCurrentCurrency(), color = Color(0xFF929292))
+                        Text("Discount", fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
+                        Text(totalDiscount.toCurrentCurrency(), color = Color(0xFF929292),  fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
                     }
                 }
             }
@@ -495,15 +502,15 @@ fun CheckoutScreen(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Grand Total", color = Color(0xFFA1A6B0), fontSize = 14.sp)
+                    Text("Grand Total", color = Color(0xFFA1A6B0), fontSize = 14.sp,  fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .padding(top = 16.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Total Amount", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text(grandTotal.toCurrentCurrency(), color = Color(0xFF929292))
+                        Text("Total Amount", fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
+                        Text(grandTotal.toCurrentCurrency(), color = Color(0xFF929292),fontFamily = customFontFamily,)
                     }
                 }
             }
@@ -521,7 +528,10 @@ fun CheckoutScreen(
             ) {
                 Text(
                     "Place Order",
-                    color = Color.Black
+                    color = Color.Black,
+                    fontFamily = customFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
                 )
             }
 

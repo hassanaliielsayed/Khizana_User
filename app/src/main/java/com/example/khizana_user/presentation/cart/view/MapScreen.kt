@@ -10,10 +10,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.khizana_user.R
+import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.utils.LocationUtils
+import com.example.khizana_user.utils.customFontFamily
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -27,6 +35,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("MissingPermission")
 @Composable
 fun MapScreen(
@@ -38,7 +47,7 @@ fun MapScreen(
     val locationUtils = remember { LocationUtils(context) }
 
     var selected by remember { mutableStateOf(defaultLocation) }
-    var address by remember { mutableStateOf("Select a location on map") }
+    var address by remember { mutableStateOf(context.getString(R.string.select_a_location_on_map)) }
     val camera = rememberCameraPositionState()
 
     val placeLauncher = rememberLauncherForActivityResult(
@@ -47,7 +56,7 @@ fun MapScreen(
         if (result.resultCode == Activity.RESULT_OK) {
             val place = Autocomplete.getPlaceFromIntent(result.data!!)
             val latLng = place.latLng
-            val placeAddress = place.address ?: "Unknown"
+            val placeAddress = place.address ?: context.getString(R.string.unknown)
             if (latLng != null) {
                 selected = latLng
                 address = placeAddress
@@ -71,53 +80,85 @@ fun MapScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize()) {
-        Button(
-            onClick = {
-                val fields = listOf(Place.Field.ID, Place.Field.LAT_LNG, Place.Field.ADDRESS)
-                val intent = Autocomplete.IntentBuilder(
-                    AutocompleteActivityMode.FULLSCREEN, fields
-                ).build(context)
-                placeLauncher.launch(intent)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text("Search Location")
-        }
-
-        GoogleMap(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            cameraPositionState = camera,
-            onMapClick = {
-                selected = it
-                coroutineScope.launch {
-                    address = getAddressFromLatLng(context, it)
-                }
-            }
-        ) {
-            Marker(state = MarkerState(position = selected), title = "Selected Location")
-        }
-
-        Column(Modifier.padding(16.dp)) {
-            Text("Selected Address:")
-            Text(address)
-
-            Spacer(Modifier.height(16.dp))
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    AppLogo()
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
+            )
+        },
+    ) { innerPadding ->
+        Column(Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             Button(
                 onClick = {
-                    navController.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set("selected_location", Pair(selected, address))
-                    navController.popBackStack()
+                    val fields = listOf(Place.Field.ID, Place.Field.LAT_LNG, Place.Field.ADDRESS)
+                    val intent = Autocomplete.IntentBuilder(
+                        AutocompleteActivityMode.FULLSCREEN, fields
+                    ).build(context)
+                    placeLauncher.launch(intent)
                 },
-                enabled = address != "Select a location on map",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorResource(
+                        id = R.color.content_color
+                    )
+                )
             ) {
-                Text("Save Location")
+                Text(stringResource(R.string.search_location), color = Color.White,
+                    fontFamily = customFontFamily, fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            GoogleMap(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                cameraPositionState = camera,
+                onMapClick = {
+                    selected = it
+                    coroutineScope.launch {
+                        address = getAddressFromLatLng(context, it)
+                    }
+                }
+            ) {
+                Marker(state = MarkerState(position = selected), title = stringResource(R.string.selected_location))
+            }
+
+            Column(Modifier.padding(16.dp)) {
+                Text(stringResource(R.string.selected_address),
+                    fontFamily = customFontFamily)
+                Text(address,
+                    fontFamily = customFontFamily)
+
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(context.getString(R.string.selected_location), Pair(selected, address))
+                        navController.popBackStack()
+                    },
+                    enabled = address != stringResource(R.string.selected_location),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(
+                            id = R.color.dark_blue
+                        )
+                    )
+                ) {
+                    Text(stringResource(R.string.save_location), fontFamily = customFontFamily, fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black)
+                }
             }
         }
     }
@@ -128,9 +169,9 @@ suspend fun getAddressFromLatLng(context: Context, latLng: LatLng): String {
         try {
             val geocoder = Geocoder(context, Locale.getDefault())
             val result = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            result?.firstOrNull()?.getAddressLine(0) ?: "Unknown Address"
+            result?.firstOrNull()?.getAddressLine(0) ?: context.getString(R.string.unknown_address)
         } catch (e: Exception) {
-            "Error resolving address"
+            context.getString(R.string.error_resolving_address)
         }
     }
 }
