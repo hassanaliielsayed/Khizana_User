@@ -70,7 +70,6 @@ import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
-import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.presentation.order.view.formatAsShortDate
@@ -95,189 +94,184 @@ fun ProfileScreen(
     val currentCustomer by authViewModel.currentCustomer.collectAsState()
     val orderState by orderViewModel.orders.collectAsState()
     val favoritesState by wishlistViewModel.favoritesState.collectAsState()
-    val connectionState by orderViewModel.networkState.collectAsState()
 
     LaunchedEffect(Unit) {
-        if (connectionState) {
-            orderViewModel.fetchOrders(customerId)
-            wishlistViewModel.loadFavorites(customerId)
-        }
+        orderViewModel.fetchOrders(customerId)
+        wishlistViewModel.loadFavorites(customerId)
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        AppLogo()
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorResource(id = R.color.light_blue)
-                    ),
-                    actions = {
-                        TopBarIconButton(
-                            icon = Icons.Default.Settings,
-                            contentDescription = stringResource(R.string.favorites),
-                            onClick = onNavigateToSetting
-                        )
-                        TopBarIconButton(
-                            icon = Icons.Default.ShoppingCart,
-                            contentDescription = stringResource(R.string.shopping_cart),
-                            onClick = onNavigateToCart
-                        )
-                    }
-                )
-            },
-        ) { innerPadding ->
-            if (Firebase.auth.currentUser != null && !Firebase.auth.currentUser!!.email.isNullOrBlank()) {
-                if (currentCustomer != null) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    AppLogo()
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
+                actions = {
+                    TopBarIconButton(
+                        icon = Icons.Default.Settings,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToSetting
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.ShoppingCart,
+                        contentDescription = stringResource(R.string.shopping_cart),
+                        onClick = onNavigateToCart
+                    )
+                }
+            )
+        },
+    ) { innerPadding ->
+        if (Firebase.auth.currentUser != null && !Firebase.auth.currentUser!!.email.isNullOrBlank()) {
+            if (currentCustomer != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .verticalScroll(rememberScrollState())
+                ) {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .verticalScroll(rememberScrollState())
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Card(
+                            shape = CircleShape,
+                            elevation = CardDefaults.cardElevation(8.dp),
+                            modifier = Modifier.size(120.dp)
                         ) {
-                            Card(
-                                shape = CircleShape,
-                                elevation = CardDefaults.cardElevation(8.dp),
-                                modifier = Modifier.size(120.dp)
-                            ) {
 
-                                Image(
-                                    painter = painterResource(id = R.drawable.user),
-                                    contentDescription = stringResource(R.string.user_image),
-                                    modifier = SharedModifiers.circleImageModifier(150.dp)
+                            Image(
+                                painter = painterResource(id = R.drawable.user),
+                                contentDescription = stringResource(R.string.user_image),
+                                modifier = SharedModifiers.circleImageModifier(150.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = currentCustomer?.name ?: "",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = customFontFamily,
+                            color = colorResource(id = R.color.dark_blue)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = currentCustomer?.email ?: "N/A",
+                            fontSize = 18.sp,
+                            color = Color.Gray,
+                            fontFamily = customFontFamily,
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    SectionHeader(
+                        title = stringResource(R.string.recent_orders),
+                        seeMoreVisible = ((orderState as? Result.Success)?.data?.size ?: 0) > 2,
+                        onSeeMoreClick = { navController.navigate(ScreenRoute.Orders.route) }
+                    )
+
+                    when (val result = orderState) {
+                        is Result.Loading -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(48.dp),
+                                    strokeWidth = 4.dp,
+                                    color = colorResource(id = R.color.dark_blue)
                                 )
                             }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                text = currentCustomer?.name ?: "",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = customFontFamily,
-                                color = colorResource(id = R.color.dark_blue)
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = currentCustomer?.email ?: "N/A",
-                                fontSize = 18.sp,
-                                color = Color.Gray,
-                                fontFamily = customFontFamily,
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
                         }
 
-                        SectionHeader(
-                            title = stringResource(R.string.recent_orders),
-                            seeMoreVisible = ((orderState as? Result.Success)?.data?.size ?: 0) > 2,
-                            onSeeMoreClick = { navController.navigate(ScreenRoute.Orders.route) }
-                        )
-
-                        when (val result = orderState) {
-                            is Result.Loading -> {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(120.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(48.dp),
-                                        strokeWidth = 4.dp,
-                                        color = colorResource(id = R.color.dark_blue)
-                                    )
-                                }
-                            }
-
-                            is Result.Success -> {
-                                if (result.data.isEmpty()) {
-                                    EmptyState(
-                                        animationRes = R.raw.no_data,
-                                        message = stringResource(R.string.you_haven_t_placed_any_orders_yet)
-                                    )
-                                } else {
-                                    Column(
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        result.data.take(2).forEach { order ->
-                                            OrderCard(order = order) {
-                                                navController.navigate("${ScreenRoute.OrderDetails.route}/${order.id}")
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            is Result.Error -> {
-                                ErrorState(message = stringResource(
-                                    R.string.failed_to_load_orders,
-                                    result.message
-                                ))
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        SectionHeader(
-                            title = stringResource(R.string.your_favorites),
-                            seeMoreVisible = (favoritesState?.items?.size ?: 0) > 4,
-                            onSeeMoreClick = { navController.navigate(ScreenRoute.Favorites.route) }
-                        )
-
-                        when {
-
-                            favoritesState?.items.isNullOrEmpty() -> {
+                        is Result.Success -> {
+                            if (result.data.isEmpty()) {
                                 EmptyState(
                                     animationRes = R.raw.no_data,
-                                    message = stringResource(R.string.you_don_t_have_any_favorites_yet)
+                                    message = stringResource(R.string.you_haven_t_placed_any_orders_yet)
                                 )
-                            }
-
-                            else -> {
-                                val favoritesToShow =
-                                    favoritesState?.items?.filterNotNull()?.take(4) ?: emptyList()
-                                LazyRow(
+                            } else {
+                                Column(
                                     modifier = Modifier.padding(horizontal = 16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    contentPadding = PaddingValues(vertical = 8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    items(favoritesToShow) { fav ->
-                                        FavoriteCard(fav = fav) {
-                                            navController.navigate(
-                                                ScreenRoute.ProductDetails.createRoute(
-                                                    variantId = fav.variantId
-                                                )
-                                            )
+                                    result.data.take(2).forEach { order ->
+                                        OrderCard(order = order) {
+                                            navController.navigate("${ScreenRoute.OrderDetails.route}/${order.id}")
                                         }
                                     }
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        is Result.Error -> {
+                            ErrorState(
+                                message = stringResource(
+                                    R.string.failed_to_load_orders,
+                                    result.message
+                                )
+                            )
+                        }
                     }
-                } else {
-                    LoadingState()
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    SectionHeader(
+                        title = stringResource(R.string.your_favorites),
+                        seeMoreVisible = (favoritesState?.items?.size ?: 0) > 4,
+                        onSeeMoreClick = { navController.navigate(ScreenRoute.Favorites.route) }
+                    )
+
+                    when {
+
+                        favoritesState?.items.isNullOrEmpty() -> {
+                            EmptyState(
+                                animationRes = R.raw.no_data,
+                                message = stringResource(R.string.you_don_t_have_any_favorites_yet)
+                            )
+                        }
+
+                        else -> {
+                            val favoritesToShow =
+                                favoritesState?.items?.filterNotNull()?.take(4) ?: emptyList()
+                            LazyRow(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                items(favoritesToShow) { fav ->
+                                    FavoriteCard(fav = fav) {
+                                        navController.navigate(
+                                            ScreenRoute.ProductDetails.createRoute(
+                                                variantId = fav.variantId
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             } else {
-                UnauthenticatedState(
-                    onLoginClick = { navController.navigate(ScreenRoute.Login.route) }
-                )
+                LoadingState()
             }
+        } else {
+            UnauthenticatedState(
+                onLoginClick = { navController.navigate(ScreenRoute.Login.route) }
+            )
         }
     }
 }

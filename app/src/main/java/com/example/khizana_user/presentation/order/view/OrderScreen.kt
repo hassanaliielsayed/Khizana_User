@@ -1,4 +1,3 @@
-
 package com.example.khizana_user.presentation.order.view
 
 import android.content.Context
@@ -37,7 +36,6 @@ import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
-import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.profile.view.StatusBadge
 import com.example.khizana_user.utils.customFontFamily
 import com.example.khizana_user.utils.toCurrentCurrency
@@ -54,135 +52,128 @@ fun OrdersScreen(
     onNavigateToCart: () -> Unit
 ) {
     val state by viewModel.orders.collectAsState()
-    val connectionState by viewModel.networkState.collectAsState()
 
     LaunchedEffect(Unit) {
-        if (connectionState) {
-            viewModel.fetchOrders(customerId)
-        }
+        viewModel.fetchOrders(customerId)
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        AppLogo()
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorResource(id = R.color.light_blue)
-                    ),
-                    actions = {
-                        TopBarIconButton(
-                            icon = Icons.Default.Settings,
-                            contentDescription = stringResource(R.string.favorites),
-                            onClick = onNavigateToSetting
-                        )
-                        TopBarIconButton(
-                            icon = Icons.Default.ShoppingCart,
-                            contentDescription = stringResource(R.string.shopping_cart),
-                            onClick = onNavigateToCart
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    AppLogo()
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
+                actions = {
+                    TopBarIconButton(
+                        icon = Icons.Default.Settings,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToSetting
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.ShoppingCart,
+                        contentDescription = stringResource(R.string.shopping_cart),
+                        onClick = onNavigateToCart
+                    )
+                }
+            )
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            when (val result = state) {
+                is Result.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            strokeWidth = 4.dp,
+                            color = colorResource(id = R.color.dark_blue)
                         )
                     }
-                )
-            }
-        ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
-                when (val result = state) {
-                    is Result.Loading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(48.dp),
-                                strokeWidth = 4.dp,
-                                color = colorResource(id = R.color.dark_blue)
-                            )
-                        }
-                    }
+                }
 
-                    is Result.Success -> {
-                        Column(
+                is Result.Success -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.your_orders),
+                            fontFamily = customFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp,
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 8.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.your_orders),
-                                fontFamily = customFontFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 28.sp,
-                                modifier = Modifier
-                                    .padding(vertical = 24.dp)
-                                    .fillMaxWidth(),
-                                textAlign = TextAlign.Center,
-                                color = colorResource(id = R.color.black)
-                            )
+                                .padding(vertical = 24.dp)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = colorResource(id = R.color.black)
+                        )
 
-                            if (result.data.isEmpty()) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
+                        if (result.data.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(32.dp)
                                 ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.padding(32.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.ShoppingBag,
-                                            contentDescription = stringResource(R.string.no_orders),
-                                            tint = Color.LightGray,
-                                            modifier = Modifier.size(64.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        Text(
-                                            text = stringResource(R.string.no_orders_yet),
-                                            fontFamily = customFontFamily,
-                                            fontSize = 20.sp,
-                                            color = Color.Gray
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.ShoppingBag,
+                                        contentDescription = stringResource(R.string.no_orders),
+                                        tint = Color.LightGray,
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = stringResource(R.string.no_orders_yet),
+                                        fontFamily = customFontFamily,
+                                        fontSize = 20.sp,
+                                        color = Color.Gray
+                                    )
                                 }
-                            } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    items(result.data) { order ->
-                                        OrderItem(order, navController)
-                                    }
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(result.data) { order ->
+                                    OrderItem(order, navController)
                                 }
                             }
                         }
                     }
+                }
 
-                    is Result.Error -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                is Result.Error -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Error,
-                                    contentDescription = stringResource(R.string.error),
-                                    tint = Color.Red,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = stringResource(R.string.error, result.message),
-                                    color = Color.Red,
-                                    fontFamily = customFontFamily,
-                                    fontSize = 20.sp,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = stringResource(R.string.error),
+                                tint = Color.Red,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = stringResource(R.string.error, result.message),
+                                color = Color.Red,
+                                fontFamily = customFontFamily,
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 }
@@ -261,8 +252,10 @@ fun OrderItem(order: Orders, navController: NavHostController) {
 
 fun String.formatAsShortDate(context: Context): String {
     return try {
-        val inputFormat = SimpleDateFormat(context.getString(R.string.yyyy_mm_dd), Locale.getDefault())
-        val outputFormat = SimpleDateFormat(context.getString(R.string.mmm_dd_yyyy), Locale.getDefault())
+        val inputFormat =
+            SimpleDateFormat(context.getString(R.string.yyyy_mm_dd), Locale.getDefault())
+        val outputFormat =
+            SimpleDateFormat(context.getString(R.string.mmm_dd_yyyy), Locale.getDefault())
 
         inputFormat.parse(this)?.let { date ->
             outputFormat.format(date)
