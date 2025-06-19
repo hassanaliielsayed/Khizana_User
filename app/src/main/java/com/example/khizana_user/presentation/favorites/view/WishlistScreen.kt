@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -158,61 +159,41 @@ fun WishlistScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             stringResource(R.string.your_favorites),
                             style = MaterialTheme.typography.titleLarge,
-                            fontFamily = customFontFamily
+                            fontFamily = customFontFamily,
+                            modifier = Modifier
+                                    .weight(1f)
+                                .wrapContentWidth(Alignment.CenterHorizontally)
+
                         )
 
                         if (items.isNotEmpty()) {
+                            var expanded by remember { mutableStateOf(false) }
 
-                            var isPressed by remember { mutableStateOf(false) }
-
-                            Button(
-                                onClick = { showClearDialog = true  },
-                                modifier = Modifier
-                                    .height(40.dp)
-                                    .padding(horizontal = 4.dp)
-                                    .shadow(
-                                        elevation = if (isPressed) 0.dp else 4.dp,
-                                        shape = MaterialTheme.shapes.medium,
-                                        clip = false
-                                    ),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colorResource(R.color.dark_blue),
-                                    contentColor = Color.White
-                                ),
-                                shape = MaterialTheme.shapes.medium,
-                                border = BorderStroke(
-                                    width = 1.dp,
-                                    color = Color.White
-                                ),
-                                elevation = ButtonDefaults.buttonElevation(
-                                    defaultElevation = 0.dp,
-                                    pressedElevation = 0.dp
-                                ),
-                                interactionSource = remember { MutableInteractionSource() }.also { interactionSource ->
-                                    isPressed = interactionSource.collectIsPressedAsState().value
-                                }
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            Box {
+                                IconButton(
+                                    onClick = { expanded = true }
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Filled.Delete,
-                                        contentDescription = stringResource(R.string.clear_cart),
-                                        modifier = Modifier.size(20.dp)
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = stringResource(R.string.options)
                                     )
-                                    Spacer(Modifier.width(2.dp))
-                                    Text(
-                                        stringResource(R.string.clear_all_favorites),
-                                        fontFamily = customFontFamily,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.SemiBold
+                                }
+
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.clear_all_favorites),fontFamily = customFontFamily) },
+                                        onClick = {
+                                            expanded = false
+                                            showClearDialog = true
+                                        }
                                     )
                                 }
                             }
@@ -272,7 +253,7 @@ private fun FavoritesList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 8.dp),
+        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, bottom = 90.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(items, key = { it.variantId }) { item ->

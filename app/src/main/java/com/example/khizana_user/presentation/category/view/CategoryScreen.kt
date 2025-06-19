@@ -347,6 +347,7 @@ fun ProductItem(product: ProductByCategory, onClick: () -> Unit,
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(350.dp)
             .padding(8.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),

@@ -97,7 +97,7 @@
     <string name="are_you_sure_you_want_to_logout">Are you sure you want to logout?</string>
     <string name="arrow">Arrow</string>
     <string name="contact_icon">Contact Icon</string>
-    <string name="ayaahmed111_gmail_com">ayaahmed111@gmail.com</string>
+    <string name="ayaahmed111_gmail_com">ayaahmed75383@gmail.com</string>
     <string name="aya_phone">01014505674</string>
     <string name="esraamohammed_gmail_com">esraamohammed@gmail.com</string>
     <string name="esraa_phone">01015291294</string>
@@ -163,4 +163,6 @@
     <string name="please_select_a_location">Please select a location</string>
     <string name="change_address">Change Address</string>
     <string name="select_on_map">Select on Map</string>
+    <string name="options">options</string>
+
 </resources>
