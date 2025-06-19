@@ -3,7 +3,6 @@ package com.example.khizana_user.data.repository
 import com.example.khizana_user.data.dto.ProductDetailsDto
 import com.example.khizana_user.domain.model.ProductDetails
 import com.example.khizana_user.domain.repository.ProductRepository
-import com.example.khizana_user.data.repository.mapper.toDomain
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
