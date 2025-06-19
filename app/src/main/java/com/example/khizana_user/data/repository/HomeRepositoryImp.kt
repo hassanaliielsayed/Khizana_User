@@ -12,7 +12,6 @@ import javax.inject.Inject
 import kotlin.collections.distinctBy
 import kotlin.collections.map
 
-
 class HomeRepositoryImp @Inject constructor(private val remoteDateSource: RemoteDataSource) : HomeRepository {
 
     override suspend fun getAllBrands(): List<Brand> {

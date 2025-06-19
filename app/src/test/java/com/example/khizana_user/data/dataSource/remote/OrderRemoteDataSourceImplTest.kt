@@ -39,7 +39,7 @@ class OrderRemoteDataSourceImplTest {
 
     @Test
     fun `getOrdersByCustomerId returns orders on success`() = runTest {
-        val orders = listOf(OrderDto(1L, "Order1", "test@example.com", "2024-06-01", "100.0", "USD", "paid", emptyList()))
+        val orders = listOf(OrderDto(1L, "Order1", "ayaahmed75383@gmail.com", "2024-06-01", "100.0", "USD", "paid", emptyList()))
         val response = OrderResponse(orders = orders)
 
         coEvery { api.getOrdersByCustomerId(1L) } returns Response.success(response)
@@ -62,7 +62,7 @@ class OrderRemoteDataSourceImplTest {
 
     @Test
     fun `getOrderById returns order on success`() = runTest {
-        val order = OrderDto(1L, "Order1", "test@example.com", "2024-06-01", "100.0", "USD", "paid", emptyList())
+        val order = OrderDto(1L, "Order1", "ayaahmed75383@gmail.com", "2024-06-01", "100.0", "USD", "paid", emptyList())
         val response = SingleOrderResponse(order = order)
 
         coEvery { api.getOrderById(1L) } returns Response.success(response)

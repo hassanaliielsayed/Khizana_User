@@ -2,9 +2,8 @@ package com.example.khizana_user.domain.usecase
 
 import com.example.khizana_user.domain.model.Orders
 import com.example.khizana_user.domain.repository.OrderRepository
-import javax.inject.Inject
 
-class GetOrderByIdUseCase @Inject constructor(
+class GetOrderByIdUseCase(
     private val repository: OrderRepository
 ) {
     suspend operator fun invoke(orderId: Long): Orders {
