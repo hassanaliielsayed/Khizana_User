@@ -2,8 +2,6 @@ package com.example.khizana_user.presentation.cart.view
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,15 +12,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -131,53 +128,35 @@ fun CartScreen(
                             Text(
                                 stringResource(R.string.your_cart),
                                 style = MaterialTheme.typography.titleLarge,
-                                fontFamily = customFontFamily
+                                fontFamily = customFontFamily,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .wrapContentWidth(Alignment.CenterHorizontally)
                             )
-                            if (cart.items.isNotEmpty()) {
-                                var isPressed by remember { mutableStateOf(false) }
 
-                                Button(
-                                    onClick = { showClearCartDialog = true },
-                                    modifier = Modifier
-                                        .height(40.dp)
-                                        .padding(horizontal = 4.dp)
-                                        .shadow(
-                                            elevation = if (isPressed) 0.dp else 4.dp,
-                                            shape = MaterialTheme.shapes.medium,
-                                            clip = false
-                                        ),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(R.color.dark_blue),
-                                        contentColor = Color.White
-                                    ),
-                                    shape = MaterialTheme.shapes.medium,
-                                    border = BorderStroke(
-                                        width = 1.dp,
-                                        color = Color.White
-                                    ),
-                                    elevation = ButtonDefaults.buttonElevation(
-                                        defaultElevation = 0.dp,
-                                        pressedElevation = 0.dp
-                                    ),
-                                    interactionSource = remember { MutableInteractionSource() }.also { interactionSource ->
-                                        isPressed = interactionSource.collectIsPressedAsState().value
-                                    }
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
+                            if (cart.items.isNotEmpty()) {
+                                var expanded by remember { mutableStateOf(false) }
+
+                                Box {
+                                    IconButton(
+                                        onClick = { expanded = true }
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = stringResource(R.string.clear_all_favorites),
-                                            modifier = Modifier.size(20.dp)
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = stringResource(R.string.options)
                                         )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(
-                                            text = stringResource(R.string.clear_cart),
-                                            fontFamily = customFontFamily,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.SemiBold
+                                    }
+
+                                    DropdownMenu(
+                                        expanded = expanded,
+                                        onDismissRequest = { expanded = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.clear_cart), fontFamily = customFontFamily,) },
+                                            onClick = {
+                                                expanded = false
+                                                showClearCartDialog = true
+                                            }
                                         )
                                     }
                                 }

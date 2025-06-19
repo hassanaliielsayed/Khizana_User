@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.category.view
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -61,6 +62,14 @@ import com.example.khizana_user.presentation.category.viewModel.CategoryViewMode
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.customFontFamily
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
@@ -68,10 +77,14 @@ import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.*
 import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
+import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.presentation.profile.view.EmptyState
+import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.isGuestUser
 import com.example.khizana_user.utils.toCurrentCurrency
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,6 +95,8 @@ fun CategoryScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToSearch: () -> Unit,
     navController: NavHostController,
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
+    customerId: Long
 ) {
 
     val mainCategory = listOf(
@@ -100,183 +115,239 @@ fun CategoryScreen(
 
     var isSubCategoryMenuOpen by remember { mutableStateOf(false) }
 
-    val connectionState by viewModel.networkState.collectAsState()
-
     var selectedPrice by remember { mutableFloatStateOf(10000f) }
 
     var isFilterVisible by remember { mutableStateOf(false) }
 
+    val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
+    val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
+    var showGuestDialog by remember { mutableStateOf(false) }
+    var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val favoritesState by wishlistViewModel.favoritesState.collectAsState()
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(customerId) {
+        wishlistViewModel.loadFavorites(customerId)
+
+    }
+
     val minPrice = 0f
     val maxPrice = 2000f
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        AppLogo()
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorResource(id = R.color.light_blue)
-                    ),
-                    actions = {
-                        TopBarIconButton(
-                            icon = Icons.Default.Search,
-                            contentDescription = stringResource(R.string.search),
-                            onClick = onNavigateToSearch
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    AppLogo()
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
+                actions = {
+                    TopBarIconButton(
+                        icon = Icons.Default.Search,
+                        contentDescription = stringResource(R.string.search),
+                        onClick = onNavigateToSearch
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.FilterList,
+                        contentDescription = stringResource(R.string.filter),
+                        tint = Color.Black,
+                        onClick = { isFilterVisible = !isFilterVisible }
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.Favorite,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToFavorites
+                    )
+                }
+            )
+        },
+        floatingActionButton = {
+            Column(horizontalAlignment = Alignment.End) {
+                AnimatedVisibility(visible = isSubCategoryMenuOpen) {
+                    Column(
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    ) {
+                        val subCategoryImages = mapOf(
+                            stringResource(R.string.all) to R.drawable.all,
+                            stringResource(R.string.accessories) to R.drawable.accessories,
+                            stringResource(R.string.shoes) to R.drawable.shoes,
+                            stringResource(R.string.t_shirts) to R.drawable.tshirt
                         )
-                        TopBarIconButton(
-                            icon = Icons.Default.FilterList,
-                            contentDescription = stringResource(R.string.filter),
-                            tint = Color.Black,
-                            onClick =  { isFilterVisible = !isFilterVisible }
-                        )
-                        TopBarIconButton(
-                            icon = Icons.Default.Favorite,
-                            contentDescription = stringResource(R.string.favorites),
-                            onClick = onNavigateToFavorites
-                        )
-                    }
-                )
-            },
-            floatingActionButton = {
-                Column(horizontalAlignment = Alignment.End) {
-                    AnimatedVisibility(visible = isSubCategoryMenuOpen) {
+
                         Column(
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
                                 .clip(RoundedCornerShape(12.dp))
                         ) {
-                            val subCategoryImages = mapOf(
-                                stringResource(R.string.all) to R.drawable.all,
-                                stringResource(R.string.accessories) to R.drawable.accessories,
-                                stringResource(R.string.shoes) to R.drawable.shoes,
-                                stringResource(R.string.t_shirts) to R.drawable.tshirt
-                            )
-
-                            Column(
-                                modifier = Modifier
-                                    .padding(bottom = 8.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                            ) {
-                                subCategories.forEach { subCategory ->
-                                    val imageRes = subCategoryImages[subCategory] ?: R.drawable.all
-                                    CategoryChipImage(
-                                        imageResId = imageRes,
-                                        isSelected = selectedSubCategory == subCategory,
-                                        onClick = {
-                                            selectedSubCategory = subCategory
-                                            viewModel.filterProductsBySubCategory(subCategory)
-                                            isSubCategoryMenuOpen = false
-                                        },
-                                        contentDescription = subCategory
-                                    )
-                                }
+                            subCategories.forEach { subCategory ->
+                                val imageRes = subCategoryImages[subCategory] ?: R.drawable.all
+                                CategoryChipImage(
+                                    imageResId = imageRes,
+                                    isSelected = selectedSubCategory == subCategory,
+                                    onClick = {
+                                        selectedSubCategory = subCategory
+                                        viewModel.filterProductsBySubCategory(subCategory)
+                                        isSubCategoryMenuOpen = false
+                                    },
+                                    contentDescription = subCategory
+                                )
                             }
                         }
                     }
+                }
 
-                    FloatingActionButton(
-                        onClick = { isSubCategoryMenuOpen = !isSubCategoryMenuOpen },
-                        containerColor = colorResource(id = R.color.black),
-                        modifier = Modifier
-                            .padding(bottom = 70.dp)
-                            .clip(RoundedCornerShape(42.dp))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = stringResource(R.string.filter),
-                            tint = Color.White
-                        )
-                    }
+                FloatingActionButton(
+                    onClick = { isSubCategoryMenuOpen = !isSubCategoryMenuOpen },
+                    containerColor = colorResource(id = R.color.black),
+                    modifier = Modifier
+                        .padding(bottom = 70.dp)
+                        .clip(RoundedCornerShape(42.dp))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = stringResource(R.string.filter),
+                        tint = Color.White
+                    )
                 }
             }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .background(Color.White)
-            ) {
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Color.White)
+        ) {
 
-                ScrollableTabRow(
-                    selectedTabIndex = mainCategory.indexOfFirst { it.first == selectedMainCategory },
-                    edgePadding = 16.dp,
-                    indicator = {},
-                    modifier = Modifier.background(colorResource(id = R.color.dark_blue))
+            ScrollableTabRow(
+                selectedTabIndex = mainCategory.indexOfFirst { it.first == selectedMainCategory },
+                edgePadding = 16.dp,
+                indicator = {},
+                modifier = Modifier.background(colorResource(id = R.color.dark_blue))
+            ) {
+                mainCategory.forEach { (tagValue, displayValue) ->
+                    Tab(
+                        selected = selectedMainCategory == tagValue,
+                        onClick = {
+                            selectedMainCategory = tagValue
+                            viewModel.filterProductsByTag(tagValue)
+                        },
+                        text = {
+                            Text(
+                                text = displayValue,
+                                color = if (selectedMainCategory == tagValue) Color.Black else Color.Gray,
+                                fontWeight = if (selectedMainCategory == tagValue) FontWeight.Bold else FontWeight.Normal,
+                                fontFamily = customFontFamily
+                            )
+                        },
+                        modifier = Modifier.background(colorResource(id = R.color.white))
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (isFilterVisible) {
+                FilterByPrice(minPrice, maxPrice) { price ->
+                    selectedPrice = price
+                    viewModel.filterProductsByPrice(price)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (products.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    mainCategory.forEach { (tagValue, displayValue) ->
-                        Tab(
-                            selected = selectedMainCategory == tagValue,
+                    EmptyState(
+                        animationRes = R.raw.no_data,
+                        message = stringResource(R.string.no_product_found_in_this_category)
+                    )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    items(products) { product ->
+                        val isFavorite = favoritesState?.items?.any { it?.variantId == product.variantId } == true
+                        val isToggling = togglingStates[product.id] ?: false
+                        ProductItem(
+                            product = product,
+                            isFavorite = isFavorite,
+                            isToggling = isToggling,
                             onClick = {
-                                selectedMainCategory = tagValue
-                                viewModel.filterProductsByTag(tagValue)
-                            },
-                            text = {
-                                Text(
-                                    text = displayValue,
-                                    color = if (selectedMainCategory == tagValue) Color.Black else Color.Gray,
-                                    fontWeight = if (selectedMainCategory == tagValue) FontWeight.Bold else FontWeight.Normal,
-                                    fontFamily = customFontFamily
+                                navController.navigate(
+                                    ScreenRoute.ProductDetails.createRoute(
+                                        product.id
+                                    )
                                 )
                             },
-                            modifier = Modifier.background(colorResource(id = R.color.white))
-                        )
-                    }
-                }
+                            onToggleFavorite = {
+                                val variantId = product.variantId ?: return@ProductItem
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (isFilterVisible) {
-                    FilterByPrice(minPrice, maxPrice) { price ->
-                        selectedPrice = price
-                        viewModel.filterProductsByPrice(price)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (products.isEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        EmptyState(
-                            animationRes = R.raw.no_data,
-                            message = stringResource(R.string.no_product_found_in_this_category)
-                        )
-                    }
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    ) {
-                        items(products) { product ->
-                            ProductItem(
-                                product = product,
-                                onClick = {
-                                    navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                                if (isGuestUser()) {
+                                    guestAction = {}
+                                    showGuestDialog = true
+                                    return@ProductItem
                                 }
-                            )
-                        }
+
+                                if (togglingStates[product.id] == true) return@ProductItem
+
+                                togglingStates[product.id] = true
+
+                                coroutineScope.launch {
+                                    val wasFavorite = favoriteStates[product.id] ?: false
+                                    val result = if (wasFavorite)
+                                        wishlistViewModel.removeFromFavorites(customerId, variantId)
+                                    else
+                                        wishlistViewModel.addToFavorites(customerId, variantId)
+
+                                    when (result) {
+                                        is Result.Success<*> -> favoriteStates[product.id] = !wasFavorite
+                                        is Result.Error -> Toast.makeText(
+                                            context,
+                                            result.message,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        else -> {}
+                                    }
+
+                                    togglingStates[product.id] = false
+                                }
+                            }
+                        )
                     }
                 }
             }
         }
     }
 }
+
 @Composable
-fun ProductItem(product: ProductByCategory, onClick: () -> Unit) {
+fun ProductItem(product: ProductByCategory, onClick: () -> Unit,
+                isFavorite: Boolean,
+                isToggling: Boolean,
+                onToggleFavorite: () -> Unit,
+                ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(350.dp)
             .padding(8.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
@@ -284,50 +355,77 @@ fun ProductItem(product: ProductByCategory, onClick: () -> Unit) {
         border = BorderStroke(1.dp, colorResource(R.color.content_color)),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(8.dp)
         ) {
 
-            AsyncImage(
-                model = product.productImage,
-                contentDescription = product.productTitle,
-                modifier = SharedModifiers.circleImageModifier(150.dp),
-                contentScale = ContentScale.Crop
-            )
+            IconButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
+            ) {
+                if (isToggling) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = if (isFavorite) colorResource(R.color.content_color) else Color.Black
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = product.productTitle,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-            Spacer(modifier = Modifier.height(8.dp))
+                AsyncImage(
+                    model = product.productImage,
+                    contentDescription = product.productTitle,
+                    modifier = SharedModifiers.circleImageModifier(150.dp),
+                    contentScale = ContentScale.Crop
+                )
 
-            Text(
-                text = stringResource(R.string.vendor, product.productVendor ?: "N/A"),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = product.productTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-            Text(
-                text = "Price: ${product.productPrice.toCurrentCurrency()}",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
-            )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.vendor, product.productVendor ?: "N/A"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Price: ${product.productPrice.toCurrentCurrency()}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
@@ -371,7 +469,11 @@ fun FilterByPrice(
             .fillMaxWidth()
             .padding(10.dp)
     ) {
-       Text(text = "Price: ${sliderPosition.toInt()} EGP" , fontFamily = customFontFamily, fontSize = 20.sp)
+        Text(
+            text = "Price: ${sliderPosition.toInt()} EGP",
+            fontFamily = customFontFamily,
+            fontSize = 20.sp
+        )
 
         Slider(
             value = sliderPosition,
