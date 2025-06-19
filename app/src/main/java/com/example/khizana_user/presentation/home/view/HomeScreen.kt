@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,7 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,11 +45,13 @@ import com.example.khizana_user.domain.model.Product
 import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
+import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 import com.example.khizana_user.presentation.home.viewModel.SearchFocusType
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.customFontFamily
+import com.example.khizana_user.utils.isGuestUser
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
@@ -60,10 +62,12 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
     paddingValues: PaddingValues = PaddingValues(),
     navController: NavHostController,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToCart: () -> Unit
+    onNavigateToCart: () -> Unit,
+    customerId: Long
 ) {
     val brands by viewModel.brands.collectAsState()
     val couponState by viewModel.coupons.collectAsStateWithLifecycle()
@@ -78,12 +82,23 @@ fun HomeScreen(
     val productFocusRequester = remember { BringIntoViewRequester() }
     val coroutineScope = rememberCoroutineScope()
 
+    val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
+    val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
+    var showGuestDialog by remember { mutableStateOf(false) }
+    var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val favoritesState by wishlistViewModel.favoritesState.collectAsState()
+
     var expanded by remember { mutableStateOf(false) }
     var selectedVendor by remember { mutableStateOf<String?>(null) }
 
     val connectionState by viewModel.networkState.collectAsState()
 
     val context = LocalContext.current
+
+    LaunchedEffect(customerId) {
+        wishlistViewModel.loadFavorites(customerId)
+
+    }
 
     LaunchedEffect(selectedVendor) {
         selectedVendor?.let { viewModel.fetchProductsByVendor(it) }
@@ -243,13 +258,47 @@ fun HomeScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         filteredProducts.forEach { product ->
+
+                            val isFavorite = favoritesState?.items?.any { it?.variantId == product.variantId } == true
+                            val isToggling = togglingStates[product.id] ?: false
+
                             ProductItem(
-                                modifier = Modifier.fillMaxWidth(),
                                 product = product,
-                                onClick = {
-                                    navController.navigate(
-                                        ScreenRoute.ProductDetails.createRoute(product.id)
-                                    )
+                                isFavorite = isFavorite,
+                                isToggling = isToggling,
+                                onClick = { navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id)) },
+                                onToggleFavorite = {
+                                    val variantId = product.variantId ?: return@ProductItem
+
+                                    if (isGuestUser()) {
+                                        guestAction = {}
+                                        showGuestDialog = true
+                                        return@ProductItem
+                                    }
+
+                                    if (togglingStates[product.id] == true) return@ProductItem
+
+                                    togglingStates[product.id] = true
+
+                                    coroutineScope.launch {
+                                        val wasFavorite = favoriteStates[product.id] ?: false
+                                        val result = if (wasFavorite)
+                                            wishlistViewModel.removeFromFavorites(customerId, variantId)
+                                        else
+                                            wishlistViewModel.addToFavorites(customerId, variantId)
+
+                                        when (result) {
+                                            is Result.Success<*> -> favoriteStates[product.id] = !wasFavorite
+                                            is Result.Error -> Toast.makeText(
+                                                context,
+                                                result.message,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            else -> {}
+                                        }
+
+                                        togglingStates[product.id] = false
+                                    }
                                 }
                             )
                         }
@@ -334,7 +383,10 @@ fun Brands(
 fun ProductItem(
     product: Product,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isFavorite: Boolean,
+    isToggling: Boolean,
+    onToggleFavorite: () -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -345,36 +397,62 @@ fun ProductItem(
             .clickable { onClick() }
 
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorResource(R.color.white))
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
         ) {
-            GlideImage(
-                model = product.productImage,
-                contentDescription = product.productTitle,
-                modifier = SharedModifiers.roundedImageModifier(80.dp),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Box(
+            Row(
                 modifier = Modifier
-                    .width(2.dp)
-                    .height(60.dp)
-                    .background(colorResource(R.color.dark_blue))
-            )
+                    .fillMaxSize()
+                    .background(colorResource(R.color.white))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                GlideImage(
+                    model = product.productImage,
+                    contentDescription = product.productTitle,
+                    modifier = SharedModifiers.roundedImageModifier(80.dp),
+                    contentScale = ContentScale.Crop
+                )
 
-            Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-            Text(
-                product.productTitle,
-                fontWeight = FontWeight.Bold,
-                fontFamily = customFontFamily,
-            )
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(60.dp)
+                        .background(colorResource(R.color.dark_blue))
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    product.productTitle,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = customFontFamily,
+                )
+            }
+
+            IconButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
+            ) {
+                if (isToggling) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = if (isFavorite) colorResource(R.color.content_color) else Color.Black
+                    )
+                }
+            }
         }
     }
 }

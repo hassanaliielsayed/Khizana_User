@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.category.view
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -61,6 +62,14 @@ import com.example.khizana_user.presentation.category.viewModel.CategoryViewMode
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.customFontFamily
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
@@ -68,10 +77,14 @@ import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.*
 import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
+import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.home.view.SharedModifiers
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.presentation.profile.view.EmptyState
+import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.isGuestUser
 import com.example.khizana_user.utils.toCurrentCurrency
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,6 +95,8 @@ fun CategoryScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToSearch: () -> Unit,
     navController: NavHostController,
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
+    customerId: Long
 ) {
 
     val mainCategory = listOf(
@@ -103,6 +118,20 @@ fun CategoryScreen(
     var selectedPrice by remember { mutableFloatStateOf(10000f) }
 
     var isFilterVisible by remember { mutableStateOf(false) }
+
+    val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
+    val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
+    var showGuestDialog by remember { mutableStateOf(false) }
+    var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val favoritesState by wishlistViewModel.favoritesState.collectAsState()
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(customerId) {
+        wishlistViewModel.loadFavorites(customerId)
+
+    }
 
     val minPrice = 0f
     val maxPrice = 2000f
@@ -255,14 +284,51 @@ fun CategoryScreen(
                     modifier = Modifier.padding(horizontal = 8.dp)
                 ) {
                     items(products) { product ->
+                        val isFavorite = favoritesState?.items?.any { it?.variantId == product.variantId } == true
+                        val isToggling = togglingStates[product.id] ?: false
                         ProductItem(
                             product = product,
+                            isFavorite = isFavorite,
+                            isToggling = isToggling,
                             onClick = {
                                 navController.navigate(
                                     ScreenRoute.ProductDetails.createRoute(
                                         product.id
                                     )
                                 )
+                            },
+                            onToggleFavorite = {
+                                val variantId = product.variantId ?: return@ProductItem
+
+                                if (isGuestUser()) {
+                                    guestAction = {}
+                                    showGuestDialog = true
+                                    return@ProductItem
+                                }
+
+                                if (togglingStates[product.id] == true) return@ProductItem
+
+                                togglingStates[product.id] = true
+
+                                coroutineScope.launch {
+                                    val wasFavorite = favoriteStates[product.id] ?: false
+                                    val result = if (wasFavorite)
+                                        wishlistViewModel.removeFromFavorites(customerId, variantId)
+                                    else
+                                        wishlistViewModel.addToFavorites(customerId, variantId)
+
+                                    when (result) {
+                                        is Result.Success<*> -> favoriteStates[product.id] = !wasFavorite
+                                        is Result.Error -> Toast.makeText(
+                                            context,
+                                            result.message,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        else -> {}
+                                    }
+
+                                    togglingStates[product.id] = false
+                                }
                             }
                         )
                     }
@@ -273,7 +339,11 @@ fun CategoryScreen(
 }
 
 @Composable
-fun ProductItem(product: ProductByCategory, onClick: () -> Unit) {
+fun ProductItem(product: ProductByCategory, onClick: () -> Unit,
+                isFavorite: Boolean,
+                isToggling: Boolean,
+                onToggleFavorite: () -> Unit,
+                ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -284,50 +354,77 @@ fun ProductItem(product: ProductByCategory, onClick: () -> Unit) {
         border = BorderStroke(1.dp, colorResource(R.color.content_color)),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(8.dp)
         ) {
 
-            AsyncImage(
-                model = product.productImage,
-                contentDescription = product.productTitle,
-                modifier = SharedModifiers.circleImageModifier(150.dp),
-                contentScale = ContentScale.Crop
-            )
+            IconButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
+            ) {
+                if (isToggling) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = if (isFavorite) colorResource(R.color.content_color) else Color.Black
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = product.productTitle,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-            Spacer(modifier = Modifier.height(8.dp))
+                AsyncImage(
+                    model = product.productImage,
+                    contentDescription = product.productTitle,
+                    modifier = SharedModifiers.circleImageModifier(150.dp),
+                    contentScale = ContentScale.Crop
+                )
 
-            Text(
-                text = stringResource(R.string.vendor, product.productVendor ?: "N/A"),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = product.productTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-            Text(
-                text = "Price: ${product.productPrice.toCurrentCurrency()}",
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
-            )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.vendor, product.productVendor ?: "N/A"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Price: ${product.productPrice.toCurrentCurrency()}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
