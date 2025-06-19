@@ -1,6 +1,5 @@
 package com.example.khizana_user.domain.usecase
 
-
 import kotlinx.coroutines.Dispatchers
 import com.example.khizana_user.domain.model.ProductDetails
 import com.example.khizana_user.domain.repository.ProductRepository

@@ -6,12 +6,20 @@ import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderServ
 import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
 import com.example.khizana_user.data.repository.AuthDataSource
 import com.example.khizana_user.data.repository.AuthRepositoryImp
+import com.example.khizana_user.data.repository.HomeRepositoryImp
 import com.example.khizana_user.domain.repository.AuthRepository
 import com.example.khizana_user.domain.repository.CartRepository
+import com.example.khizana_user.domain.repository.CategoryRepository
+import com.example.khizana_user.domain.repository.HomeRepository
 import com.example.khizana_user.domain.repository.OrderRepository
 import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.repository.WishlistRepository
+import com.example.khizana_user.domain.usecase.GetAllBrandsUseCase
+import com.example.khizana_user.domain.usecase.GetAllProductsByCategoryUseCase
+import com.example.khizana_user.domain.usecase.GetAllProductsUseCase
+import com.example.khizana_user.domain.usecase.GetOrderByIdUseCase
+import com.example.khizana_user.domain.usecase.GetOrdersByCustomerIdUseCase
 import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
 import com.example.khizana_user.domain.usecase.GetShopifyCustomerByEmailUseCase
 import com.example.khizana_user.domain.usecase.authusecases.LoginUseCase
@@ -170,14 +178,46 @@ class KhizanaModuleProvider {
         return ConnectionLiveData(context)
     }
 
-
-
-
     @Provides
     fun provideDraftOrderService(
         @ShopifyApi retrofit: Retrofit
     ): ShopifyDraftOrderService {
         return retrofit.create(ShopifyDraftOrderService::class.java)
+    }
+
+    @Provides
+    fun provideGetAllBrandsUseCase (repository: HomeRepositoryImp): GetAllBrandsUseCase {
+
+        return GetAllBrandsUseCase(repository)
+
+    }
+
+    @Provides
+    fun provideGetAllProductsByCategoryUseCase (repository: CategoryRepository): GetAllProductsByCategoryUseCase {
+
+        return GetAllProductsByCategoryUseCase(repository)
+
+    }
+
+    @Provides
+    fun provideGetAllProductsUseCase (repository: HomeRepository): GetAllProductsUseCase {
+
+        return GetAllProductsUseCase(repository)
+
+    }
+
+    @Provides
+    fun provideGetOrderByIdUseCase (repository: OrderRepository): GetOrderByIdUseCase {
+
+        return GetOrderByIdUseCase(repository)
+
+    }
+
+    @Provides
+    fun provideGetOrdersByCustomerIdUseCase(repository: OrderRepository): GetOrdersByCustomerIdUseCase {
+
+        return GetOrdersByCustomerIdUseCase(repository)
+
     }
 
 }

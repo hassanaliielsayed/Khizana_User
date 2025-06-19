@@ -1,14 +1,11 @@
 package com.example.khizana_user.presentation.home.viewModel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.model.Product
 import com.example.khizana_user.domain.usecase.*
-import com.example.khizana_user.utils.ConnectionLiveData
 import com.example.khizana_user.utils.CurrencyHelper
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,8 +23,7 @@ class HomeViewModel @Inject constructor(
     private val getAllCouponsUseCase: GetAllCouponsUseCase,
     private val getAllProductsUseCase: GetAllProductsUseCase,
     private val getExchangeRateUseCase: GetExchangeRateUseCase,
-    private val getCurrencyUseCase: GetCurrencyUseCase,
-    private val connectionLiveData: ConnectionLiveData
+    private val getCurrencyUseCase: GetCurrencyUseCase
 ) : ViewModel() {
 
     private val _brands = MutableStateFlow<List<Brand>>(emptyList())
@@ -57,9 +53,6 @@ class HomeViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState = _networkState.asStateFlow()
-
     private val _searchFocusType = MutableStateFlow<SearchFocusType?>(null)
     val searchFocusType: StateFlow<SearchFocusType?> = _searchFocusType
 
@@ -68,31 +61,16 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
-        observeNetworkState()
         fetchInitialData()
         setupSearchHandler()
         setupCurrencyObserver()
-    }
-
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData
-                .asFlow()
-                .distinctUntilChanged()
-                .collect { isConnected ->
-                    _networkState.value = isConnected
-                    if (isConnected) {
-                        fetchInitialData()
-                    }
-                }
-        }
     }
 
     private fun setupCurrencyObserver() {
         viewModelScope.launch {
             getCurrencyUseCase().collect { savedCurrency ->
                 CurrencyHelper.currencyUnit = savedCurrency ?: "EGP"
-                CurrencyHelper.exchangeRates = if (CurrencyHelper.currencyUnit != "EGP" && _networkState.value) {
+                CurrencyHelper.exchangeRates = if (CurrencyHelper.currencyUnit != "EGP") {
                     try {
                         getExchangeRateUseCase("EGP", CurrencyHelper.currencyUnit).rate
                     } catch (e: Exception) {
@@ -111,13 +89,9 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun fetchInitialData() {
-        if (_networkState.value) {
             fetchBrands()
             fetchCoupons()
             fetchAllProducts()
-        } else {
-            _error.value = "No internet connection"
-        }
     }
 
     private fun setupSearchHandler() {
@@ -126,11 +100,7 @@ class HomeViewModel @Inject constructor(
                 .debounce(300)
                 .distinctUntilChanged()
                 .collect { query ->
-                    if (_networkState.value) {
-                        handleSmartSearch(query)
-                    } else {
-                        _error.value = "Search unavailable offline"
-                    }
+                    handleSmartSearch(query)
                 }
         }
     }
@@ -174,11 +144,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun fetchBrands() {
-        if (!_networkState.value) {
-            _error.value = "Cannot fetch brands offline"
-            return
-        }
-
         viewModelScope.launch {
             try {
                 val result = getAllBrandsUseCase()
@@ -191,11 +156,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun fetchCoupons() {
-        if (!_networkState.value) {
-            _error.value = "Cannot fetch brands offline"
-            return
-        }
-
         viewModelScope.launch {
             try {
                 val result = getAllCouponsUseCase()
@@ -207,10 +167,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun fetchProductsByVendor(vendor: String) {
-        if (!_networkState.value) {
-            _error.value = "Cannot fetch products offline"
-            return
-        }
         viewModelScope.launch {
             try {
                 val result = getAllProductsUseCase(vendor)
@@ -223,10 +179,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun fetchAllProducts() {
-        if (!_networkState.value) {
-            _error.value = "Cannot fetch products offline"
-            return
-        }
         viewModelScope.launch {
             try {
                 val result = getAllProductsUseCase("") // empty = fetch all
