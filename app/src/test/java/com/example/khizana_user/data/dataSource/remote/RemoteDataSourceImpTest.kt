@@ -139,4 +139,54 @@ class RemoteDataSourceImpTest {
         assertEquals(expectedRate, currencyData.value, 0.01)
     }
 
+    @Test
+    fun `fetchAllProducts with vendor returns product list on success`() = runTest {
+        val mockProducts = listOf(
+            ProductDto(1L, "Product1", "desc", "vendor", "tags", "type", emptyList(), null, null)
+        )
+        val productResponseDto = ProductResponseDto(products = mockProducts)
+
+        coEvery { khizanaAPIService.getAllProducts("vendor") } returns Response.success(productResponseDto)
+
+        val result = remoteDataSource.fetchAllProducts("vendor")
+
+        assertEquals(1, result.size)
+        assertEquals("Product1", result[0].title)
+    }
+
+    @Test(expected = Exception::class)
+    fun `fetchAllProducts with vendor throws on failure`() = runTest {
+        coEvery { khizanaAPIService.getAllProducts("vendor") } returns Response.error(
+            500,
+            mockk<ResponseBody>(relaxed = true)
+        )
+
+        remoteDataSource.fetchAllProducts("vendor")
+    }
+
+    @Test
+    fun `fetchAllProducts returns product list on success`() = runTest {
+        val mockProducts = listOf(
+            ProductDto(2L, "Product2", "desc", "vendor", "tags", "type", emptyList(), null, null)
+        )
+        val productResponseDto = ProductResponseDto(products = mockProducts)
+
+        coEvery { khizanaAPIService.getAllProducts() } returns Response.success(productResponseDto)
+
+        val result = remoteDataSource.fetchAllProducts()
+
+        assertEquals(1, result.size)
+        assertEquals("Product2", result[0].title)
+    }
+
+    @Test(expected = Exception::class)
+    fun `fetchAllProducts throws on failure`() = runTest {
+        coEvery { khizanaAPIService.getAllProducts() } returns Response.error(
+            500,
+            mockk<ResponseBody>(relaxed = true)
+        )
+
+        remoteDataSource.fetchAllProducts()
+    }
+
 }
