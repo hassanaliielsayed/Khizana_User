@@ -6,6 +6,11 @@ import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.model.Product
 import com.example.khizana_user.domain.usecase.*
+import com.example.khizana_user.domain.usecase.home.GetAllBrandsUseCase
+import com.example.khizana_user.domain.usecase.home.GetAllCouponsUseCase
+import com.example.khizana_user.domain.usecase.home.GetAllProductsUseCase
+import com.example.khizana_user.domain.usecase.home.GetExchangeRateUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.GetCurrencyUseCase
 import com.example.khizana_user.utils.CurrencyHelper
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel

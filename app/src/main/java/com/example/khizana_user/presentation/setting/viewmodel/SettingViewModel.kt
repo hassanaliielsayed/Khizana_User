@@ -60,7 +60,13 @@ class SettingViewModel @Inject constructor(
 
     fun saveAddress(governorate: String, city: String) {
         viewModelScope.launch {
-            saveAddressUseCase(governorate, city)
+            try {
+                saveAddressUseCase(governorate, city)
+                _governorate.value = governorate
+                _city.value = city
+            } catch (e: Exception) {
+                // Handle error
+            }
         }
     }
 
