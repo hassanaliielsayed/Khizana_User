@@ -16,8 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
-    private val getAllProductsByCategoryUseCase: GetAllProductsByCategoryUseCase,
-    private val connectionLiveData: ConnectionLiveData
+    private val getAllProductsByCategoryUseCase: GetAllProductsByCategoryUseCase
 ) : ViewModel() {
 
     private val _allProducts = MutableStateFlow<List<ProductByCategory>>(emptyList())
@@ -30,24 +29,13 @@ class CategoryViewModel @Inject constructor(
     private var currentMainCategory: String = "All"
     private var currentSubCategory: String = "All"
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
-
     private var currentPrice: Float = Float.MAX_VALUE
 
 
     init {
-        observeNetworkState()
         getAllProducts()
     }
 
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
-    }
 
     fun getAllProducts() {
         viewModelScope.launch {

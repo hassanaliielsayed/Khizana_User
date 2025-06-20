@@ -2,9 +2,8 @@ package com.example.khizana_user.domain.usecase.cart
 
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.repository.CartRepository
-import javax.inject.Inject
 
-class ValidateCouponUseCase @Inject constructor(
+class ValidateCouponUseCase(
     private val repository: CartRepository
 ) {
     suspend operator fun invoke(code: String): Coupon {

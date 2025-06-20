@@ -79,14 +79,19 @@ fun AppNavGraph(
 
         composable(ScreenRoute.Home.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
-                HomeScreen(navController = navController,
-                    paddingValues = innerPadding,
-                    onNavigateToFavorites = {
-                        navController.navigate(ScreenRoute.Favorites.route)
-                    },
-                    onNavigateToCart = {
-                        navController.navigate(ScreenRoute.Cart.route)
-                    })
+                if(customer != null) {
+                    HomeScreen(
+                        navController = navController,
+                        paddingValues = innerPadding,
+                        onNavigateToFavorites = {
+                            navController.navigate(ScreenRoute.Favorites.route)
+                        },
+                        onNavigateToCart = {
+                            navController.navigate(ScreenRoute.Cart.route)
+                        },
+                        customerId = customer.id
+                    )
+                }
             }
         }
 
@@ -94,16 +99,19 @@ fun AppNavGraph(
             Scaffold(
                 bottomBar = { BottomNavigationBar(navController) }
             ) { innerPadding ->
-                CategoryScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    onNavigateToFavorites = {
-                        navController.navigate(ScreenRoute.Favorites.route)
-                    },
-                    onNavigateToSearch = {
-                        navController.navigate("search")
-                                         },
-                    navController = navController
-                )
+                if(customer != null) {
+                    CategoryScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onNavigateToFavorites = {
+                            navController.navigate(ScreenRoute.Favorites.route)
+                        },
+                        onNavigateToSearch = {
+                            navController.navigate("search")
+                        },
+                        navController = navController,
+                        customerId = customer.id
+                    )
+                }
             }
         }
 
@@ -328,15 +336,18 @@ fun AppNavGraph(
         }
 
         composable("search") {
-            SearchScreen(
-                onNavigateToFavorites = {
-                navController.navigate(ScreenRoute.Favorites.route)
-                                        },
-                onNavigateToCart = {
-                    navController.navigate(ScreenRoute.Cart.route)
-                },
-                navController = navController
-            )
+            if(customer != null) {
+                SearchScreen(
+                    onNavigateToFavorites = {
+                        navController.navigate(ScreenRoute.Favorites.route)
+                    },
+                    onNavigateToCart = {
+                        navController.navigate(ScreenRoute.Cart.route)
+                    },
+                    navController = navController,
+                    customerId = customer.id
+                )
+            }
         }
     }
 }

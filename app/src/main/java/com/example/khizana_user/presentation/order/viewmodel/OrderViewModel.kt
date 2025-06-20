@@ -2,25 +2,22 @@ package com.example.khizana_user.presentation.order.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.data.dto.draftorderDto.AppliedDiscountDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItem
 import com.example.khizana_user.data.dto.draftorderDto.ShippingAddressDto
 import com.example.khizana_user.domain.model.Orders
-import com.example.khizana_user.domain.usecase.order.GetOrderByIdUseCase
-import com.example.khizana_user.domain.usecase.order.GetOrdersByCustomerIdUseCase
-import com.example.khizana_user.domain.usecase.order.getProductImageUseCase
-import com.example.khizana_user.domain.usecase.order.CompleteDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.order.GetDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.order.SendInvoiceUseCase
-import com.example.khizana_user.domain.usecase.order.UpdateDraftOrderUseCase
-import com.example.khizana_user.utils.ConnectionLiveData
+import com.example.khizana_user.domain.usecase.GetOrderByIdUseCase
+import com.example.khizana_user.domain.usecase.GetOrdersByCustomerIdUseCase
+import com.example.khizana_user.domain.usecase.getProductImageUseCase
+import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
+import com.example.khizana_user.domain.usecase.orderusecase.UpdateDraftOrderUseCase
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -49,23 +46,9 @@ class OrderViewModel @Inject constructor(
     private val _orderDetails = MutableStateFlow<Result<Orders>>(Result.Loading)
     val orderDetails: StateFlow<Result<Orders>> = _orderDetails
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState = _networkState.asStateFlow()
-
     private val _productImages = MutableStateFlow<Map<Long, String>>(emptyMap())
     val productImages: StateFlow<Map<Long, String>> = _productImages
 
-    init {
-        observeNetworkState()
-    }
-
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
-    }
 
     fun completeCODOrder(draftOrderId: Long) {
         viewModelScope.launch {
@@ -136,15 +119,9 @@ class OrderViewModel @Inject constructor(
                 val orderList = getOrdersByCustomerIdUseCase(customerId)
                 _orders.value = Result.Success(orderList)
 
-                orderList.forEach { order ->
-                    Log.d("OrderVM", "Order: $order")
-                }
-
-                // _orders.value = Result.Success(orderList)
             } catch (e: Exception) {
                 val error = e.message ?: "Error fetching orders"
                 _orders.value = Result.Error(error)
-                Log.e("OrderVM", "Failed to fetch orders: $error")
             }
         }
     }

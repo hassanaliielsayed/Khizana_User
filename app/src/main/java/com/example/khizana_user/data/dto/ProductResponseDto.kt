@@ -14,7 +14,7 @@ data class ProductDto(
     val product_type: String?,
     val variants: List<ProductVariantDto>,
     val created_at: String?,
-    val image: ProductImageDto?
+    val image: ProductImageDto?,
 )
 
 data class ProductImageDto(
