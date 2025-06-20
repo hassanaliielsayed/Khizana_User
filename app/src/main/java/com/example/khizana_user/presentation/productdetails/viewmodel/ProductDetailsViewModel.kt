@@ -1,11 +1,9 @@
 package com.example.khizana_user.presentation.productdetails.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.ProductDetails
-import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
-import com.example.khizana_user.utils.ConnectionLiveData
+import com.example.khizana_user.domain.usecase.details.GetProductDetailsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

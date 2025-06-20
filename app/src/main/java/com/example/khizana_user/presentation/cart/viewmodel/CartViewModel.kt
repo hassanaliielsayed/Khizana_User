@@ -6,12 +6,12 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.model.FavoriteList
-import com.example.khizana_user.domain.usecase.cartusecase.AddToCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.ClearCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseCase
+import com.example.khizana_user.domain.usecase.cart.AddToCartUseCase
+import com.example.khizana_user.domain.usecase.cart.ClearCartUseCase
+import com.example.khizana_user.domain.usecase.cart.DecrementFromCartUseCase
+import com.example.khizana_user.domain.usecase.cart.RemoveFromCartUseCase
+import com.example.khizana_user.domain.usecase.cart.ValidateCouponUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.GetCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.RemoveFromCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.ValidateCouponUseCase
 import com.example.khizana_user.utils.ConnectionLiveData
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel

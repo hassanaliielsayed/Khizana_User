@@ -4,10 +4,11 @@ import android.content.Context
 import android.util.Log
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
-import com.example.khizana_user.data.repository.CustomerPreferencesDataSource
+import com.example.khizana_user.data.repository.sharedpref.CustomerPreferencesDataSource
 import com.example.khizana_user.domain.model.Customer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -23,6 +24,8 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
         private val CUSTOMER_EMAIL = stringPreferencesKey("customer_email")
         private val CUSTOMER_VERIFIED = booleanPreferencesKey("customer_verified")
         private val CUSTOMER_CURRENCY = stringPreferencesKey("customer_currency")
+        private val GOVERNORATE = stringPreferencesKey("customer_governorate")
+        private val CITY = stringPreferencesKey("customer_city")
 
         private const val TAG = "CustomerPrefs"
     }
@@ -66,6 +69,20 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
         return context.dataStore.data.map { prefs ->
             prefs[CUSTOMER_CURRENCY]
         }
+    }
+
+    override suspend fun saveAddress(governorate: String, city: String) {
+        context.dataStore.edit { prefs ->
+            prefs[GOVERNORATE] = governorate
+            prefs[CITY] = city
+        }
+        Log.d(TAG, "Saved address: Governorate=$governorate, City=$city")
+    }
+
+    override suspend fun getAddress(): Pair<String?, String?> {
+        return context.dataStore.data.map { prefs ->
+            Pair(prefs[GOVERNORATE], prefs[CITY])
+        }.first()
     }
 
 

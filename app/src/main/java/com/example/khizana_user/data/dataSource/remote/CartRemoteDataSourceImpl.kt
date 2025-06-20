@@ -3,7 +3,7 @@ package com.example.khizana_user.data.dataSource.remote
 import android.util.Log
 import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
 import com.example.khizana_user.data.dto.draftorderDto.*
-import com.example.khizana_user.data.repository.CartRemoteDataSource
+import com.example.khizana_user.data.repository.cart.CartRemoteDataSource
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.domain.model.FavoriteList
 import kotlinx.coroutines.async
@@ -78,11 +78,21 @@ class CartRemoteDataSourceImpl @Inject constructor(
             val cartDraft = getCustomerCartDraft(customerId)
                 ?: return Result.failure(Exception("Cart draft not found"))
 
-            val updatedItems = cartDraft.lineItems.mapNotNull {
-                when {
-                    it.variantId == variantId && it.quantity > 1 -> it.copy(quantity = it.quantity - 1)
-                    it.variantId == variantId && it.quantity == 1 -> null
-                    else -> it
+            // Find the item to decrement
+            val itemToUpdate = cartDraft.lineItems.find { it.variantId == variantId }
+                ?: return Result.failure(Exception("Item not found in cart"))
+
+            // If quantity is already 1, return success without making any changes
+            if (itemToUpdate.quantity == 1) {
+                return Result.success(Unit)
+            }
+
+            // Otherwise, decrement the quantity
+            val updatedItems = cartDraft.lineItems.map {
+                if (it.variantId == variantId) {
+                    it.copy(quantity = it.quantity - 1)
+                } else {
+                    it
                 }
             }
 

@@ -1,3 +1,5 @@
+@file:Suppress("NAME_SHADOWING")
+
 package com.example.khizana_user.presentation.cart.view
 
 import android.Manifest
@@ -7,6 +9,7 @@ import android.location.Geocoder
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -27,7 +30,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -106,7 +111,7 @@ fun CheckoutScreen(
 
     var couponCode by remember { mutableStateOf("") }
     var showConfirmationDialog by remember { mutableStateOf(false) }
-    var selectedPaymentMethod by remember { mutableStateOf(PaymentMethod.COD) }
+
 
     val couponState by viewModel.couponState.collectAsStateWithLifecycle()
     val cartState by viewModel.cartState.collectAsState()
@@ -137,6 +142,10 @@ fun CheckoutScreen(
     }
 
     val contect = LocalContext.current
+    val forceOnlinePayment = grandTotal >= 2000
+    var selectedPaymentMethod by remember {
+        mutableStateOf(if (forceOnlinePayment) PaymentMethod.ONLINE else PaymentMethod.COD)
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = object : DefaultLifecycleObserver {
@@ -326,7 +335,9 @@ fun CheckoutScreen(
             }
 
             // Payment Method
+
             var expanded by remember { mutableStateOf(false) }
+
 
             Card(
                 modifier = Modifier
@@ -371,7 +382,7 @@ fun CheckoutScreen(
                                 onClick = { expanded = true }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.ArrowForwardIos,
+                                    imageVector = Icons.Default.KeyboardArrowDown,
                                     contentDescription = "Select Payment Method"
                                 )
                             }
@@ -383,9 +394,12 @@ fun CheckoutScreen(
                                 DropdownMenuItem(
                                     text = { Text("Cash on Delivery (COD)",fontFamily = customFontFamily,) },
                                     onClick = {
-                                        selectedPaymentMethod = PaymentMethod.COD
-                                        expanded = false
-                                    }
+                                        if (!forceOnlinePayment) {
+                                            selectedPaymentMethod = PaymentMethod.COD
+                                            expanded = false
+                                        }
+                                    },
+                                    enabled = !forceOnlinePayment
                                 )
                                 DropdownMenuItem(
                                     text = { Text("Online Payment",fontFamily = customFontFamily,) },
@@ -542,6 +556,11 @@ fun CheckoutScreen(
         showDialog = showConfirmationDialog,
         onDismiss = { showConfirmationDialog = false },
         onConfirm = {
+            if (forceOnlinePayment && selectedPaymentMethod == PaymentMethod.COD) {
+                // Show error toast or dialog
+                Toast.makeText(context, "Orders over 3000 EGP must be paid online", Toast.LENGTH_LONG).show()
+                return@ConfirmationDialog
+            }
             showConfirmationDialog = false
             coroutineScope.launch {
                 val draftOrder = (cartState as? Result.Success)?.data

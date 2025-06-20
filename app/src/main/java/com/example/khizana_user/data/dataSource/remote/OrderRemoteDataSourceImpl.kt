@@ -6,7 +6,7 @@ import com.example.khizana_user.data.dto.OrderDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderRequest
 import com.example.khizana_user.data.dto.draftorderDto.ProductImageDto
-import com.example.khizana_user.data.repository.OrderRemoteDataSource
+import com.example.khizana_user.data.repository.order.OrderRemoteDataSource
 import retrofit2.Response
 import javax.inject.Inject
 

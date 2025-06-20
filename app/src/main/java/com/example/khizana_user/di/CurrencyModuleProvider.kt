@@ -2,7 +2,7 @@ package com.example.khizana_user.di
 
 import com.example.khizana_user.data.dataSource.remote.api.CurrencyAPIService
 import com.example.khizana_user.domain.repository.SettingRepository
-import com.example.khizana_user.domain.usecase.GetExchangeRateUseCase
+import com.example.khizana_user.domain.usecase.home.GetExchangeRateUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
