@@ -3,7 +3,7 @@ package com.example.khizana_user.data.dataSource.remote
 import android.util.Log
 import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
 import com.example.khizana_user.data.dto.draftorderDto.*
-import com.example.khizana_user.data.repository.WishlistRemoteDataSource
+import com.example.khizana_user.data.repository.fav.WishlistRemoteDataSource
 import com.example.khizana_user.domain.model.FavoriteItem
 import com.example.khizana_user.domain.model.FavoriteList
 import kotlinx.coroutines.async

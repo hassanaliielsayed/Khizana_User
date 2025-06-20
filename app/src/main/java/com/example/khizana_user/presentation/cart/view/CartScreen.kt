@@ -118,7 +118,6 @@ fun CartScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
                             .padding(start = 16.dp, end = 16.dp, top = 110.dp)
                     ) {
                         Row(
@@ -200,10 +199,11 @@ fun CartScreen(
                                 )
                             }
                         } else {
+                            // Main scrollable content with fixed height items
                             LazyColumn(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 200.dp, max = 500.dp),
+                                    .weight(1f)
+                                    .fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(cart.items) { item ->
@@ -228,54 +228,66 @@ fun CartScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Divider(
-                                color = colorResource(R.color.dark_blue),
-                                thickness = 2.dp
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    stringResource(R.string.total),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = customFontFamily
-                                )
-                                Text(
-                                    text = totalPrice.toCurrentCurrency(),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colorResource(R.color.content_color),
-                                    fontFamily = customFontFamily
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Button(
-                                onClick = { onCheckoutClick(totalPrice) },
+                            // Fixed height checkout section
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colorResource(
-                                        id = R.color.dark_blue
-                                    )
-                                )
+                                    .height(200.dp) // Fixed height for checkout section
+                                    .background(Color.White)
                             ) {
-                                Text(
-                                    stringResource(R.string.proceed_to_checkout),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
-                                    fontFamily = customFontFamily
+                                Divider(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(2.dp),
+                                    color = colorResource(R.color.dark_blue),
+                                    thickness = 2.dp
                                 )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        stringResource(R.string.total),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = customFontFamily
+                                    )
+                                    Text(
+                                        text = totalPrice.toCurrentCurrency(),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = colorResource(R.color.content_color),
+                                        fontFamily = customFontFamily
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Button(
+                                    onClick = { onCheckoutClick(totalPrice) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp) // Fixed height for button
+                                        .padding(horizontal = 16.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = colorResource(
+                                            id = R.color.dark_blue
+                                        )
+                                    )
+                                ) {
+                                    Text(
+                                        stringResource(R.string.proceed_to_checkout),
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+                                        fontFamily = customFontFamily
+                                    )
+                                }
                             }
                         }
                     }

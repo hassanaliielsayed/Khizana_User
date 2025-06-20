@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,7 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -152,7 +152,8 @@ fun HomeScreen(
                     suggestions = suggestions,
                     onSuggestionClick = { suggestion ->
                         if (suggestion.startsWith(context.getString(R.string.brand))) {
-                            val brandName = suggestion.removePrefix(context.getString(R.string.brand)).trim()
+                            val brandName =
+                                suggestion.removePrefix(context.getString(R.string.brand)).trim()
                             viewModel.updateSearchQuery(brandName)
                             viewModel.fetchProductsByVendor(brandName)
                             viewModel.setFocus(SearchFocusType.BRAND)
@@ -234,13 +235,12 @@ fun HomeScreen(
                             modifier = Modifier.size(200.dp)
                         )
                     }
-                }
-                else {
+                } else {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 16.dp, end = 16.dp, bottom = 90.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         filteredProducts.forEach { product ->
                             ProductItem(

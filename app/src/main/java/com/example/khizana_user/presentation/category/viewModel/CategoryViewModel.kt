@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.ProductByCategory
-import com.example.khizana_user.domain.usecase.GetAllProductsByCategoryUseCase
+import com.example.khizana_user.domain.usecase.category.GetAllProductsByCategoryUseCase
 import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

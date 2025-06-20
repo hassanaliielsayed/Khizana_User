@@ -1,0 +1,11 @@
+package com.example.khizana_user.domain.usecase.home
+
+import com.example.khizana_user.domain.model.Product
+import com.example.khizana_user.domain.repository.HomeRepository
+import javax.inject.Inject
+
+class GetAllProductsUseCase @Inject constructor(private val repository: HomeRepository) {
+    suspend operator fun invoke(vendor: String): List<Product> {
+        return repository.getAllProductsByBrand(vendor)
+    }
+}

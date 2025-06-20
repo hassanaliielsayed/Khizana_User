@@ -4,32 +4,35 @@ import android.content.Context
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
 import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
-import com.example.khizana_user.data.repository.AuthDataSource
-import com.example.khizana_user.data.repository.AuthRepositoryImp
+import com.example.khizana_user.data.repository.auth.AuthDataSource
+import com.example.khizana_user.data.repository.auth.AuthRepositoryImp
 import com.example.khizana_user.domain.repository.AuthRepository
 import com.example.khizana_user.domain.repository.CartRepository
+import com.example.khizana_user.domain.repository.CustomerPreferencesRepository
 import com.example.khizana_user.domain.repository.OrderRepository
 import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.repository.WishlistRepository
-import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
-import com.example.khizana_user.domain.usecase.GetShopifyCustomerByEmailUseCase
-import com.example.khizana_user.domain.usecase.authusecases.LoginUseCase
-import com.example.khizana_user.domain.usecase.RegisterShopifyCustomerUseCase
-import com.example.khizana_user.domain.usecase.authusecases.RegisterUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.AddToCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.ClearCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.GetCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.RemoveFromCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.ValidateCouponUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavoritesUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
+import com.example.khizana_user.domain.usecase.details.GetProductDetailsUseCase
+import com.example.khizana_user.domain.usecase.auth.GetShopifyCustomerByEmailUseCase
+import com.example.khizana_user.domain.usecase.auth.LoginUseCase
+import com.example.khizana_user.domain.usecase.auth.RegisterShopifyCustomerUseCase
+import com.example.khizana_user.domain.usecase.auth.RegisterUseCase
+import com.example.khizana_user.domain.usecase.cart.AddToCartUseCase
+import com.example.khizana_user.domain.usecase.cart.ClearCartUseCase
+import com.example.khizana_user.domain.usecase.cart.DecrementFromCartUseCase
+import com.example.khizana_user.domain.usecase.cart.GetCartUseCase
+import com.example.khizana_user.domain.usecase.cart.RemoveFromCartUseCase
+import com.example.khizana_user.domain.usecase.cart.ValidateCouponUseCase
+import com.example.khizana_user.domain.usecase.favourite.AddToFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.DeleteFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.GetFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.RemoveFromFavoritesUseCase
+import com.example.khizana_user.domain.usecase.order.CompleteDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.GetDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.SendInvoiceUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.GetAddressUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.SaveAddressUseCase
 import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.Module
 import dagger.Provides
@@ -161,6 +164,16 @@ class KhizanaModuleProvider {
     @Provides
     fun provideSendInvoiceUseCase(repo: OrderRepository): SendInvoiceUseCase {
         return SendInvoiceUseCase(repo)
+    }
+
+    @Provides
+    fun provideSaveAddressUseCase(repo: CustomerPreferencesRepository): SaveAddressUseCase {
+        return SaveAddressUseCase(repo)
+    }
+
+    @Provides
+    fun provideGetAddressUseCase(repo: CustomerPreferencesRepository): GetAddressUseCase {
+        return GetAddressUseCase(repo)
     }
 
     @Provides

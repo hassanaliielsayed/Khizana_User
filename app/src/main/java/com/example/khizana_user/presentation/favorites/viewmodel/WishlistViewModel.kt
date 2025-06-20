@@ -5,10 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.FavoriteList
-import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.AddToFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.DeleteFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.GetFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.RemoveFromFavoritesUseCase
 import com.example.khizana_user.utils.ConnectionLiveData
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -2,11 +2,11 @@
 
 package com.example.khizana_user.presentation.setting.viewmodel
 
-import com.example.khizana_user.domain.usecase.GetCurrencyUseCase
-import com.example.khizana_user.domain.usecase.GetExchangeRateUseCase
-import com.example.khizana_user.domain.usecase.authusecases.LogoutUseCase
-import com.example.khizana_user.domain.usecase.sharedperfernceusecase.ClearCustomerUseCase
-import com.example.khizana_user.domain.usecase.SaveCurrencyUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.GetCurrencyUseCase
+import com.example.khizana_user.domain.usecase.home.GetExchangeRateUseCase
+import com.example.khizana_user.domain.usecase.auth.LogoutUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.ClearCustomerUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.SaveCurrencyUseCase
 import com.example.khizana_user.utils.CurrencyHelper
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
