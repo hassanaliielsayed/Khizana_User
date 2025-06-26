@@ -32,9 +32,6 @@ class SettingViewModel @Inject constructor(
     private val _state = MutableStateFlow("EGP")
     val state = _state.asStateFlow()
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
-
     private val _governorate = MutableStateFlow("")
     val governorate = _governorate.asStateFlow()
 

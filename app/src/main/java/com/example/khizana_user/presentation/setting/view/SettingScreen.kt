@@ -106,8 +106,8 @@ fun SettingScreen(
         "Sohag"
     )
     var showAddressDialog by remember { mutableStateOf(false) }
-    val governorate by viewModel.governorate.collectAsState()
-    val city by viewModel.city.collectAsState()
+    val governorate by viewModel.governorate.collectAsStateWithLifecycle()
+    val city by viewModel.city.collectAsStateWithLifecycle()
     var tempGovernorate by remember { mutableStateOf("") }
     var tempCity by remember { mutableStateOf("") }
 
@@ -117,7 +117,6 @@ fun SettingScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val selectedCurrency by viewModel.state.collectAsStateWithLifecycle()
-    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
 
     LaunchedEffect(showAddressDialog) {
         if (showAddressDialog) {
@@ -126,10 +125,6 @@ fun SettingScreen(
         }
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-        return
-    }
     Scaffold(
         topBar = {
             TopAppBar(

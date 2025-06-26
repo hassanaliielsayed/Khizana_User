@@ -7,6 +7,7 @@ import com.example.khizana_user.domain.usecase.details.GetProductDetailsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,11 +17,7 @@ class ProductDetailsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<Result>(Result.Loading)
-    val state: StateFlow<Result> = _state
-
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
-
+    val state = _state.asStateFlow()
 
     fun loadProduct(productId: Long) {
         viewModelScope.launch {

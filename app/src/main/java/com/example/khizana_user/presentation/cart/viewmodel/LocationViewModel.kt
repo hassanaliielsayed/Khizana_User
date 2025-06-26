@@ -1,6 +1,5 @@
 package com.example.khizana_user.presentation.cart.viewmodel
 
-import android.location.Location
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel

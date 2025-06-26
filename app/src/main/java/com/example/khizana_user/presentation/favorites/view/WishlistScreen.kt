@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.khizana_user.R
@@ -52,23 +53,21 @@ fun WishlistScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToCard: () -> Unit
 ) {
-    val favoritesState by viewModel.favoritesState.collectAsState()
+    val favoritesState by viewModel.favoritesState.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val removingIds = remember { mutableStateListOf<Long>() }
 
     var showClearDialog by remember { mutableStateOf(false) }
     var confirmRemoveItem by remember { mutableStateOf<FavoriteItem?>(null) }
 
-    val connectionState by viewModel.networkState.collectAsState()
+
 
     val context = LocalContext.current
 
-    val isLoading by viewModel.loading.collectAsState()
+    val isLoading by viewModel.loading.collectAsStateWithLifecycle()
 
     LaunchedEffect(customerId) {
-        if (connectionState) {
-            viewModel.loadFavorites(customerId)
-        }
+        viewModel.loadFavorites(customerId)
     }
 
     if (showClearDialog) {
@@ -116,9 +115,6 @@ fun WishlistScreen(
         )
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -241,7 +237,7 @@ fun WishlistScreen(
             }
 
         }
-    }
+
 }
 
 @Composable

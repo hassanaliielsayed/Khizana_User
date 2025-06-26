@@ -38,22 +38,6 @@ class CartViewModel @Inject constructor(
     private val _couponState = MutableStateFlow<Result<Coupon>>(Result.Loading)
     val couponState = _couponState.asStateFlow()
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
-
-    init {
-        observeNetworkState()
-    }
-
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
-    }
-
-
     fun loadCart(customerId: Long) {
         viewModelScope.launch {
             try {

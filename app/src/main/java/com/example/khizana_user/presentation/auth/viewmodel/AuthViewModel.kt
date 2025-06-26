@@ -45,43 +45,32 @@ class AuthViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
-    val authState: StateFlow<AuthState> = _authState
+    val authState = _authState.asStateFlow()
 
     private val _shopifyRegisterResult = MutableStateFlow<Result<Customer>?>(null)
-    val shopifyRegisterResult: StateFlow<Result<Customer>?> = _shopifyRegisterResult
+    val shopifyRegisterResult = _shopifyRegisterResult.asStateFlow()
 
     private val _resetPasswordState = MutableStateFlow<Result<Unit>?>(null)
-    val resetPasswordState: StateFlow<Result<Unit>?> = _resetPasswordState
+    val resetPasswordState = _resetPasswordState.asStateFlow()
 
     private val _emailVerificationState = MutableStateFlow<Result<Unit>?>(null)
-    val emailVerificationState: StateFlow<Result<Unit>?> = _emailVerificationState
+    val emailVerificationState = _emailVerificationState.asStateFlow()
 
     private val _isEmailVerified = MutableStateFlow(false)
-    val isEmailVerified: StateFlow<Boolean> = _isEmailVerified
+    val isEmailVerified = _isEmailVerified.asStateFlow()
 
     private val _currentUserEmail = MutableStateFlow<String?>(null)
-    val currentUserEmail: StateFlow<String?> = _currentUserEmail
+    val currentUserEmail = _currentUserEmail.asStateFlow()
 
     private var didRegisterShopify = false
     private var registeredUserName: String? = null
-
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
 
     val currentCustomer: StateFlow<Customer?> = getCustomerUseCase()
         .onEach { Log.d("AuthViewModel", "currentCustomer loaded: $it") }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
-        observeNetworkState()
         observeVerificationAndRegister()
-    }
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
     }
 
     private fun observeVerificationAndRegister() {

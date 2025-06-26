@@ -73,6 +73,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.*
 import com.example.khizana_user.presentation.AppLogo
@@ -124,7 +125,7 @@ fun CategoryScreen(
     val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
     var showGuestDialog by remember { mutableStateOf(false) }
     var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-    val favoritesState by wishlistViewModel.favoritesState.collectAsState()
+    val favoritesState by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()

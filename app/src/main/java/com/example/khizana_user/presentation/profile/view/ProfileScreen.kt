@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -91,9 +92,9 @@ fun ProfileScreen(
     onNavigateToSetting: () -> Unit,
     onNavigateToCart: () -> Unit
 ) {
-    val currentCustomer by authViewModel.currentCustomer.collectAsState()
-    val orderState by orderViewModel.orders.collectAsState()
-    val favoritesState by wishlistViewModel.favoritesState.collectAsState()
+    val currentCustomer by authViewModel.currentCustomer.collectAsStateWithLifecycle()
+    val orderState by orderViewModel.orders.collectAsStateWithLifecycle()
+    val favoritesState by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchOrders(customerId)
