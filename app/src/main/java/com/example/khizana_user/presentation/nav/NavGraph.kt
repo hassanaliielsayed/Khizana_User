@@ -30,8 +30,10 @@ import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.presentation.favorites.view.WishlistScreen
 import com.example.khizana_user.presentation.home.view.HomeScreen
 import com.example.khizana_user.presentation.cart.view.MapScreen
+import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.order.view.OrderDetailsScreen
 import com.example.khizana_user.presentation.order.view.OrdersScreen
+import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
 import com.example.khizana_user.presentation.productdetails.view.ProductDetailsScreen
 import com.example.khizana_user.presentation.profile.view.ProfileScreen
 import com.example.khizana_user.presentation.setting.view.AboutUs
@@ -79,14 +81,19 @@ fun AppNavGraph(
 
         composable(ScreenRoute.Home.route) {
             Scaffold(bottomBar = { BottomNavigationBar(navController) }) { innerPadding ->
-                HomeScreen(navController = navController,
-                    paddingValues = innerPadding,
-                    onNavigateToFavorites = {
-                        navController.navigate(ScreenRoute.Favorites.route)
-                    },
-                    onNavigateToCart = {
-                        navController.navigate(ScreenRoute.Cart.route)
-                    })
+                if(customer != null) {
+                    HomeScreen(
+                        navController = navController,
+                        paddingValues = innerPadding,
+                        onNavigateToFavorites = {
+                            navController.navigate(ScreenRoute.Favorites.route)
+                        },
+                        onNavigateToCart = {
+                            navController.navigate(ScreenRoute.Cart.route)
+                        },
+                        customerId = customer.id
+                    )
+                }
             }
         }
 
@@ -94,16 +101,19 @@ fun AppNavGraph(
             Scaffold(
                 bottomBar = { BottomNavigationBar(navController) }
             ) { innerPadding ->
-                CategoryScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    onNavigateToFavorites = {
-                        navController.navigate(ScreenRoute.Favorites.route)
-                    },
-                    onNavigateToSearch = {
-                        navController.navigate("search")
-                                         },
-                    navController = navController
-                )
+                if(customer != null) {
+                    CategoryScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onNavigateToFavorites = {
+                            navController.navigate(ScreenRoute.Favorites.route)
+                        },
+                        onNavigateToSearch = {
+                            navController.navigate("search")
+                        },
+                        navController = navController,
+                        customerId = customer.id
+                    )
+                }
             }
         }
 
@@ -249,39 +259,28 @@ fun AppNavGraph(
             val customerId = backStackEntry.arguments?.getLong("customerId") ?: return@composable
             val totalPrice = backStackEntry.arguments?.getString("totalPrice")?.toDoubleOrNull() ?: 0.0
 
-            val locationViewModel: LocationViewModel = hiltViewModel()
-
-            val selectedLocation = backStackEntry.savedStateHandle
-                .getLiveData<Pair<LatLng, String>>("selected_location")
-                .observeAsState()
-
-            selectedLocation.value?.let { (latLng, address) ->
-                LaunchedEffect(latLng) {
-                    locationViewModel.updateAddress(address, latLng)
-                    backStackEntry.savedStateHandle.remove<Pair<LatLng, String>>("selected_location")
-                }
-            }
-
             CheckoutScreen(
                 customerId = customerId,
                 totalPrice = totalPrice,
                 onBackClick = { navController.popBackStack() },
                 onPlaceOrderClick = {},
                 onAddressClick = {
-                    navController.navigate("map")
+                    navController.navigate("map"){
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 },
                 onPaymentMethodClick = {},
                 onNavigateToOrderSuccess = {
                     navController.navigate("order_success")
-                }
+                },
+                navController = navController
             )
         }
 
 
         composable("map") {
-            MapScreen(
-                navController = navController
-            )
+            MapScreen(navController)
         }
 
         composable("verify_email") {
@@ -328,15 +327,18 @@ fun AppNavGraph(
         }
 
         composable("search") {
-            SearchScreen(
-                onNavigateToFavorites = {
-                navController.navigate(ScreenRoute.Favorites.route)
-                                        },
-                onNavigateToCart = {
-                    navController.navigate(ScreenRoute.Cart.route)
-                },
-                navController = navController
-            )
+            if(customer != null) {
+                SearchScreen(
+                    onNavigateToFavorites = {
+                        navController.navigate(ScreenRoute.Favorites.route)
+                    },
+                    onNavigateToCart = {
+                        navController.navigate(ScreenRoute.Cart.route)
+                    },
+                    navController = navController,
+                    customerId = customer.id
+                )
+            }
         }
     }
 }

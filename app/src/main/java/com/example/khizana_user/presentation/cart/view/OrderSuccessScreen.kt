@@ -58,7 +58,7 @@ fun OrderSuccessScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Your order will arrive in 3 days, If You have any Problems Please Contact Us",
+            text = "Your order will be arrive soon.., If You have any Problems Please Contact Us",
             fontSize = 18.sp,
             color = Color.Gray,
             fontFamily = customFontFamily,

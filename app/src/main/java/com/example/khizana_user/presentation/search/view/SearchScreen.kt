@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.search.view
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,13 +32,20 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
+import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.productdetails.view.GuestLoginDialog
 import com.example.khizana_user.presentation.profile.view.EmptyState
+import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.isGuestUser
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,9 +55,25 @@ fun SearchScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToCart: () -> Unit,
     navController: NavHostController,
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
+    customerId: Long
 ) {
-    val products by viewModel.products.collectAsState()
+    val products by viewModel.products.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
+
+    val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
+    val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
+    var showGuestDialog by remember { mutableStateOf(false) }
+    var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val favoritesState by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(customerId) {
+        wishlistViewModel.loadFavorites(customerId)
+
+    }
 
     LaunchedEffect(Unit) {
         viewModel.getAllProducts()
@@ -121,13 +145,64 @@ fun SearchScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(products) { product ->
+                        val isFavorite = favoritesState?.items?.any { it?.variantId == product.variantId } == true
+                        val isToggling = togglingStates[product.id] ?: false
                         ProductItem(
                             product = product,
+                            isFavorite = isFavorite,
+                            isToggling = isToggling,
                             onClick = {
                                 navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
+                            },
+                            onToggleFavorite = {
+                                val variantId = product.variantId ?: return@ProductItem
+
+                                if (isGuestUser()) {
+                                    guestAction = {}
+                                    showGuestDialog = true
+                                    return@ProductItem
+                                }
+
+                                if (togglingStates[product.id] == true) return@ProductItem
+
+                                togglingStates[product.id] = true
+
+                                coroutineScope.launch {
+                                    val wasFavorite = favoriteStates[product.id] ?: false
+                                    val result = if (wasFavorite)
+                                        wishlistViewModel.removeFromFavorites(customerId, variantId)
+                                    else
+                                        wishlistViewModel.addToFavorites(customerId, variantId)
+
+                                    when (result) {
+                                        is Result.Success<*> -> favoriteStates[product.id] = !wasFavorite
+                                        is Result.Error -> Toast.makeText(
+                                            context,
+                                            result.message,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        else -> {}
+                                    }
+
+                                    togglingStates[product.id] = false
+                                }
                             }
+
                         )
                     }
+                }
+                if (showGuestDialog) {
+                    GuestLoginDialog(
+                        onDismiss = { showGuestDialog = false },
+                        onLoginClick = {
+                            showGuestDialog = false
+                            navController.navigate(context.getString(R.string.login))
+                        },
+                        onContinueClick = {
+                            showGuestDialog = false
+                            guestAction?.invoke()
+                        }
+                    )
                 }
             }
         }

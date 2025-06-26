@@ -4,32 +4,41 @@ import android.content.Context
 import com.example.khizana_user.data.dataSource.remote.api.KhizanaAPIService
 import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
 import com.example.khizana_user.data.dataSource.remote.firebase.FirebaseAuthDataSourceImpl
-import com.example.khizana_user.data.repository.AuthDataSource
-import com.example.khizana_user.data.repository.AuthRepositoryImp
+
+import com.example.khizana_user.data.repository.HomeRepositoryImp
+import com.example.khizana_user.data.repository.auth.AuthDataSource
+import com.example.khizana_user.data.repository.auth.AuthRepositoryImp
 import com.example.khizana_user.domain.repository.AuthRepository
 import com.example.khizana_user.domain.repository.CartRepository
+import com.example.khizana_user.domain.repository.CategoryRepository
+import com.example.khizana_user.domain.repository.HomeRepository
 import com.example.khizana_user.domain.repository.OrderRepository
 import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.repository.WishlistRepository
-import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
-import com.example.khizana_user.domain.usecase.GetShopifyCustomerByEmailUseCase
-import com.example.khizana_user.domain.usecase.authusecases.LoginUseCase
-import com.example.khizana_user.domain.usecase.RegisterShopifyCustomerUseCase
-import com.example.khizana_user.domain.usecase.authusecases.RegisterUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.AddToCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.ClearCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.DecrementFromCartUseCase
+import com.example.khizana_user.domain.usecase.auth.GetShopifyCustomerByEmailUseCase
+import com.example.khizana_user.domain.usecase.auth.LoginUseCase
+import com.example.khizana_user.domain.usecase.auth.RegisterShopifyCustomerUseCase
+import com.example.khizana_user.domain.usecase.auth.RegisterUseCase
+import com.example.khizana_user.domain.usecase.cart.AddToCartUseCase
+import com.example.khizana_user.domain.usecase.cart.ClearCartUseCase
+import com.example.khizana_user.domain.usecase.cart.DecrementFromCartUseCase
+import com.example.khizana_user.domain.usecase.cart.RemoveFromCartUseCase
+import com.example.khizana_user.domain.usecase.cart.ValidateCouponUseCase
 import com.example.khizana_user.domain.usecase.cartusecase.GetCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.RemoveFromCartUseCase
-import com.example.khizana_user.domain.usecase.cartusecase.ValidateCouponUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavoritesUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
+import com.example.khizana_user.domain.usecase.category.GetAllProductsByCategoryUseCase
+import com.example.khizana_user.domain.usecase.details.GetProductDetailsUseCase
+import com.example.khizana_user.domain.usecase.favourite.AddToFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.DeleteFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.GetFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.RemoveFromFavoritesUseCase
+import com.example.khizana_user.domain.usecase.home.GetAllBrandsUseCase
+import com.example.khizana_user.domain.usecase.home.GetAllProductsUseCase
+import com.example.khizana_user.domain.usecase.order.CompleteDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.GetDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.GetOrderByIdUseCase
+import com.example.khizana_user.domain.usecase.order.GetOrdersByCustomerIdUseCase
+import com.example.khizana_user.domain.usecase.order.SendInvoiceUseCase
 import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.Module
 import dagger.Provides
@@ -170,14 +179,46 @@ class KhizanaModuleProvider {
         return ConnectionLiveData(context)
     }
 
-
-
-
     @Provides
     fun provideDraftOrderService(
         @ShopifyApi retrofit: Retrofit
     ): ShopifyDraftOrderService {
         return retrofit.create(ShopifyDraftOrderService::class.java)
+    }
+
+    @Provides
+    fun provideGetAllBrandsUseCase (repository: HomeRepositoryImp): GetAllBrandsUseCase {
+
+        return GetAllBrandsUseCase(repository)
+
+    }
+
+    @Provides
+    fun provideGetAllProductsByCategoryUseCase (repository: CategoryRepository): GetAllProductsByCategoryUseCase {
+
+        return GetAllProductsByCategoryUseCase(repository)
+
+    }
+
+    @Provides
+    fun provideGetAllProductsUseCase (repository: HomeRepository): GetAllProductsUseCase {
+
+        return GetAllProductsUseCase(repository)
+
+    }
+
+    @Provides
+    fun provideGetOrderByIdUseCase (repository: OrderRepository): GetOrderByIdUseCase {
+
+        return GetOrderByIdUseCase(repository)
+
+    }
+
+    @Provides
+    fun provideGetOrdersByCustomerIdUseCase(repository: OrderRepository): GetOrdersByCustomerIdUseCase {
+
+        return GetOrdersByCustomerIdUseCase(repository)
+
     }
 
 }

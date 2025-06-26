@@ -2,19 +2,18 @@ package com.example.khizana_user.presentation.order.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.data.dto.draftorderDto.AppliedDiscountDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItem
 import com.example.khizana_user.data.dto.draftorderDto.ShippingAddressDto
 import com.example.khizana_user.domain.model.Orders
-import com.example.khizana_user.domain.usecase.GetOrderByIdUseCase
-import com.example.khizana_user.domain.usecase.GetOrdersByCustomerIdUseCase
-import com.example.khizana_user.domain.usecase.getProductImageUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.UpdateDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.CompleteDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.GetDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.GetOrderByIdUseCase
+import com.example.khizana_user.domain.usecase.order.GetOrdersByCustomerIdUseCase
+import com.example.khizana_user.domain.usecase.order.SendInvoiceUseCase
+import com.example.khizana_user.domain.usecase.order.UpdateDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.getProductImageUseCase
 import com.example.khizana_user.utils.ConnectionLiveData
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,34 +37,20 @@ class OrderViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _orderState = MutableStateFlow<Result<Unit>>(Result.Loading)
-    val orderState: StateFlow<Result<Unit>> = _orderState
+    val orderState = _orderState.asStateFlow()
 
     private val _invoiceUrl = MutableStateFlow<Result<String>>(Result.Loading)
-    val invoiceUrl: StateFlow<Result<String>> = _invoiceUrl
+    val invoiceUrl = _invoiceUrl.asStateFlow()
 
     private val _orders = MutableStateFlow<Result<List<Orders>>>(Result.Loading)
-    val orders: StateFlow<Result<List<Orders>>> = _orders
+    val orders = _orders.asStateFlow()
 
     private val _orderDetails = MutableStateFlow<Result<Orders>>(Result.Loading)
-    val orderDetails: StateFlow<Result<Orders>> = _orderDetails
-
-    private val _networkState = MutableStateFlow(true)
-    val networkState = _networkState.asStateFlow()
+    val orderDetails = _orderDetails.asStateFlow()
 
     private val _productImages = MutableStateFlow<Map<Long, String>>(emptyMap())
-    val productImages: StateFlow<Map<Long, String>> = _productImages
+    val productImages = _productImages.asStateFlow()
 
-    init {
-        observeNetworkState()
-    }
-
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
-    }
 
     fun completeCODOrder(draftOrderId: Long) {
         viewModelScope.launch {
@@ -136,15 +121,9 @@ class OrderViewModel @Inject constructor(
                 val orderList = getOrdersByCustomerIdUseCase(customerId)
                 _orders.value = Result.Success(orderList)
 
-                orderList.forEach { order ->
-                    Log.d("OrderVM", "Order: $order")
-                }
-
-                // _orders.value = Result.Success(orderList)
             } catch (e: Exception) {
                 val error = e.message ?: "Error fetching orders"
                 _orders.value = Result.Error(error)
-                Log.e("OrderVM", "Failed to fetch orders: $error")
             }
         }
     }

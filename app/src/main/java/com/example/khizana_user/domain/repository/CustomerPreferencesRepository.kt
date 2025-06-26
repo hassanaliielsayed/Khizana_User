@@ -15,4 +15,8 @@ interface CustomerPreferencesRepository {
 
     fun getCurrency(): Flow<String?>
 
+    suspend fun saveAddress(governorate: String, city: String)
+
+    suspend fun getAddress(): Pair<String?, String?>
+
 }

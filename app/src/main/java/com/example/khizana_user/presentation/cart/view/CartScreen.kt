@@ -2,8 +2,6 @@ package com.example.khizana_user.presentation.cart.view
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,15 +12,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -59,178 +56,167 @@ fun CartScreen(
     var showClearCartDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<FavoriteItem?>(null) }
     var totalPrice by remember { mutableStateOf(0.0) }
-    val connectionState by viewModel.networkState.collectAsState()
 
     LaunchedEffect(customerId) {
-        if (connectionState) {
-            viewModel.loadCart(customerId)
-        }
+        viewModel.loadCart(customerId)
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        AppLogo()
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorResource(id = R.color.light_blue)
-                    ),
-                    actions = {
-                        TopBarIconButton(
-                            icon = Icons.Default.Home,
-                            contentDescription = stringResource(R.string.home),
-                            onClick = onNavigateToHome
-                        )
-                        TopBarIconButton(
-                            icon = Icons.Default.Favorite,
-                            contentDescription = stringResource(R.string.favorites),
-                            onClick = onNavigateToFavorite
-                        )
-                    }
-                )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    AppLogo()
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
+                actions = {
+                    TopBarIconButton(
+                        icon = Icons.Default.Home,
+                        contentDescription = stringResource(R.string.home),
+                        onClick = onNavigateToHome
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.Favorite,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToFavorite
+                    )
+                }
+            )
+        }
+    ) { padding ->
+        when (val result = cartResult) {
+            Result.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        ) { padding ->
-            when (val result = cartResult) {
-                Result.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+
+            is Result.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        stringResource(R.string.failed_to_load_cart, result.message),
+                        color = Color.Red,
+                        fontFamily = customFontFamily
+                    )
                 }
+            }
 
-                is Result.Error -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            stringResource(R.string.failed_to_load_cart, result.message),
-                            color = Color.Red,
-                            fontFamily = customFontFamily
-                        )
-                    }
-                }
+            is Result.Success -> {
+                val cart = result.data
+                totalPrice = cart.items.sumOf { (it?.price ?: 0.0) * (it?.quantity ?: 0) }
 
-                is Result.Success -> {
-                    val cart = result.data
-                    totalPrice = cart.items.sumOf { (it?.price ?: 0.0) * (it?.quantity ?: 0) }
-
-                    Column(
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 16.dp, end = 16.dp, top = 110.dp)
+                ) {
+                    Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(start = 16.dp, end = 16.dp, top = 110.dp)
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
+                        Text(
+                            stringResource(R.string.your_cart),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontFamily = customFontFamily,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                stringResource(R.string.your_cart),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontFamily = customFontFamily
-                            )
-                            if (cart.items.isNotEmpty()) {
-                                var isPressed by remember { mutableStateOf(false) }
+                                .weight(1f)
+                                .wrapContentWidth(Alignment.CenterHorizontally)
+                        )
 
-                                Button(
-                                    onClick = { showClearCartDialog = true },
-                                    modifier = Modifier
-                                        .height(40.dp)
-                                        .padding(horizontal = 4.dp)
-                                        .shadow(
-                                            elevation = if (isPressed) 0.dp else 4.dp,
-                                            shape = MaterialTheme.shapes.medium,
-                                            clip = false
-                                        ),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(R.color.dark_blue),
-                                        contentColor = Color.White
-                                    ),
-                                    shape = MaterialTheme.shapes.medium,
-                                    border = BorderStroke(
-                                        width = 1.dp,
-                                        color = Color.White
-                                    ),
-                                    elevation = ButtonDefaults.buttonElevation(
-                                        defaultElevation = 0.dp,
-                                        pressedElevation = 0.dp
-                                    ),
-                                    interactionSource = remember { MutableInteractionSource() }.also { interactionSource ->
-                                        isPressed = interactionSource.collectIsPressedAsState().value
-                                    }
+                        if (cart.items.isNotEmpty()) {
+                            var expanded by remember { mutableStateOf(false) }
+
+                            Box {
+                                IconButton(
+                                    onClick = { expanded = true }
                                 ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = stringResource(R.string.clear_all_favorites),
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(
-                                            text = stringResource(R.string.clear_cart),
-                                            fontFamily = customFontFamily,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = stringResource(R.string.options)
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(R.string.clear_cart),
+                                                fontFamily = customFontFamily,
+                                            )
+                                        },
+                                        onClick = {
+                                            expanded = false
+                                            showClearCartDialog = true
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (cart.items.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            EmptyState(
+                                animationRes = R.raw.empity_cart,
+                                message = stringResource(R.string.your_cart_is_empty_add_items_to_see_them_here)
+                            )
+                        }
+                    } else {
+                        // Main scrollable content with fixed height items
+                        LazyColumn(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(cart.items) { item ->
+                                item?.let {
+                                    CartItemColumn(
+                                        item = it,
+                                        onAdd = {
+                                            viewModel.addToCart(
+                                                customerId,
+                                                item.variantId
+                                            )
+                                        },
+                                        onRemove = {
+                                            viewModel.decrementFromCart(
+                                                customerId,
+                                                item.variantId
+                                            )
+                                        },
+                                        onDelete = { itemToDelete = it }
+                                    )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        if (cart.items.isEmpty()) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                EmptyState(
-                                    animationRes = R.raw.empity_cart,
-                                    message = stringResource(R.string.your_cart_is_empty_add_items_to_see_them_here)
-                                )
-                            }
-                        } else {
-                            LazyColumn(
+                        // Fixed height checkout section
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp) // Fixed height for checkout section
+                                .background(Color.White)
+                        ) {
+                            Divider(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(min = 200.dp, max = 500.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                items(cart.items) { item ->
-                                    item?.let {
-                                        CartItemColumn(
-                                            item = it,
-                                            onAdd = {
-                                                viewModel.addToCart(
-                                                    customerId,
-                                                    item.variantId
-                                                )
-                                            },
-                                            onRemove = {
-                                                viewModel.decrementFromCart(
-                                                    customerId,
-                                                    item.variantId
-                                                )
-                                            },
-                                            onDelete = { itemToDelete = it }
-                                        )
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Divider(
+                                    .height(2.dp),
                                 color = colorResource(R.color.dark_blue),
                                 thickness = 2.dp
                             )
@@ -238,7 +224,9 @@ fun CartScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
@@ -262,7 +250,8 @@ fun CartScreen(
                                 onClick = { onCheckoutClick(totalPrice) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(56.dp),
+                                    .height(56.dp) // Fixed height for button
+                                    .padding(horizontal = 16.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = colorResource(
                                         id = R.color.dark_blue
@@ -282,6 +271,7 @@ fun CartScreen(
                 }
             }
         }
+
     }
 
     ConfirmationDialog(
@@ -290,7 +280,7 @@ fun CartScreen(
         onConfirm = { viewModel.clearCart(customerId) },
         title = stringResource(R.string.clear_cart),
         text = stringResource(R.string.are_you_sure_you_want_to_clear_your_cart),
-        confirmText = stringResource(R.string.color)
+        confirmText = stringResource(R.string.clear)
     )
 
     ConfirmationDialog(

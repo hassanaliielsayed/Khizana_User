@@ -36,7 +36,6 @@ import com.example.khizana_user.domain.model.ProductDetails
 import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.cart.viewmodel.CartViewModel
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
-import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.productdetails.viewmodel.ProductDetailsViewModel
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.customFontFamily

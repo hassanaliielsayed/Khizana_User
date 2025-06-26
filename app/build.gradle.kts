@@ -167,4 +167,8 @@ dependencies {
     implementation ("androidx.compose.material:material:1.4.0")
     implementation ("com.airbnb.android:lottie-compose:6.0.0")
 
+
+    //shimmer
+    implementation ("com.google.accompanist:accompanist-placeholder-material:0.31.6-rc")
+
 }

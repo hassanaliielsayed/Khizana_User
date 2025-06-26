@@ -3,7 +3,7 @@
 package com.example.khizana_user.presentation.productdetails.viewmodel
 
 import com.example.khizana_user.domain.model.ProductDetails
-import com.example.khizana_user.domain.usecase.GetProductDetailsUseCase
+import com.example.khizana_user.domain.usecase.details.GetProductDetailsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*

@@ -1,6 +1,5 @@
 package com.example.khizana_user.data.repository
 
-import android.util.Log
 import com.example.khizana_user.data.repository.mapper.toProductByCategoryModel
 import com.example.khizana_user.domain.model.ProductByCategory
 import com.example.khizana_user.domain.repository.CategoryRepository

@@ -1,3 +1,5 @@
+@file:Suppress("NAME_SHADOWING")
+
 package com.example.khizana_user.presentation.cart.view
 
 import android.Manifest
@@ -7,6 +9,7 @@ import android.location.Geocoder
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -27,7 +30,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,6 +71,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.example.khizana_user.R
 import com.example.khizana_user.data.dto.draftorderDto.AppliedDiscountDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItem
@@ -98,28 +104,46 @@ fun CheckoutScreen(
     onPlaceOrderClick: () -> Unit,
     onNavigateToOrderSuccess: () -> Unit,
     onAddressClick: () -> Unit,
+    navController: NavController,
     onPaymentMethodClick: () -> Unit
 ) {
 
+    val selectedAddress by locationViewModel.selectedAddress.collectAsState()
+    val selectedLatLng by locationViewModel.selectedLatLng.collectAsState()
+
+    // Handle saved state
+    val savedLocation by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow<Pair<LatLng, String>?>("selected_location", null)
+        ?.collectAsState() ?: remember { mutableStateOf(null) }
+
+    LaunchedEffect(savedLocation) {
+        savedLocation?.let { (latLng, address) ->
+            locationViewModel.updateAddress(address, latLng)
+            navController.currentBackStackEntry
+                ?.savedStateHandle
+                ?.remove<Pair<LatLng, String>>("selected_location")
+        }
+    }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     var couponCode by remember { mutableStateOf("") }
     var showConfirmationDialog by remember { mutableStateOf(false) }
-    var selectedPaymentMethod by remember { mutableStateOf(PaymentMethod.COD) }
+
 
     val couponState by viewModel.couponState.collectAsStateWithLifecycle()
-    val cartState by viewModel.cartState.collectAsState()
-    val orderState by orderViewModel.orderState.collectAsState()
-    val invoiceUrlState by orderViewModel.invoiceUrl.collectAsState()
-    val connectionState by viewModel.networkState.collectAsState()
+    val cartState by viewModel.cartState.collectAsStateWithLifecycle()
+    val orderState by orderViewModel.orderState.collectAsStateWithLifecycle()
+    val invoiceUrlState by orderViewModel.invoiceUrl.collectAsStateWithLifecycle()
+
 
     val coupon = (couponState as? Result.Success)?.data
     val totalDiscount = if (coupon != null) totalPrice * (coupon.discount / 100.0) else 0.0
     val grandTotal = remember(totalPrice, totalDiscount) { totalPrice - totalDiscount }
 
-    val selectedAddress by locationViewModel.selectedAddress.collectAsState()
-    val selectedLatLng by locationViewModel.selectedLatLng.collectAsState()
+//    val selectedAddress by locationViewModel.selectedAddress.collectAsStateWithLifecycle()
+//    val selectedLatLng by locationViewModel.selectedLatLng.collectAsStateWithLifecycle()
 
     val locationUtils = remember { LocationUtils(context) }
 
@@ -137,6 +161,10 @@ fun CheckoutScreen(
     }
 
     val contect = LocalContext.current
+    val forceOnlinePayment = grandTotal >= 2000
+    var selectedPaymentMethod by remember {
+        mutableStateOf(if (forceOnlinePayment) PaymentMethod.ONLINE else PaymentMethod.COD)
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = object : DefaultLifecycleObserver {
@@ -158,7 +186,8 @@ fun CheckoutScreen(
                 val location = locationUtils.getCurrentLocation().first()
                 val geocoder = Geocoder(context)
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                val address = addresses?.firstOrNull()?.getAddressLine(0) ?: contect.getString(R.string.unknown_address)
+                val address = addresses?.firstOrNull()?.getAddressLine(0)
+                    ?: contect.getString(R.string.unknown_address)
                 locationViewModel.updateAddress(
                     address,
                     LatLng(location.latitude, location.longitude)
@@ -241,9 +270,7 @@ fun CheckoutScreen(
     }
 
     LaunchedEffect(customerId) {
-        if (connectionState) {
-            viewModel.loadCart(customerId)
-        }
+        viewModel.loadCart(customerId)
     }
 
     LaunchedEffect(orderState) {
@@ -257,291 +284,374 @@ fun CheckoutScreen(
         }
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        TopAppBar(
+            title = { Text(stringResource(R.string.checkout)) },
+            navigationIcon = {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = stringResource(R.string.back)
+                    )
+                }
+            }
+        )
+
+        // Shipping Address with Map
+        Card(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(4.dp),
+            shape = RoundedCornerShape(10.dp)
         ) {
-            TopAppBar(
-                title = { Text(stringResource(R.string.checkout)) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
+            Column(Modifier.padding(10.dp)) {
+                Text(
+                    stringResource(R.string.shipping_address),
+                    color = Color(0xFFA1A6B0),
+                    fontSize = 14.sp,
+                    fontFamily = customFontFamily,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    stringResource(R.string.address),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = customFontFamily,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = selectedAddress.ifBlank { stringResource(R.string.please_select_a_location) },
+                    color = colorResource(R.color.content_color),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = customFontFamily,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row {
+                    Button(
+                        onClick = { autocompleteLauncher() },
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.content_color))
+                    ) {
+                        Text(
+                            stringResource(R.string.change_address),
+                            color = Color.Black, fontFamily = customFontFamily,
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            userSelectedLocation = true
+                            onAddressClick()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.content_color))
+                    ) {
+                        Text(
+                            stringResource(R.string.select_on_map),
+                            color = Color.Black, fontFamily = customFontFamily,
+
+                            )
                     }
                 }
-            )
+            }
+        }
 
-            // Shipping Address with Map
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Column(Modifier.padding(10.dp)) {
-                    Text(stringResource(R.string.shipping_address), color = Color(0xFFA1A6B0), fontSize = 14.sp,fontFamily = customFontFamily,)
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.address), fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
-                    Spacer(modifier = Modifier.height(4.dp))
+        // Payment Method
+
+        var expanded by remember { mutableStateOf(false) }
+
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            elevation = CardDefaults.cardElevation(4.dp),
+            shape = RoundedCornerShape(10.dp)
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) {
+                Text(
+                    "Payment Method",
+                    color = Color(0xFFA1A6B0),
+                    fontSize = 14.sp,
+                    fontFamily = customFontFamily,
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_payment_method),
+                        contentDescription = "Payment Method",
+                        modifier = Modifier.size(50.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // Payment method text and dropdown
+                    Box(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            when (selectedPaymentMethod) {
+                                PaymentMethod.COD -> "Cash on Delivery (COD)"
+                                PaymentMethod.ONLINE -> "Online Payment"
+                            },
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = customFontFamily,
+                        )
+                    }
+
+                    // Dropdown menu
+                    Box(
+                        modifier = Modifier.wrapContentSize(Alignment.TopEnd)
+                    ) {
+                        IconButton(
+                            onClick = { expanded = true }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Select Payment Method"
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Cash on Delivery (COD)",
+                                        fontFamily = customFontFamily,
+                                    )
+                                },
+                                onClick = {
+                                    if (!forceOnlinePayment) {
+                                        selectedPaymentMethod = PaymentMethod.COD
+                                        expanded = false
+                                    }
+                                },
+                                enabled = !forceOnlinePayment
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Online Payment", fontFamily = customFontFamily) },
+                                onClick = {
+                                    selectedPaymentMethod = PaymentMethod.ONLINE
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Fees
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(4.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = selectedAddress.ifBlank { stringResource(R.string.please_select_a_location) },
-                        color = colorResource(R.color.content_color),
+                        "Sub Total",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = customFontFamily,
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row {
-                        Button(
-                            onClick = { autocompleteLauncher() },
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.content_color))
-                        ) {
-                            Text(
-                                stringResource(R.string.change_address),
-                                color = Color.Black,fontFamily = customFontFamily,
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Button(
-                            onClick = {
-                                userSelectedLocation = true
-                                onAddressClick()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.content_color))
-                        ) {
-                            Text(
-                                stringResource(R.string.select_on_map),
-                                color = Color.Black,fontFamily = customFontFamily,
-
-                            )
-                        }
-                    }
+                    Text(
+                        totalPrice.toCurrentCurrency(),
+                        color = Color(0xFF929292),
+                        fontFamily = customFontFamily,
+                    )
+                }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Shipping Fees",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = customFontFamily,
+                    )
+                    Text("0.0 EGP", color = Color(0xFF929292), fontFamily = customFontFamily)
                 }
             }
-
-            // Payment Method
-            var expanded by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Payment Method", color = Color(0xFFA1A6B0), fontSize = 14.sp,fontFamily = customFontFamily,)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 8.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_payment_method),
-                            contentDescription = "Payment Method",
-                            modifier = Modifier.size(50.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        // Payment method text and dropdown
-                        Box(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                when (selectedPaymentMethod) {
-                                    PaymentMethod.COD -> "Cash on Delivery (COD)"
-                                    PaymentMethod.ONLINE -> "Online Payment"
-                                },
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = customFontFamily,
-                            )
-                        }
-
-                        // Dropdown menu
-                        Box(
-                            modifier = Modifier.wrapContentSize(Alignment.TopEnd)
-                        ) {
-                            IconButton(
-                                onClick = { expanded = true }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowForwardIos,
-                                    contentDescription = "Select Payment Method"
-                                )
-                            }
-
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Cash on Delivery (COD)",fontFamily = customFontFamily,) },
-                                    onClick = {
-                                        selectedPaymentMethod = PaymentMethod.COD
-                                        expanded = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Online Payment",fontFamily = customFontFamily,) },
-                                    onClick = {
-                                        selectedPaymentMethod = PaymentMethod.ONLINE
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Fees
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Sub Total", fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
-                        Text(totalPrice.toCurrentCurrency(), color = Color(0xFF929292),fontFamily = customFontFamily,)
-                    }
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Shipping Fees", fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
-                        Text("0.0 EGP", color = Color(0xFF929292),fontFamily = customFontFamily,)
-                    }
-                }
-            }
-
-            // Coupon
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Coupon", color = Color(0xFFA1A6B0), fontSize = 14.sp,fontFamily = customFontFamily,)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp, bottom = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = couponCode,
-                            onValueChange = { couponCode = it },
-                            modifier = Modifier.weight(1f),
-                            placeholder = { Text("Enter coupon code") },
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Button(
-                            onClick = { viewModel.validateCoupon(couponCode) },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
-                        ) {
-                            Text(
-                                "Validate",
-                                color = Color.Black,fontFamily = customFontFamily,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Discount
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Discount", color = Color(0xFFA1A6B0), fontSize = 14.sp,fontFamily = customFontFamily,)
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Discount", fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
-                        Text(totalDiscount.toCurrentCurrency(), color = Color(0xFF929292),  fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
-                    }
-                }
-            }
-
-            // Grand Total
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text("Grand Total", color = Color(0xFFA1A6B0), fontSize = 14.sp,  fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Total Amount", fontSize = 14.sp, fontWeight = FontWeight.Bold,fontFamily = customFontFamily,)
-                        Text(grandTotal.toCurrentCurrency(), color = Color(0xFF929292),fontFamily = customFontFamily,)
-                    }
-                }
-            }
-
-            // Place Order Button
-            Button(
-
-                onClick = { showConfirmationDialog = true },
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue)),
-                elevation = ButtonDefaults.buttonElevation(8.dp),
-            ) {
-                Text(
-                    "Place Order",
-                    color = Color.Black,
-                    fontFamily = customFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-            }
-
         }
+
+        // Coupon
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(4.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) {
+                Text(
+                    "Coupon",
+                    color = Color(0xFFA1A6B0),
+                    fontSize = 14.sp,
+                    fontFamily = customFontFamily,
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = couponCode,
+                        onValueChange = { couponCode = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Enter coupon code") },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Button(
+                        onClick = { viewModel.validateCoupon(couponCode) },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue))
+                    ) {
+                        Text(
+                            "Validate",
+                            color = Color.Black, fontFamily = customFontFamily,
+                        )
+                    }
+                }
+            }
+        }
+
+        // Discount
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(4.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) {
+                Text(
+                    "Discount",
+                    color = Color(0xFFA1A6B0),
+                    fontSize = 14.sp,
+                    fontFamily = customFontFamily,
+                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Discount",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = customFontFamily,
+                    )
+                    Text(
+                        totalDiscount.toCurrentCurrency(),
+                        color = Color(0xFF929292),
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = customFontFamily,
+                    )
+                }
+            }
+        }
+
+        // Grand Total
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(4.dp),
+            shape = RoundedCornerShape(10.dp)
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) {
+                Text(
+                    "Grand Total",
+                    color = Color(0xFFA1A6B0),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = customFontFamily,
+                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Total Amount",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = customFontFamily,
+                    )
+                    Text(
+                        grandTotal.toCurrentCurrency(),
+                        color = Color(0xFF929292),
+                        fontFamily = customFontFamily,
+                    )
+                }
+            }
+        }
+
+        // Place Order Button
+        Button(
+
+            onClick = { showConfirmationDialog = true },
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue)),
+            elevation = ButtonDefaults.buttonElevation(8.dp),
+        ) {
+            Text(
+                "Place Order",
+                color = Color.Black,
+                fontFamily = customFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        }
+
     }
+
 
     ConfirmationDialog(
         showDialog = showConfirmationDialog,
         onDismiss = { showConfirmationDialog = false },
         onConfirm = {
+            if (forceOnlinePayment && selectedPaymentMethod == PaymentMethod.COD) {
+                // Show error toast or dialog
+                Toast.makeText(
+                    context,
+                    "Orders over 3000 EGP must be paid online",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@ConfirmationDialog
+            }
             showConfirmationDialog = false
             coroutineScope.launch {
                 val draftOrder = (cartState as? Result.Success)?.data

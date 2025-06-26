@@ -1,6 +1,5 @@
 package com.example.khizana_user.data.dto
 
-
 data class CouponsResponseDto(
     val price_rules: List<Price_rulesItemEntity>
 )
