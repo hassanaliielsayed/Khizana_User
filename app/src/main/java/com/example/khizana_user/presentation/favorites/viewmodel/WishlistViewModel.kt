@@ -33,23 +33,8 @@ class WishlistViewModel @Inject constructor(
     private val _toggleFavoriteState = MutableStateFlow<Result<Boolean>>(Result.Success(false))
     val toggleFavoriteState = _toggleFavoriteState.asStateFlow()
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState = _networkState.asStateFlow()
-
     private val _loading = MutableStateFlow(true)
     val loading = _loading.asStateFlow()
-
-    init {
-        observeNetworkState()
-    }
-
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
-    }
 
     fun loadFavorites(customerId: Long) {
         viewModelScope.launch {

@@ -117,7 +117,6 @@ fun SettingScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val selectedCurrency by viewModel.state.collectAsStateWithLifecycle()
-    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
 
     LaunchedEffect(showAddressDialog) {
         if (showAddressDialog) {
@@ -126,10 +125,6 @@ fun SettingScreen(
         }
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-        return
-    }
     Scaffold(
         topBar = {
             TopAppBar(

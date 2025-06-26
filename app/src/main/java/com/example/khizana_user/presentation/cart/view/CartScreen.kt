@@ -56,223 +56,222 @@ fun CartScreen(
     var showClearCartDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<FavoriteItem?>(null) }
     var totalPrice by remember { mutableStateOf(0.0) }
-    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
 
     LaunchedEffect(customerId) {
-        if (connectionState) {
-            viewModel.loadCart(customerId)
-        }
+        viewModel.loadCart(customerId)
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        AppLogo()
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorResource(id = R.color.light_blue)
-                    ),
-                    actions = {
-                        TopBarIconButton(
-                            icon = Icons.Default.Home,
-                            contentDescription = stringResource(R.string.home),
-                            onClick = onNavigateToHome
-                        )
-                        TopBarIconButton(
-                            icon = Icons.Default.Favorite,
-                            contentDescription = stringResource(R.string.favorites),
-                            onClick = onNavigateToFavorite
-                        )
-                    }
-                )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    AppLogo()
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
+                actions = {
+                    TopBarIconButton(
+                        icon = Icons.Default.Home,
+                        contentDescription = stringResource(R.string.home),
+                        onClick = onNavigateToHome
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.Favorite,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToFavorite
+                    )
+                }
+            )
+        }
+    ) { padding ->
+        when (val result = cartResult) {
+            Result.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        ) { padding ->
-            when (val result = cartResult) {
-                Result.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+
+            is Result.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        stringResource(R.string.failed_to_load_cart, result.message),
+                        color = Color.Red,
+                        fontFamily = customFontFamily
+                    )
                 }
+            }
 
-                is Result.Error -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            stringResource(R.string.failed_to_load_cart, result.message),
-                            color = Color.Red,
-                            fontFamily = customFontFamily
-                        )
-                    }
-                }
+            is Result.Success -> {
+                val cart = result.data
+                totalPrice = cart.items.sumOf { (it?.price ?: 0.0) * (it?.quantity ?: 0) }
 
-                is Result.Success -> {
-                    val cart = result.data
-                    totalPrice = cart.items.sumOf { (it?.price ?: 0.0) * (it?.quantity ?: 0) }
-
-                    Column(
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 16.dp, end = 16.dp, top = 110.dp)
+                ) {
+                    Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(start = 16.dp, end = 16.dp, top = 110.dp)
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
+                        Text(
+                            stringResource(R.string.your_cart),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontFamily = customFontFamily,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .weight(1f)
+                                .wrapContentWidth(Alignment.CenterHorizontally)
+                        )
+
+                        if (cart.items.isNotEmpty()) {
+                            var expanded by remember { mutableStateOf(false) }
+
+                            Box {
+                                IconButton(
+                                    onClick = { expanded = true }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = stringResource(R.string.options)
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                stringResource(R.string.clear_cart),
+                                                fontFamily = customFontFamily,
+                                            )
+                                        },
+                                        onClick = {
+                                            expanded = false
+                                            showClearCartDialog = true
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (cart.items.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                stringResource(R.string.your_cart),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontFamily = customFontFamily,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                            EmptyState(
+                                animationRes = R.raw.empity_cart,
+                                message = stringResource(R.string.your_cart_is_empty_add_items_to_see_them_here)
                             )
-
-                            if (cart.items.isNotEmpty()) {
-                                var expanded by remember { mutableStateOf(false) }
-
-                                Box {
-                                    IconButton(
-                                        onClick = { expanded = true }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.MoreVert,
-                                            contentDescription = stringResource(R.string.options)
-                                        )
-                                    }
-
-                                    DropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false }
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text(stringResource(R.string.clear_cart), fontFamily = customFontFamily,) },
-                                            onClick = {
-                                                expanded = false
-                                                showClearCartDialog = true
-                                            }
-                                        )
-                                    }
+                        }
+                    } else {
+                        // Main scrollable content with fixed height items
+                        LazyColumn(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(cart.items) { item ->
+                                item?.let {
+                                    CartItemColumn(
+                                        item = it,
+                                        onAdd = {
+                                            viewModel.addToCart(
+                                                customerId,
+                                                item.variantId
+                                            )
+                                        },
+                                        onRemove = {
+                                            viewModel.decrementFromCart(
+                                                customerId,
+                                                item.variantId
+                                            )
+                                        },
+                                        onDelete = { itemToDelete = it }
+                                    )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        if (cart.items.isEmpty()) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                EmptyState(
-                                    animationRes = R.raw.empity_cart,
-                                    message = stringResource(R.string.your_cart_is_empty_add_items_to_see_them_here)
-                                )
-                            }
-                        } else {
-                            // Main scrollable content with fixed height items
-                            LazyColumn(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                items(cart.items) { item ->
-                                    item?.let {
-                                        CartItemColumn(
-                                            item = it,
-                                            onAdd = {
-                                                viewModel.addToCart(
-                                                    customerId,
-                                                    item.variantId
-                                                )
-                                            },
-                                            onRemove = {
-                                                viewModel.decrementFromCart(
-                                                    customerId,
-                                                    item.variantId
-                                                )
-                                            },
-                                            onDelete = { itemToDelete = it }
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Fixed height checkout section
-                            Column(
+                        // Fixed height checkout section
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp) // Fixed height for checkout section
+                                .background(Color.White)
+                        ) {
+                            Divider(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(200.dp) // Fixed height for checkout section
-                                    .background(Color.White)
+                                    .height(2.dp),
+                                color = colorResource(R.color.dark_blue),
+                                thickness = 2.dp
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Divider(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(2.dp),
-                                    color = colorResource(R.color.dark_blue),
-                                    thickness = 2.dp
+                                Text(
+                                    stringResource(R.string.total),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = customFontFamily
                                 )
+                                Text(
+                                    text = totalPrice.toCurrentCurrency(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colorResource(R.color.content_color),
+                                    fontFamily = customFontFamily
+                                )
+                            }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        stringResource(R.string.total),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = customFontFamily
+                            Button(
+                                onClick = { onCheckoutClick(totalPrice) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp) // Fixed height for button
+                                    .padding(horizontal = 16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(
+                                        id = R.color.dark_blue
                                     )
-                                    Text(
-                                        text = totalPrice.toCurrentCurrency(),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = colorResource(R.color.content_color),
-                                        fontFamily = customFontFamily
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Button(
-                                    onClick = { onCheckoutClick(totalPrice) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(56.dp) // Fixed height for button
-                                        .padding(horizontal = 16.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(
-                                            id = R.color.dark_blue
-                                        )
-                                    )
-                                ) {
-                                    Text(
-                                        stringResource(R.string.proceed_to_checkout),
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-                                        fontFamily = customFontFamily
-                                    )
-                                }
+                                )
+                            ) {
+                                Text(
+                                    stringResource(R.string.proceed_to_checkout),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black,
+                                    fontFamily = customFontFamily
+                                )
                             }
                         }
                     }
                 }
             }
         }
+
     }
 
     ConfirmationDialog(
