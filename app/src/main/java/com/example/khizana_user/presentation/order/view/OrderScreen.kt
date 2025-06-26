@@ -236,7 +236,7 @@ fun OrderItem(order: Orders, navController: NavHostController) {
                         color = Color.DarkGray
                     )
                     Text(
-                        text = order.totalPrice.toCurrentCurrency(),
+                        text = order.totalPrice.toCurrentCurrency() +  " EGP",
                         fontFamily = customFontFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
