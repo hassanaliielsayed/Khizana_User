@@ -172,4 +172,5 @@
     <string name="enter_city">Enter your city</string>
     <string name="please_select_governorate_and_city">Please select governorate and enter city</string>
     <string name="save">Save</string>
+    <string name="title_activity_shimmer_effect">ShimmerEffect</string>
 </resources>

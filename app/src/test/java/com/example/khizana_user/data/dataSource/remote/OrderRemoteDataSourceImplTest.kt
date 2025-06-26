@@ -6,7 +6,7 @@ import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderServ
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import com.example.khizana_user.data.dto.*
-import com.example.khizana_user.data.repository.OrderRemoteDataSource
+import com.example.khizana_user.data.repository.order.OrderRemoteDataSource
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers

@@ -40,6 +40,7 @@ import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.productdetails.view.GuestLoginDialog
 import com.example.khizana_user.presentation.profile.view.EmptyState
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.isGuestUser
@@ -188,6 +189,19 @@ fun SearchScreen(
 
                         )
                     }
+                }
+                if (showGuestDialog) {
+                    GuestLoginDialog(
+                        onDismiss = { showGuestDialog = false },
+                        onLoginClick = {
+                            showGuestDialog = false
+                            navController.navigate(context.getString(R.string.login))
+                        },
+                        onContinueClick = {
+                            showGuestDialog = false
+                            guestAction?.invoke()
+                        }
+                    )
                 }
             }
         }
