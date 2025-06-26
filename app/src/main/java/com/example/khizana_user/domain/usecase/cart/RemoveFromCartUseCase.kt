@@ -1,6 +1,7 @@
 package com.example.khizana_user.domain.usecase.cart
 
 import com.example.khizana_user.domain.repository.CartRepository
+
 class RemoveFromCartUseCase (
     private val repository: CartRepository
 ) {

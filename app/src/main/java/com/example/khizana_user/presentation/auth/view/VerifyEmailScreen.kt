@@ -9,11 +9,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.khizana_user.R
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.utils.AuthState
+import com.example.khizana_user.utils.customFontFamily
 import kotlinx.coroutines.delay
 
 @Composable
@@ -66,7 +69,8 @@ fun VerifyEmailScreen(
     LaunchedEffect(isVerified) {
         if (isVerified && !stopPolling) {
             Log.d("VerifyEmailScreen", "LaunchedEffect: email verified, navigating...")
-            Toast.makeText(context, "Email verified! Logging you in...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context,
+                context.getString(R.string.email_verified_logging_you_in), Toast.LENGTH_SHORT).show()
             stopPolling = true
             viewModel.resetState()
             onLoginComplete()
@@ -89,25 +93,31 @@ fun VerifyEmailScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Verify Your Email", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.verify_your_email), style = MaterialTheme.typography.headlineSmall,fontFamily = customFontFamily)
         Spacer(Modifier.height(16.dp))
 
-        Text("We've sent an email to ${email ?: "your account"}. Please verify it before continuing.")
+        Text(
+            stringResource(
+                R.string.we_ve_sent_an_email_to_please_verify_it_before_continuing,
+                email ?: stringResource(R.string.your_account)
+            ), fontFamily = customFontFamily)
         Spacer(Modifier.height(16.dp))
 
         if (canResend) {
             Text(
-                "Resend Email",
+                stringResource(R.string.resend_email),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable {
                     viewModel.sendEmailVerification()
-                    Toast.makeText(context, "Verification email resent.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context,
+                        context.getString(R.string.verification_email_resent), Toast.LENGTH_SHORT).show()
                     canResend = false
                     timeLeft = 60
-                }
+                },
+                fontFamily = customFontFamily
             )
         } else {
-            Text("You can resend in $timeLeft seconds.")
+            Text(stringResource(R.string.you_can_resend_in_seconds, timeLeft) , fontFamily = customFontFamily)
         }
 
         Spacer(Modifier.height(24.dp))
@@ -118,12 +128,12 @@ fun VerifyEmailScreen(
         }
 
         if (timeoutReached) {
-            Text("Verification timeout. Please try again.", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(R.string.verification_timeout_please_try_again), color = MaterialTheme.colorScheme.error, fontFamily = customFontFamily)
             Spacer(Modifier.height(16.dp))
         }
 
         TextButton(onClick = onBackToLogin) {
-            Text("Back to Login")
+            Text(stringResource(R.string.back_to_login), fontFamily = customFontFamily)
         }
     }
 }
