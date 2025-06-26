@@ -361,7 +361,7 @@ private fun OrderCard(order: Orders, onClick: () -> Unit) {
                         fontFamily = customFontFamily,
                     )
                     Text(
-                        text = order.totalPrice.toCurrentCurrency(),
+                        text = order.totalPrice.toCurrentCurrency() + " EGP",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = customFontFamily,

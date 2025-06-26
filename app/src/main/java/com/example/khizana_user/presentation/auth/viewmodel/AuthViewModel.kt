@@ -2,7 +2,6 @@ package com.example.khizana_user.presentation.auth.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Customer
 import com.example.khizana_user.domain.usecase.auth.CheckEmailVerifiedUseCase
