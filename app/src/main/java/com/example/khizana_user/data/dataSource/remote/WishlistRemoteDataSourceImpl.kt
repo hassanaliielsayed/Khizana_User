@@ -1,6 +1,5 @@
 package com.example.khizana_user.data.dataSource.remote
 
-import android.util.Log
 import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
 import com.example.khizana_user.data.dto.draftorderDto.*
 import com.example.khizana_user.data.repository.fav.WishlistRemoteDataSource
@@ -22,7 +21,6 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             val favoriteDraft = getCustomerFavoritesDraft(customerId)
 
             if (favoriteDraft != null) {
-                Log.d(TAG, "Updating existing FAVORITES draft: ${favoriteDraft.id}")
                 val updatedItems = favoriteDraft.lineItems.toMutableList()
                 if (updatedItems.none { it.variantId == variantId }) {
                     updatedItems.add(DraftOrderItemDto(null, variantId, "Fav Item", 1))
@@ -38,7 +36,6 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
 
                 service.updateDraftOrder(favoriteDraft.id, request)
             } else {
-                Log.d(TAG, "Creating new FAVORITES draft for $customerId")
                 val request = DraftOrderRequest(
                     draftOrder = DraftOrderData(
                         line_items = listOf(DraftOrderItem(variantId, 1)),
@@ -50,14 +47,12 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
                 val response = service.createDraftOrder(request)
                 if (!response.isSuccessful) {
                     val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "Create draft failed: ${response.code()} $errorBody")
                     return Result.failure(Exception("Shopify draft creation failed: $errorBody"))
                 }
             }
 
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in addToFavorites: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -79,7 +74,6 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             service.updateDraftOrder(favoriteDraft.id, request)
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in removeFromFavorites: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -112,7 +106,6 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
                 )
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Error in getFavorites: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -124,7 +117,6 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             service.deleteDraftOrder(favoriteDraft.id)
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in deleteFavoritesDraft: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -135,11 +127,8 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
             val allDrafts = service.getDraftOrders().body()?.draftOrders.orEmpty()
             allDrafts.find {
                 it.note == favoritesNote(customerId) && it.customer.id == customerId
-            }.also {
-                Log.d(TAG, "Fetched draft for $customerId: ${it?.id}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get customer draft: ${e.message}", e)
             null
         }
     }
@@ -157,7 +146,6 @@ class WishlistRemoteDataSourceImpl @Inject constructor(
 
         Pair(imageUrl, price)
     } catch (e: Exception) {
-        Log.e(TAG, "Failed to resolve product details for variantId $variantId: ${e.message}", e)
         Pair("", 0.0)
     }
 }

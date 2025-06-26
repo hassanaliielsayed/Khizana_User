@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -24,8 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.khizana_user.R
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.utils.AuthState
+import com.example.khizana_user.utils.customFontFamily
 
 @Composable
 fun RegisterScreen(
@@ -53,7 +57,8 @@ fun RegisterScreen(
 
     LaunchedEffect(state) {
         if (state is AuthState.VerificationEmailSent) {
-            Toast.makeText(context, "Verification email sent. Please check your inbox.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context,
+                context.getString(R.string.verification_email_sent_please_check_your_inbox), Toast.LENGTH_LONG).show()
             viewModel.resetState()
             onRegisterSuccess()
         }
@@ -62,7 +67,14 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(colors = listOf(Color(0xFFEEF2F3), Color(0xFF8E9EAB))))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFEEF2F3),
+                        Color(0xFF8E9EAB)
+                    )
+                )
+            )
             .padding(20.dp)
     ) {
         Column(
@@ -70,17 +82,18 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Sign Up", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+            Text(stringResource(R.string.sign_up), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray, fontFamily = customFontFamily)
 
             Spacer(Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name") },
+                label = { Text(stringResource(R.string.name)) },
                 singleLine = true,
                 shape = RoundedCornerShape(50),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(fontFamily = customFontFamily)
             )
 
             Spacer(Modifier.height(8.dp))
@@ -88,10 +101,11 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.userEmail)) },
                 singleLine = true,
                 shape = RoundedCornerShape(50),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(fontFamily = customFontFamily)
             )
 
             Spacer(Modifier.height(8.dp))
@@ -99,10 +113,11 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = mobile,
                 onValueChange = { mobile = it },
-                label = { Text("Mobile") },
+                label = { Text(stringResource(R.string.mobile)) },
                 singleLine = true,
                 shape = RoundedCornerShape(50),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(fontFamily = customFontFamily)
             )
 
             Spacer(Modifier.height(8.dp))
@@ -110,7 +125,7 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.password)) },
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -122,17 +137,19 @@ fun RegisterScreen(
                     }
                 },
                 shape = RoundedCornerShape(50),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(fontFamily = customFontFamily)
             )
 
             Spacer(Modifier.height(12.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = agreeChecked, onCheckedChange = { agreeChecked = it })
-                Text("I agree with ")
-                Text("privacy", color = Color.Magenta)
-                Text(" and ")
-                Text("Policy", color = Color.Magenta)
+                Text(stringResource(R.string.i_agree_with),  fontFamily = customFontFamily)
+                Text(stringResource(R.string.privacy), color = Color.White,fontFamily = customFontFamily, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.and),fontFamily = customFontFamily)
+                Text(stringResource(R.string.policy), color = Color.White,fontFamily = customFontFamily, fontWeight = FontWeight.Bold)
+
             }
 
             Spacer(Modifier.height(16.dp))
@@ -142,7 +159,8 @@ fun RegisterScreen(
                     if (agreeChecked) {
                         viewModel.register(email.trim(), password.trim(), name.trim())
                     } else {
-                        Toast.makeText(context, "You must agree to the policy to continue.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context,
+                            context.getString(R.string.you_must_agree_to_the_policy_to_continue), Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
@@ -157,11 +175,12 @@ fun RegisterScreen(
             Spacer(Modifier.height(20.dp))
 
             Text(
-                "Already have an account? Sign In",
+                stringResource(R.string.already_have_an_account_sign_in),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .clickable { onNavigateToLogin() },
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                fontFamily = customFontFamily
             )
 
             when (state) {
@@ -171,7 +190,7 @@ fun RegisterScreen(
                 }
                 is AuthState.Error -> {
                     Spacer(Modifier.height(16.dp))
-                    Text("Error: ${(state as AuthState.Error).message}", color = Color.Red)
+                    Text("Error: ${(state as AuthState.Error).message}", color = Color.Red, fontFamily = customFontFamily)
                 }
                 else -> Unit
             }

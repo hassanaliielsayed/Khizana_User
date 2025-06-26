@@ -1,6 +1,5 @@
 package com.example.khizana_user.data.repository.mapper
 
-
 import com.example.khizana_user.R
 import com.example.khizana_user.data.dto.CouponsResponseDto
 import com.example.khizana_user.data.dto.Price_rulesItemEntity
