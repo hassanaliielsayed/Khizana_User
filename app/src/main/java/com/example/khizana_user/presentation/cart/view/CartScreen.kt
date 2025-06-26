@@ -56,7 +56,7 @@ fun CartScreen(
     var showClearCartDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<FavoriteItem?>(null) }
     var totalPrice by remember { mutableStateOf(0.0) }
-    val connectionState by viewModel.networkState.collectAsState()
+    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
 
     LaunchedEffect(customerId) {
         if (connectionState) {

@@ -19,6 +19,7 @@ import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,19 +37,19 @@ class OrderViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _orderState = MutableStateFlow<Result<Unit>>(Result.Loading)
-    val orderState: StateFlow<Result<Unit>> = _orderState
+    val orderState = _orderState.asStateFlow()
 
     private val _invoiceUrl = MutableStateFlow<Result<String>>(Result.Loading)
-    val invoiceUrl: StateFlow<Result<String>> = _invoiceUrl
+    val invoiceUrl = _invoiceUrl.asStateFlow()
 
     private val _orders = MutableStateFlow<Result<List<Orders>>>(Result.Loading)
-    val orders: StateFlow<Result<List<Orders>>> = _orders
+    val orders = _orders.asStateFlow()
 
     private val _orderDetails = MutableStateFlow<Result<Orders>>(Result.Loading)
-    val orderDetails: StateFlow<Result<Orders>> = _orderDetails
+    val orderDetails = _orderDetails.asStateFlow()
 
     private val _productImages = MutableStateFlow<Map<Long, String>>(emptyMap())
-    val productImages: StateFlow<Map<Long, String>> = _productImages
+    val productImages = _productImages.asStateFlow()
 
 
     fun completeCODOrder(draftOrderId: Long) {

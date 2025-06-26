@@ -59,7 +59,7 @@ class HomeViewModel @Inject constructor(
     val error = _error.asStateFlow()
 
     private val _searchFocusType = MutableStateFlow<SearchFocusType?>(null)
-    val searchFocusType: StateFlow<SearchFocusType?> = _searchFocusType
+    val searchFocusType = _searchFocusType.asStateFlow()
 
     fun setFocus(type: SearchFocusType?) {
         _searchFocusType.value = type

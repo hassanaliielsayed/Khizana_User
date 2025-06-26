@@ -39,7 +39,7 @@ class CartViewModel @Inject constructor(
     val couponState = _couponState.asStateFlow()
 
     private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
+    val networkState = _networkState.asStateFlow()
 
     init {
         observeNetworkState()
