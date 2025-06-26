@@ -259,17 +259,6 @@ fun AppNavGraph(
 
             val locationViewModel: LocationViewModel = hiltViewModel()
 
-            val selectedLocation = backStackEntry.savedStateHandle
-                .getLiveData<Pair<LatLng, String>>("selected_location")
-                .observeAsState()
-
-            selectedLocation.value?.let { (latLng, address) ->
-                LaunchedEffect(latLng) {
-                    locationViewModel.updateAddress(address, latLng)
-                    backStackEntry.savedStateHandle.remove<Pair<LatLng, String>>("selected_location")
-                }
-            }
-
             CheckoutScreen(
                 customerId = customerId,
                 totalPrice = totalPrice,

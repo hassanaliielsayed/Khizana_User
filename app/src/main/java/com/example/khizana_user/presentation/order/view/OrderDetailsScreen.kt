@@ -45,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.TopBarIconButton
@@ -62,8 +63,8 @@ fun OrderDetailsScreen(
     onNavigateToSetting: () -> Unit,
     onNavigateToCart: () -> Unit
 ) {
-    val state by viewModel.orderDetails.collectAsState()
-    val productImages by viewModel.productImages.collectAsState()
+    val state by viewModel.orderDetails.collectAsStateWithLifecycle()
+    val productImages by viewModel.productImages.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
 

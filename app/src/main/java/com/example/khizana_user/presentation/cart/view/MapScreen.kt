@@ -17,9 +17,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.cart.viewmodel.LocationViewModel
 import com.example.khizana_user.utils.LocationUtils
 import com.example.khizana_user.utils.customFontFamily
 import com.google.android.gms.location.LocationServices
@@ -154,7 +156,7 @@ fun MapScreen(
                             id = R.color.dark_blue
                         )
                     )
-                ) {
+                ){
                     Text(stringResource(R.string.save_location), fontFamily = customFontFamily, fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black)

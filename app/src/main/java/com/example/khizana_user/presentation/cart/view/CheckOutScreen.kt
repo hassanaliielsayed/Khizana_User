@@ -71,6 +71,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.example.khizana_user.R
 import com.example.khizana_user.data.dto.draftorderDto.AppliedDiscountDto
 import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItem
@@ -114,17 +115,17 @@ fun CheckoutScreen(
 
 
     val couponState by viewModel.couponState.collectAsStateWithLifecycle()
-    val cartState by viewModel.cartState.collectAsState()
-    val orderState by orderViewModel.orderState.collectAsState()
-    val invoiceUrlState by orderViewModel.invoiceUrl.collectAsState()
-    val connectionState by viewModel.networkState.collectAsState()
+    val cartState by viewModel.cartState.collectAsStateWithLifecycle()
+    val orderState by orderViewModel.orderState.collectAsStateWithLifecycle()
+    val invoiceUrlState by orderViewModel.invoiceUrl.collectAsStateWithLifecycle()
+    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
 
     val coupon = (couponState as? Result.Success)?.data
     val totalDiscount = if (coupon != null) totalPrice * (coupon.discount / 100.0) else 0.0
     val grandTotal = remember(totalPrice, totalDiscount) { totalPrice - totalDiscount }
 
-    val selectedAddress by locationViewModel.selectedAddress.collectAsState()
-    val selectedLatLng by locationViewModel.selectedLatLng.collectAsState()
+    val selectedAddress by locationViewModel.selectedAddress.collectAsStateWithLifecycle()
+    val selectedLatLng by locationViewModel.selectedLatLng.collectAsStateWithLifecycle()
 
     val locationUtils = remember { LocationUtils(context) }
 

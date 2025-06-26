@@ -106,8 +106,8 @@ fun SettingScreen(
         "Sohag"
     )
     var showAddressDialog by remember { mutableStateOf(false) }
-    val governorate by viewModel.governorate.collectAsState()
-    val city by viewModel.city.collectAsState()
+    val governorate by viewModel.governorate.collectAsStateWithLifecycle()
+    val city by viewModel.city.collectAsStateWithLifecycle()
     var tempGovernorate by remember { mutableStateOf("") }
     var tempCity by remember { mutableStateOf("") }
 

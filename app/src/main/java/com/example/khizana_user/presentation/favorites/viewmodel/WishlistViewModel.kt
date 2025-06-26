@@ -14,6 +14,7 @@ import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,16 +28,16 @@ class WishlistViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _favoritesState = MutableStateFlow<FavoriteList?>(null)
-    val favoritesState: StateFlow<FavoriteList?> = _favoritesState
+    val favoritesState = _favoritesState.asStateFlow()
 
     private val _toggleFavoriteState = MutableStateFlow<Result<Boolean>>(Result.Success(false))
-    val toggleFavoriteState: StateFlow<Result<Boolean>> = _toggleFavoriteState
+    val toggleFavoriteState = _toggleFavoriteState.asStateFlow()
 
     private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
+    val networkState = _networkState.asStateFlow()
 
     private val _loading = MutableStateFlow(true)
-    val loading: StateFlow<Boolean> = _loading
+    val loading = _loading.asStateFlow()
 
     init {
         observeNetworkState()

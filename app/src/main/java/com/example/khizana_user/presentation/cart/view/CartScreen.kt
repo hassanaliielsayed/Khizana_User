@@ -56,7 +56,7 @@ fun CartScreen(
     var showClearCartDialog by remember { mutableStateOf(false) }
     var itemToDelete by remember { mutableStateOf<FavoriteItem?>(null) }
     var totalPrice by remember { mutableStateOf(0.0) }
-    val connectionState by viewModel.networkState.collectAsState()
+    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
 
     LaunchedEffect(customerId) {
         if (connectionState) {
@@ -281,7 +281,7 @@ fun CartScreen(
         onConfirm = { viewModel.clearCart(customerId) },
         title = stringResource(R.string.clear_cart),
         text = stringResource(R.string.are_you_sure_you_want_to_clear_your_cart),
-        confirmText = stringResource(R.string.color)
+        confirmText = stringResource(R.string.clear)
     )
 
     ConfirmationDialog(

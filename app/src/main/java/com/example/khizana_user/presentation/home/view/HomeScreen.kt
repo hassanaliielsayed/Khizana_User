@@ -70,13 +70,13 @@ fun HomeScreen(
     onNavigateToCart: () -> Unit,
     customerId: Long
 ) {
-    val brands by viewModel.brands.collectAsState()
+    val brands by viewModel.brands.collectAsStateWithLifecycle()
     val couponState by viewModel.coupons.collectAsStateWithLifecycle()
-    val filteredProducts by viewModel.filteredProducts.collectAsState()
+    val filteredProducts by viewModel.filteredProducts.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsState(initial = "")
-    val suggestions by viewModel.suggestions.collectAsState()
-    val searchFocusType by viewModel.searchFocusType.collectAsState()
-    val currentCustomer by authViewModel.currentCustomer.collectAsState()
+    val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
+    val searchFocusType by viewModel.searchFocusType.collectAsStateWithLifecycle()
+    val currentCustomer by authViewModel.currentCustomer.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
 
     val brandFocusRequester = remember { BringIntoViewRequester() }
@@ -87,7 +87,7 @@ fun HomeScreen(
     val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
     var showGuestDialog by remember { mutableStateOf(false) }
     var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-    val favoritesState by wishlistViewModel.favoritesState.collectAsState()
+    val favoritesState by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
 
     var expanded by remember { mutableStateOf(false) }
     var selectedVendor by remember { mutableStateOf<String?>(null) }

@@ -34,6 +34,7 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.khizana_user.R
 import com.example.khizana_user.presentation.AppLogo
@@ -57,14 +58,14 @@ fun SearchScreen(
     wishlistViewModel: WishlistViewModel = hiltViewModel(),
     customerId: Long
 ) {
-    val products by viewModel.products.collectAsState()
+    val products by viewModel.products.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
 
     val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
     val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
     var showGuestDialog by remember { mutableStateOf(false) }
     var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-    val favoritesState by wishlistViewModel.favoritesState.collectAsState()
+    val favoritesState by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
