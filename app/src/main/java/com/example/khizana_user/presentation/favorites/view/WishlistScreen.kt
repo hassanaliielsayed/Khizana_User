@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.khizana_user.R
@@ -51,7 +52,7 @@ fun WishlistScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToCard: () -> Unit
 ) {
-    val favoritesState by viewModel.favoritesState.collectAsState()
+    val favoritesState by viewModel.favoritesState.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val removingIds = remember { mutableStateListOf<Long>() }
 
