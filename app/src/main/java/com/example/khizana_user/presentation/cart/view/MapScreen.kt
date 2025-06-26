@@ -42,6 +42,7 @@ import java.util.*
 @Composable
 fun MapScreen(
     navController: NavController,
+    locationViewModel: LocationViewModel = hiltViewModel(),
     defaultLocation: LatLng = LatLng(30.0444, 31.2357)
 ) {
     val context = LocalContext.current
@@ -146,7 +147,8 @@ fun MapScreen(
                     onClick = {
                         navController.previousBackStackEntry
                             ?.savedStateHandle
-                            ?.set(context.getString(R.string.selected_location), Pair(selected, address))
+                            ?.set("selected_location", Pair(selected, address))
+                        locationViewModel.updateAddress(address, selected)
                         navController.popBackStack()
                     },
                     enabled = address != stringResource(R.string.selected_location),

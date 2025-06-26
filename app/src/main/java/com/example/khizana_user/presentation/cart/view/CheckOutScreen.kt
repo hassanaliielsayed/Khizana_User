@@ -104,9 +104,27 @@ fun CheckoutScreen(
     onPlaceOrderClick: () -> Unit,
     onNavigateToOrderSuccess: () -> Unit,
     onAddressClick: () -> Unit,
+    navController: NavController,
     onPaymentMethodClick: () -> Unit
 ) {
 
+    val selectedAddress by locationViewModel.selectedAddress.collectAsState()
+    val selectedLatLng by locationViewModel.selectedLatLng.collectAsState()
+
+    // Handle saved state
+    val savedLocation by navController.currentBackStackEntry
+        ?.savedStateHandle
+        ?.getStateFlow<Pair<LatLng, String>?>("selected_location", null)
+        ?.collectAsState() ?: remember { mutableStateOf(null) }
+
+    LaunchedEffect(savedLocation) {
+        savedLocation?.let { (latLng, address) ->
+            locationViewModel.updateAddress(address, latLng)
+            navController.currentBackStackEntry
+                ?.savedStateHandle
+                ?.remove<Pair<LatLng, String>>("selected_location")
+        }
+    }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -124,8 +142,8 @@ fun CheckoutScreen(
     val totalDiscount = if (coupon != null) totalPrice * (coupon.discount / 100.0) else 0.0
     val grandTotal = remember(totalPrice, totalDiscount) { totalPrice - totalDiscount }
 
-    val selectedAddress by locationViewModel.selectedAddress.collectAsStateWithLifecycle()
-    val selectedLatLng by locationViewModel.selectedLatLng.collectAsStateWithLifecycle()
+//    val selectedAddress by locationViewModel.selectedAddress.collectAsStateWithLifecycle()
+//    val selectedLatLng by locationViewModel.selectedLatLng.collectAsStateWithLifecycle()
 
     val locationUtils = remember { LocationUtils(context) }
 
