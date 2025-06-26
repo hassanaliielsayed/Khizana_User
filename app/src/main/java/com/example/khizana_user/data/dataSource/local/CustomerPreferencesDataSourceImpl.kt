@@ -1,7 +1,6 @@
 package com.example.khizana_user.data.dataSource.local
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.khizana_user.data.repository.sharedpref.CustomerPreferencesDataSource
@@ -31,7 +30,6 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
     }
 
     override suspend fun saveCustomer(customer: Customer) {
-        Log.d(TAG, "Saving customer: $customer")
         context.dataStore.edit { prefs ->
             prefs[CUSTOMER_ID] = customer.id
             prefs[CUSTOMER_NAME] = customer.name
@@ -49,13 +47,11 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
             val verified = prefs[CUSTOMER_VERIFIED] ?: false
             val currency = prefs[CUSTOMER_CURRENCY] ?: "USD"
             val customer = Customer(id, name, email, verified, currency)
-            Log.d(TAG, "Loaded customer from DataStore: $customer")
             customer
         }
     }
 
     override suspend fun clearCustomer() {
-        Log.d(TAG, "Clearing all customer data from DataStore")
         context.dataStore.edit { it.clear() }
     }
 
@@ -76,7 +72,6 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
             prefs[GOVERNORATE] = governorate
             prefs[CITY] = city
         }
-        Log.d(TAG, "Saved address: Governorate=$governorate, City=$city")
     }
 
     override suspend fun getAddress(): Pair<String?, String?> {
@@ -84,6 +79,5 @@ class CustomerPreferencesDataSourceImpl @Inject constructor(
             Pair(prefs[GOVERNORATE], prefs[CITY])
         }.first()
     }
-
 
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -27,8 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.khizana_user.R
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.utils.AuthState
+import com.example.khizana_user.utils.customFontFamily
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -87,7 +90,14 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(colors = listOf(Color(0xFFEEF2F3), Color(0xFF8E9EAB))))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFEEF2F3),
+                        Color(0xFF8E9EAB)
+                    )
+                )
+            )
             .padding(20.dp)
     ) {
         Column(
@@ -95,13 +105,13 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            Text("Login", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+            Text(stringResource(R.string.login), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray,  fontFamily = customFontFamily)
             Spacer(Modifier.height(24.dp))
 
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.userEmail), fontFamily = customFontFamily) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(50)
@@ -112,7 +122,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.password), fontFamily = customFontFamily) },
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -129,15 +139,24 @@ fun LoginScreen(
 
             Spacer(Modifier.height(8.dp))
             Text(
-                "Forgot your password?",
+                stringResource(R.string.forgot_your_password),
+                fontFamily = customFontFamily,
                 modifier = Modifier
                     .align(Alignment.End)
                     .clickable {
                         if (email.isNotBlank()) {
                             viewModel.resetPassword(email)
-                            Toast.makeText(context, "Reset email sent if account exists.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.reset_email_sent_if_account_exists),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else {
-                            Toast.makeText(context, "Please enter your email above first.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Please enter your email above first.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     },
                 color = MaterialTheme.colorScheme.secondary
@@ -167,21 +186,22 @@ fun LoginScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White)
             ) {
-                Text("Sign in with Google", color = Color.DarkGray)
+                Text(stringResource(R.string.sign_in_with_google), color = Color.DarkGray, fontFamily = customFontFamily)
             }
 
             Spacer(Modifier.height(12.dp))
 
             TextButton(onClick = { viewModel.loginAsGuest() }) {
-                Text("Continue as Guest", color = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.continue_as_guest), color = MaterialTheme.colorScheme.primary,  fontFamily = customFontFamily)
             }
 
             Spacer(Modifier.height(16.dp))
 
             Text(
-                "Don't have an account? Sign Up",
+                stringResource(R.string.don_t_have_an_account_sign_up),
                 modifier = Modifier.clickable { onNavigateToRegister() },
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                fontFamily = customFontFamily
             )
 
             when (state) {
@@ -191,7 +211,7 @@ fun LoginScreen(
                 }
                 is AuthState.Error -> {
                     Spacer(Modifier.height(16.dp))
-                    Text("Error: ${(state as AuthState.Error).message}", color = Color.Red)
+                    Text("Error: ${(state as AuthState.Error).message}", color = Color.Red, fontFamily = customFontFamily)
                 }
                 else -> {}
             }

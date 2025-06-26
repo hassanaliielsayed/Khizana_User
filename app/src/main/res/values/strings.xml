@@ -105,6 +105,7 @@
     <string name="yousef_phone">01001395368</string>
     <string name="hassanaliielsayed_gmail_com">hassanaliielsayed@gmail.com</string>
     <string name="hassan_phone">01555379365</string>
+    <string name="userEmail">Email</string>
     <string name="email">Email:</string>
     <string name="phone">Phone:</string>
     <string name="project_description">It is an m-Commerce Application that presents products from different vendors and enables the authenticated users to add/remove products to/from their shopping carts and complete the whole shopping cycle online through the app.</string>
@@ -173,4 +174,29 @@
     <string name="please_select_governorate_and_city">Please select governorate and enter city</string>
     <string name="save">Save</string>
     <string name="title_activity_shimmer_effect">ShimmerEffect</string>
+    <string name="userLogin">Login</string>
+    <string name="password">Password</string>
+    <string name="forgot_your_password">Forgot your password?</string>
+    <string name="reset_email_sent_if_account_exists">Reset email sent if account exists.</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="don_t_have_an_account_sign_up">Don\'t have an account? Sign Up</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="name">Name</string>
+    <string name="mobile">Mobile</string>
+    <string name="i_agree_with">"I agree with "</string>
+    <string name="privacy">privacy</string>
+    <string name="policy">Policy</string>
+    <string name="and">" and "</string>
+    <string name="you_must_agree_to_the_policy_to_continue">You must agree to the policy to continue.</string>
+    <string name="verification_email_sent_please_check_your_inbox">Verification email sent. Please check your inbox.</string>
+    <string name="already_have_an_account_sign_in">Already have an account? Sign In</string>
+    <string name="verify_your_email">Verify Your Email</string>
+    <string name="we_ve_sent_an_email_to_please_verify_it_before_continuing">We\'ve sent an email to %1$s. Please verify it before continuing.</string>
+    <string name="your_account">your account</string>
+    <string name="resend_email">Resend Email</string>
+    <string name="back_to_login">Back to Login</string>
+    <string name="verification_timeout_please_try_again">Verification timeout. Please try again.</string>
+    <string name="you_can_resend_in_seconds">You can resend in %1$s seconds.</string>
+    <string name="verification_email_resent">Verification email resent.</string>
+    <string name="email_verified_logging_you_in">Email verified! Logging you in...</string>
 </resources>
