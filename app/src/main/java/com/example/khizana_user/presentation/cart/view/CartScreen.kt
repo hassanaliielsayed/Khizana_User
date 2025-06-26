@@ -281,7 +281,7 @@ fun CartScreen(
         onConfirm = { viewModel.clearCart(customerId) },
         title = stringResource(R.string.clear_cart),
         text = stringResource(R.string.are_you_sure_you_want_to_clear_your_cart),
-        confirmText = stringResource(R.string.color)
+        confirmText = stringResource(R.string.clear)
     )
 
     ConfirmationDialog(
