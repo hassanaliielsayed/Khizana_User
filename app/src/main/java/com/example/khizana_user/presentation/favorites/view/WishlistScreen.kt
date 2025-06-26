@@ -60,16 +60,14 @@ fun WishlistScreen(
     var showClearDialog by remember { mutableStateOf(false) }
     var confirmRemoveItem by remember { mutableStateOf<FavoriteItem?>(null) }
 
-    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
+
 
     val context = LocalContext.current
 
     val isLoading by viewModel.loading.collectAsStateWithLifecycle()
 
     LaunchedEffect(customerId) {
-        if (connectionState) {
-            viewModel.loadFavorites(customerId)
-        }
+        viewModel.loadFavorites(customerId)
     }
 
     if (showClearDialog) {
@@ -117,9 +115,6 @@ fun WishlistScreen(
         )
     }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -242,7 +237,7 @@ fun WishlistScreen(
             }
 
         }
-    }
+
 }
 
 @Composable

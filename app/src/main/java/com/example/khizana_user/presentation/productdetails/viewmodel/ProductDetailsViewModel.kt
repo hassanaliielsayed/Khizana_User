@@ -19,10 +19,6 @@ class ProductDetailsViewModel @Inject constructor(
     private val _state = MutableStateFlow<Result>(Result.Loading)
     val state = _state.asStateFlow()
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState = _networkState.asStateFlow()
-
-
     fun loadProduct(productId: Long) {
         viewModelScope.launch {
             _state.value = Result.Loading

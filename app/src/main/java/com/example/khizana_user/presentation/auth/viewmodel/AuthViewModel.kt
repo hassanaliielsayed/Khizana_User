@@ -65,23 +65,12 @@ class AuthViewModel @Inject constructor(
     private var didRegisterShopify = false
     private var registeredUserName: String? = null
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
-
     val currentCustomer: StateFlow<Customer?> = getCustomerUseCase()
         .onEach { Log.d("AuthViewModel", "currentCustomer loaded: $it") }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
-        observeNetworkState()
         observeVerificationAndRegister()
-    }
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
     }
 
     private fun observeVerificationAndRegister() {
