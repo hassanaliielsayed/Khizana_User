@@ -2,6 +2,7 @@ package com.example.khizana_user.domain.usecase
 
 import com.example.khizana_user.domain.model.ProductByCategory
 import com.example.khizana_user.domain.repository.CategoryRepository
+import com.example.khizana_user.domain.usecase.category.GetAllProductsByCategoryUseCase
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.Dispatchers
 import io.mockk.coEvery

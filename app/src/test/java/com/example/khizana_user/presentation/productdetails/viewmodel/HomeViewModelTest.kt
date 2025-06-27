@@ -2,11 +2,11 @@ package com.example.khizana_user.presentation.productdetails.viewmodel
 
 import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Product
-import com.example.khizana_user.domain.usecase.GetAllBrandsUseCase
-import com.example.khizana_user.domain.usecase.GetAllCouponsUseCase
-import com.example.khizana_user.domain.usecase.GetAllProductsUseCase
-import com.example.khizana_user.domain.usecase.GetCurrencyUseCase
-import com.example.khizana_user.domain.usecase.GetExchangeRateUseCase
+import com.example.khizana_user.domain.usecase.home.GetAllBrandsUseCase
+import com.example.khizana_user.domain.usecase.home.GetAllCouponsUseCase
+import com.example.khizana_user.domain.usecase.home.GetAllProductsUseCase
+import com.example.khizana_user.domain.usecase.home.GetExchangeRateUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.GetCurrencyUseCase
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 import io.mockk.coEvery
 import io.mockk.mockk
