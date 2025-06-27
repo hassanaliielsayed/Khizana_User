@@ -13,5 +13,35 @@
 <!--    <color name="dark_blue">0xFF4157FF</color>-->
 <!--    <color name="dark_blue">#4157FF</color>-->
     <color name="dark_blue">#C9EEFE</color>
-    <color name="light_blue">#FFE3F2FD</color>
+    <color name="light_blue">#C6ECFD</color>
+
+    <color name="content_color">#FF1E88E5</color>
+    <color name="fav_card">#FFF3E0</color>
+
+    <color name="primary_blue">#3F51B5</color>
+    <color name="background_light">#FAFAFA</color>
+    <color name="background_white">#FFFFFF</color>
+
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_on_primary">#FFFFFF</color>
+
+    <color name="light_gray">#E0E0E0</color>
+    <color name="divider_color">#BDBDBD</color>
+    <color name="accent_color">#FF4081</color>
+    <color name="success_green">#4CAF50</color>
+    <color name="error_red">#F44336</color>
+
+    <color name="light_background">#F5F5F5</color>
+    <color name="primary_color">#1E88E5</color>
+
+    <color name="onboarding_indicator_active">#3F51B5</color>
+    <color name="onboarding_indicator_inactive">#BDBDBD</color>
+    <color name="onboarding_button_background">#3F51B5</color>
+    <color name="onboarding_button_text">#FFFFFF</color>
+    <color name="onboarding_skip_text">#757575</color>
+
+    <color name="splash_text">#2E3B4E</color>
+    <color name="splash_subtitle">#757575</color>
+
 </resources>

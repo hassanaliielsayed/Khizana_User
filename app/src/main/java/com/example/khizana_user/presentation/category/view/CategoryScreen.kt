@@ -1,5 +1,6 @@
 package com.example.khizana_user.presentation.category.view
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -7,30 +8,30 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,7 +54,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.khizana_user.R
@@ -60,6 +61,32 @@ import com.example.khizana_user.domain.model.ProductByCategory
 import com.example.khizana_user.presentation.category.viewModel.CategoryViewModel
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.utils.customFontFamily
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import com.airbnb.lottie.compose.*
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
+import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
+import com.example.khizana_user.presentation.home.view.SharedModifiers
+import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.productdetails.view.GuestLoginDialog
+import com.example.khizana_user.presentation.profile.view.EmptyState
+import com.example.khizana_user.utils.Result
+import com.example.khizana_user.utils.isGuestUser
+import com.example.khizana_user.utils.toCurrentCurrency
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,10 +95,19 @@ fun CategoryScreen(
     modifier: Modifier = Modifier,
     viewModel: CategoryViewModel = hiltViewModel(),
     onNavigateToFavorites: () -> Unit,
-    onNavigateToCart: () -> Unit
+    onNavigateToSearch: () -> Unit,
+    navController: NavHostController,
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
+    customerId: Long
 ) {
 
-    val mainCategory = listOf("All", "Women", "Men", "Kid")
+    val mainCategory = listOf(
+        "All" to stringResource(R.string.all),
+        "Women" to stringResource(R.string.women),
+        "Men" to stringResource(R.string.men),
+        "Kid" to stringResource(R.string.kids)
+    )
+
     var selectedMainCategory by remember { mutableStateOf("All") }
 
     val subCategories = listOf("All", "ACCESSORIES", "SHOES", "T-SHIRTS")
@@ -81,149 +117,236 @@ fun CategoryScreen(
 
     var isSubCategoryMenuOpen by remember { mutableStateOf(false) }
 
-    val connectionState by viewModel.networkState.collectAsState()
+    var selectedPrice by remember { mutableFloatStateOf(10000f) }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-    } else {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            stringResource(R.string.project_name),
-                            fontFamily = customFontFamily,
-                            fontSize = 20.sp,
-                            color = Color.Black
+    var isFilterVisible by remember { mutableStateOf(false) }
+
+    val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
+    val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
+    var showGuestDialog by remember { mutableStateOf(false) }
+    var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val favoritesState by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(customerId) {
+        wishlistViewModel.loadFavorites(customerId)
+
+    }
+
+    val minPrice = 0f
+    val maxPrice = 2000f
+
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    AppLogo()
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
+                actions = {
+                    TopBarIconButton(
+                        icon = Icons.Default.Search,
+                        contentDescription = stringResource(R.string.search),
+                        onClick = onNavigateToSearch
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.FilterList,
+                        contentDescription = stringResource(R.string.filter),
+                        tint = Color.Black,
+                        onClick = { isFilterVisible = !isFilterVisible }
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.Favorite,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToFavorites
+                    )
+                }
+            )
+        },
+        floatingActionButton = {
+            Column(horizontalAlignment = Alignment.End) {
+                AnimatedVisibility(visible = isSubCategoryMenuOpen) {
+                    Column(
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    ) {
+                        val subCategoryImages = mapOf(
+                            stringResource(R.string.all) to R.drawable.all,
+                            stringResource(R.string.accessories) to R.drawable.accessories,
+                            stringResource(R.string.shoes) to R.drawable.shoes,
+                            stringResource(R.string.t_shirts) to R.drawable.tshirt
                         )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
-                    actions = {
-                        IconButton(onClick = {}) {
-                            Icon(
-                                Icons.Default.Search,
-                                contentDescription = null,
-                                tint = Color.Black
-                            )
-                        }
-                        IconButton(onClick = onNavigateToFavorites) {
-                            Icon(
-                                Icons.Default.Favorite,
-                                contentDescription = null,
-                                tint = Color.Black
-                            )
-                        }
-                        IconButton(onClick = onNavigateToCart) {
-                            Icon(
-                                Icons.Default.ShoppingCart,
-                                tint = Color.Black,
-                                contentDescription = null,
-                            )
-                        }
-                    }
-                )
-            },
-            floatingActionButton = {
-                Column(horizontalAlignment = Alignment.End) {
-                    AnimatedVisibility(visible = isSubCategoryMenuOpen) {
+
                         Column(
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
                                 .clip(RoundedCornerShape(12.dp))
                         ) {
-                            val subCategoryImages = mapOf(
-                                "All" to R.drawable.all,
-                                "ACCESSORIES" to R.drawable.accessories,
-                                "SHOES" to R.drawable.shoes,
-                                "T-SHIRTS" to R.drawable.tshirt
-                            )
-
-                            Column(
-                                modifier = Modifier
-                                    .padding(bottom = 8.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                            ) {
-                                subCategories.forEach { subCategory ->
-                                    val imageRes = subCategoryImages[subCategory] ?: R.drawable.all
-                                    CategoryChipImage(
-                                        imageResId = imageRes,
-                                        isSelected = selectedSubCategory == subCategory,
-                                        onClick = {
-                                            selectedSubCategory = subCategory
-                                            viewModel.filterProductsBySubCategory(subCategory)
-                                            isSubCategoryMenuOpen = false
-                                        },
-                                        contentDescription = subCategory
-                                    )
-                                }
+                            subCategories.forEach { subCategory ->
+                                val imageRes = subCategoryImages[subCategory] ?: R.drawable.all
+                                CategoryChipImage(
+                                    imageResId = imageRes,
+                                    isSelected = selectedSubCategory == subCategory,
+                                    onClick = {
+                                        selectedSubCategory = subCategory
+                                        viewModel.filterProductsBySubCategory(subCategory)
+                                        isSubCategoryMenuOpen = false
+                                    },
+                                    contentDescription = subCategory
+                                )
                             }
                         }
                     }
+                }
 
-                    FloatingActionButton(
-                        onClick = { isSubCategoryMenuOpen = !isSubCategoryMenuOpen },
-                        containerColor = colorResource(id = R.color.black),
-                        modifier = Modifier
-                            .padding(bottom = 70.dp)
-                            .clip(RoundedCornerShape(42.dp))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filter",
-                            tint = Color.White
-                        )
-                    }
+                FloatingActionButton(
+                    onClick = { isSubCategoryMenuOpen = !isSubCategoryMenuOpen },
+                    containerColor = colorResource(id = R.color.black),
+                    modifier = Modifier
+                        .padding(bottom = 70.dp)
+                        .clip(RoundedCornerShape(42.dp))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = stringResource(R.string.filter),
+                        tint = Color.White
+                    )
                 }
             }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .background(Color.White)
-            ) {
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Color.White)
+        ) {
 
-                ScrollableTabRow(
-                    selectedTabIndex = mainCategory.indexOf(selectedMainCategory),
-                    edgePadding = 16.dp,
-                    indicator = {},
-                    modifier = Modifier.background(colorResource(id = R.color.dark_blue))
+            ScrollableTabRow(
+                selectedTabIndex = mainCategory.indexOfFirst { it.first == selectedMainCategory },
+                edgePadding = 16.dp,
+                indicator = {},
+                modifier = Modifier.background(colorResource(id = R.color.dark_blue))
+            ) {
+                mainCategory.forEach { (tagValue, displayValue) ->
+                    Tab(
+                        selected = selectedMainCategory == tagValue,
+                        onClick = {
+                            selectedMainCategory = tagValue
+                            viewModel.filterProductsByTag(tagValue)
+                        },
+                        text = {
+                            Text(
+                                text = displayValue,
+                                color = if (selectedMainCategory == tagValue) Color.Black else Color.Gray,
+                                fontWeight = if (selectedMainCategory == tagValue) FontWeight.Bold else FontWeight.Normal,
+                                fontFamily = customFontFamily
+                            )
+                        },
+                        modifier = Modifier.background(colorResource(id = R.color.white))
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (isFilterVisible) {
+                FilterByPrice(minPrice, maxPrice) { price ->
+                    selectedPrice = price
+                    viewModel.filterProductsByPrice(price)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (products.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    mainCategory.forEach { main ->
-                        Tab(
-                            selected = selectedMainCategory == main,
+                    EmptyState(
+                        animationRes = R.raw.no_data,
+                        message = stringResource(R.string.no_product_found_in_this_category)
+                    )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    items(products) { product ->
+                        val isFavorite = favoritesState?.items?.any { it?.variantId == product.variantId } == true
+                        val isToggling = togglingStates[product.id] ?: false
+                        ProductItem(
+                            product = product,
+                            isFavorite = isFavorite,
+                            isToggling = isToggling,
                             onClick = {
-                                selectedMainCategory = main
-                                viewModel.filterProductsByTag(main)
-                            },
-                            text = {
-                                Text(
-                                    text = main,
-                                    color = if (selectedMainCategory == main) Color.Black else Color.Gray,
-                                    fontWeight = if (selectedMainCategory == main) FontWeight.Bold else FontWeight.Normal
+                                navController.navigate(
+                                    ScreenRoute.ProductDetails.createRoute(
+                                        product.id
+                                    )
                                 )
                             },
-                            modifier = Modifier.background(colorResource(id = R.color.white))
+                            onToggleFavorite = {
+                                val variantId = product.variantId ?: return@ProductItem
+
+                                if (isGuestUser()) {
+                                    guestAction = {}
+                                    showGuestDialog = true
+                                    return@ProductItem
+                                }
+
+                                if (togglingStates[product.id] == true) return@ProductItem
+
+                                togglingStates[product.id] = true
+
+                                coroutineScope.launch {
+                                    val wasFavorite = favoriteStates[product.id] ?: false
+                                    val result = if (wasFavorite)
+                                        wishlistViewModel.removeFromFavorites(customerId, variantId)
+                                    else
+                                        wishlistViewModel.addToFavorites(customerId, variantId)
+
+                                    when (result) {
+                                        is Result.Success<*> -> favoriteStates[product.id] = !wasFavorite
+                                        is Result.Error -> Toast.makeText(
+                                            context,
+                                            result.message,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        else -> {}
+                                    }
+
+                                    togglingStates[product.id] = false
+                                }
+                            }
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (products.isEmpty()) {
-                    Text(
-                        "No products found.",
-                        modifier = Modifier.padding(16.dp),
-                        fontFamily = customFontFamily,
-                    )
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(products) { product ->
-                            ProductItem(product = product)
+                if (showGuestDialog) {
+                    GuestLoginDialog(
+                        onDismiss = { showGuestDialog = false },
+                        onLoginClick = {
+                            showGuestDialog = false
+                            navController.navigate(context.getString(R.string.login))
+                        },
+                        onContinueClick = {
+                            showGuestDialog = false
+                            guestAction?.invoke()
                         }
-                    }
+                    )
                 }
             }
         }
@@ -231,35 +354,92 @@ fun CategoryScreen(
 }
 
 @Composable
-fun ProductItem(product: ProductByCategory) {
+fun ProductItem(product: ProductByCategory, onClick: () -> Unit,
+                isFavorite: Boolean,
+                isToggling: Boolean,
+                onToggleFavorite: () -> Unit,
+                ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colorResource(id = R.color.white)
-        )
+            .height(350.dp)
+            .padding(8.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
+        border = BorderStroke(1.dp, colorResource(R.color.content_color)),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
-            AsyncImage(
-                model = product.productImage,
-                contentDescription = product.productTitle,
-                modifier = Modifier.size(80.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    product.productTitle,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = customFontFamily,
+
+            IconButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
+            ) {
+                if (isToggling) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = if (isFavorite) colorResource(R.color.content_color) else Color.Black
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                AsyncImage(
+                    model = product.productImage,
+                    contentDescription = product.productTitle,
+                    modifier = SharedModifiers.circleImageModifier(150.dp),
+                    contentScale = ContentScale.Crop
                 )
-                Text("Vendor: ${product.productVendor ?: "N/A"}", fontFamily = customFontFamily)
-                Text("Price: ${product.productPrice} EGP", fontFamily = customFontFamily)
-                Text("Product Type: ${product.product_type}", fontFamily = customFontFamily)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = product.productTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.vendor, product.productVendor ?: "N/A"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Price: ${product.productPrice.toCurrentCurrency()}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -274,7 +454,7 @@ fun CategoryChipImage(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) Color(0xFFFDE6EE) else Color.White,
+        color = if (isSelected) colorResource(R.color.content_color) else Color.White,
         border = BorderStroke(1.dp, Color.Gray),
         modifier = Modifier
             .padding(4.dp)
@@ -291,3 +471,40 @@ fun CategoryChipImage(
         )
     }
 }
+
+@Composable
+fun FilterByPrice(
+    minPrice: Float,
+    maxPrice: Float,
+    onValueChange: (Float) -> Unit
+) {
+    var sliderPosition by remember { mutableFloatStateOf(minPrice) }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+    ) {
+        Text(
+            text = "Price: ${sliderPosition.toInt()} EGP",
+            fontFamily = customFontFamily,
+            fontSize = 20.sp
+        )
+
+        Slider(
+            value = sliderPosition,
+            onValueChange = {
+                sliderPosition = it
+                onValueChange(sliderPosition)
+            },
+            valueRange = minPrice..maxPrice,
+            modifier = Modifier.height(22.dp),
+            colors = SliderDefaults.colors(
+                thumbColor = colorResource(R.color.dark_blue),
+                activeTrackColor = colorResource(R.color.content_color),
+                inactiveTrackColor = colorResource(R.color.dark_blue)
+            )
+        )
+    }
+}
+
+

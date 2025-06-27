@@ -13,15 +13,14 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +29,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,12 +42,17 @@ import com.example.khizana_user.R
 import com.example.khizana_user.domain.model.Brand
 import com.example.khizana_user.domain.model.Coupon
 import com.example.khizana_user.domain.model.Product
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
 import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
+import com.example.khizana_user.presentation.favorites.viewmodel.WishlistViewModel
 import com.example.khizana_user.presentation.home.viewModel.HomeViewModel
 import com.example.khizana_user.presentation.home.viewModel.SearchFocusType
 import com.example.khizana_user.presentation.nav.ScreenRoute
+import com.example.khizana_user.presentation.productdetails.view.GuestLoginDialog
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.utils.customFontFamily
+import com.example.khizana_user.utils.isGuestUser
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.delay
@@ -59,32 +63,40 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
     paddingValues: PaddingValues = PaddingValues(),
     navController: NavHostController,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToCart: () -> Unit
+    onNavigateToCart: () -> Unit,
+    customerId: Long
 ) {
-    val brands by viewModel.brands.collectAsState()
+    val brands by viewModel.brands.collectAsStateWithLifecycle()
     val couponState by viewModel.coupons.collectAsStateWithLifecycle()
-    val filteredProducts by viewModel.filteredProducts.collectAsState()
+    val filteredProducts by viewModel.filteredProducts.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsState(initial = "")
-    val suggestions by viewModel.suggestions.collectAsState()
-    val searchFocusType by viewModel.searchFocusType.collectAsState()
-    val currentCustomer by authViewModel.currentCustomer.collectAsState()
+    val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
+    val searchFocusType by viewModel.searchFocusType.collectAsStateWithLifecycle()
+    val currentCustomer by authViewModel.currentCustomer.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
 
     val brandFocusRequester = remember { BringIntoViewRequester() }
     val productFocusRequester = remember { BringIntoViewRequester() }
     val coroutineScope = rememberCoroutineScope()
 
+    val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
+    val togglingStates = remember { mutableStateMapOf<Long, Boolean>() }
+    var showGuestDialog by remember { mutableStateOf(false) }
+    var guestAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val favoritesState by wishlistViewModel.favoritesState.collectAsStateWithLifecycle()
+
     var expanded by remember { mutableStateOf(false) }
     var selectedVendor by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
-    val connectionState by viewModel.networkState.collectAsState()
 
-    LaunchedEffect(brands) {
-        if (brands.isNotEmpty()) selectedVendor = brands.first().title
+    LaunchedEffect(customerId) {
+        wishlistViewModel.loadFavorites(customerId)
+
     }
 
     LaunchedEffect(selectedVendor) {
@@ -113,204 +125,203 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        stringResource(R.string.project_name),
-                        fontFamily = customFontFamily,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
+                    AppLogo()
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
                 actions = {
-                    IconButton(onClick = { }) {
-                        Image(
-                            painter = painterResource(R.drawable.filter2),
-                            contentDescription = "Filter",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    IconButton(onClick = onNavigateToFavorites) {
-                        Icon(Icons.Default.Favorite, contentDescription = "Favorites", tint = Color.Black)
-                    }
-                    IconButton(onClick = onNavigateToCart) {
-                        Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = Color.Black)
-                    }
+                    TopBarIconButton(
+                        icon = Icons.Default.Favorite,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToFavorites
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.ShoppingCart,
+                        contentDescription = stringResource(R.string.shopping_cart),
+                        onClick = onNavigateToCart
+                    )
                 }
             )
         }
     ) { paddingValues ->
-        if (!connectionState) {
-            NoInternetConnectionView()
-        } else {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
+        ) {
+
+            HomeScreenTopSection(
+                currentCustomer = currentCustomer,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { query ->
+                    viewModel.updateSearchQuery(query)
+                    expanded = true
+                },
+                expanded = expanded,
+                suggestions = suggestions,
+                onSuggestionClick = { suggestion ->
+                    if (suggestion.startsWith(context.getString(R.string.brand))) {
+                        val brandName =
+                            suggestion.removePrefix(context.getString(R.string.brand)).trim()
+                        viewModel.updateSearchQuery(brandName)
+                        viewModel.fetchProductsByVendor(brandName)
+                        viewModel.setFocus(SearchFocusType.BRAND)
+                    } else {
+                        viewModel.updateSearchQuery(suggestion)
+                        viewModel.setFocus(SearchFocusType.PRODUCT)
+                    }
+                    expanded = false
+                    focusManager.clearFocus()
+                },
+                onClearClick = {
+                    viewModel.updateSearchQuery("")
+                    expanded = false
+                }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            when (couponState) {
+                is Result.Error -> Text(
+                    stringResource(R.string.error_loading_coupons),
+                    color = MaterialTheme.colorScheme.error,
+                    fontFamily = customFontFamily,
+                )
+
+                is Result.Loading -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+
+                is Result.Success -> CouponCarousel((couponState as Result.Success<List<Coupon>>).data)
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Text(
+                text = stringResource(R.string.brands),
+                fontSize = 25.sp,
+                fontFamily = customFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                color = colorResource(id = R.color.black),
+                textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(paddingValues)
+                    .padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
+                    .bringIntoViewRequester(brandFocusRequester)
+            )
+
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                items(brands) { brand ->
+                    Brands(
+                        brands = brand,
+                        onClick = {
+                            selectedVendor = brand.title
+                            viewModel.fetchProductsByVendor(brand.title)
+                        },
+                        isSelected = selectedVendor == brand.title
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (filteredProducts.isEmpty() && selectedVendor != null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(colorResource(id = R.color.dark_blue))
-                        .padding(16.dp)
+                        .height(300.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column {
-                        Image(
-                            painter = painterResource(id = R.drawable.person),
-                            contentDescription = "User Icon",
-                            modifier = Modifier
-                                .size(60.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
-                                .border(1.dp, Color.Gray, CircleShape)
-                                .padding(4.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = "Welcome ${currentCustomer?.name ?: ""}",
-                            fontSize = 22.sp,
-                            fontFamily = customFontFamily,
-                            color = Color.Black
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = {
-                                viewModel.updateSearchQuery(it)
-                                expanded = true
-                            },
-                            placeholder = { Text("Search for products or brands") },
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)),
-                            trailingIcon = {
-                                if (searchQuery.isNotBlank()) {
-                                    IconButton(onClick = {
-                                        viewModel.updateSearchQuery("")
-                                        expanded = false
-                                    }) {
-                                        Icon(Icons.Default.Close, contentDescription = "Clear")
-                                    }
-                                }
-                            },
-                            shape = RoundedCornerShape(24.dp),
-                            colors = TextFieldDefaults.colors(
-                                unfocusedContainerColor = Color.White,
-                                focusedContainerColor = Color.White
-                            )
-                        )
-
-                        if (expanded && suggestions.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 300.dp)
-                                    .shadow(6.dp, RoundedCornerShape(8.dp))
-                                    .background(Color.White)
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .verticalScroll(rememberScrollState())
-                                        .padding(vertical = 8.dp)
-                                ) {
-                                    suggestions.forEach { suggestion ->
-                                        Text(
-                                            text = suggestion,
-                                            modifier = Modifier.fillMaxWidth().clickable {
-                                                if (suggestion.startsWith("Brand: ")) {
-                                                    val brandName = suggestion.removePrefix("Brand: ").trim()
-                                                    viewModel.updateSearchQuery(brandName)
-                                                    viewModel.fetchProductsByVendor(brandName)
-                                                    viewModel.setFocus(SearchFocusType.BRAND)
-                                                } else {
-                                                    viewModel.updateSearchQuery(suggestion)
-                                                    viewModel.setFocus(SearchFocusType.PRODUCT)
-                                                }
-                                                expanded = false
-                                                focusManager.clearFocus()
-                                            }.padding(horizontal = 16.dp, vertical = 10.dp),
-                                            fontSize = 16.sp
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    LottieAnimation(
+                        composition = rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.no_data)).value,
+                        iterations = LottieConstants.IterateForever,
+                        modifier = Modifier.size(200.dp)
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Brands",
-                    fontSize = 25.sp,
-                    fontFamily = customFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colorResource(id = R.color.black),
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp).bringIntoViewRequester(brandFocusRequester)
-                )
-
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 90.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(brands) { brand ->
-                        Brands(
-                            brands = brand,
-                            onClick = { selectedVendor = brand.title },
-                            isSelected = selectedVendor == brand.title
-                        )
-                    }
-                }
+                    filteredProducts.forEach { product ->
 
-                Spacer(modifier = Modifier.height(16.dp))
+                        val isFavorite =
+                            favoritesState?.items?.any { it?.variantId == product.variantId } == true
+                        val isToggling = togglingStates[product.id] ?: false
 
-                when (couponState) {
-                    is Result.Error -> Text("Error loading coupons", color = MaterialTheme.colorScheme.error)
-                    is Result.Loading -> CircularProgressIndicator()
-                    is Result.Success -> CouponCarousel((couponState as Result.Success<List<Coupon>>).data)
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Products",
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = customFontFamily,
-                    color = colorResource(id = R.color.black),
-                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp).bringIntoViewRequester(productFocusRequester)
-                )
-
-                if (filteredProducts.isEmpty()) {
-                    Text("No matching products found.", modifier = Modifier.padding(16.dp), color = Color.Gray)
-                } else {
-                    val productRows = groupProductsInRows(filteredProducts)
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        productRows.forEach { row ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                row.forEach { product ->
-                                    ProductItem(
-                                        modifier = Modifier.weight(1f),
-                                        product = product,
-                                        onClick = {
-                                            navController.navigate(ScreenRoute.ProductDetails.createRoute(product.id))
-                                        }
+                        ProductItem(
+                            product = product,
+                            isFavorite = isFavorite,
+                            isToggling = isToggling,
+                            onClick = {
+                                navController.navigate(
+                                    ScreenRoute.ProductDetails.createRoute(
+                                        product.id
                                     )
+                                )
+                            },
+                            onToggleFavorite = {
+                                val variantId = product.variantId ?: return@ProductItem
+
+                                if (isGuestUser()) {
+                                    guestAction = {}
+                                    showGuestDialog = true
+                                    return@ProductItem
                                 }
-                                if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
+
+                                if (togglingStates[product.id] == true) return@ProductItem
+
+                                togglingStates[product.id] = true
+
+                                coroutineScope.launch {
+                                    val wasFavorite = favoriteStates[product.id] ?: false
+                                    val result = if (wasFavorite)
+                                        wishlistViewModel.removeFromFavorites(customerId, variantId)
+                                    else
+                                        wishlistViewModel.addToFavorites(customerId, variantId)
+
+                                    when (result) {
+                                        is Result.Success<*> -> favoriteStates[product.id] =
+                                            !wasFavorite
+
+                                        is Result.Error -> Toast.makeText(
+                                            context,
+                                            result.message,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                        else -> {}
+                                    }
+
+                                    togglingStates[product.id] = false
+                                }
                             }
-                        }
+                        )
                     }
                 }
+
+            }
+            if (showGuestDialog) {
+                GuestLoginDialog(
+                    onDismiss = { showGuestDialog = false },
+                    onLoginClick = {
+                        showGuestDialog = false
+                        navController.navigate(context.getString(R.string.login))
+                    },
+                    onContinueClick = {
+                        showGuestDialog = false
+                        guestAction?.invoke()
+                    }
+                )
             }
         }
     }
@@ -342,8 +353,16 @@ fun NoInternetConnectionView() {
             modifier = Modifier.size(200.dp)
         )
 
-        Text("No Internet Connection", style = MaterialTheme.typography.titleMedium)
-        Text("Please check your connection", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            stringResource(R.string.no_internet_connection),
+            style = MaterialTheme.typography.titleMedium,
+            fontFamily = customFontFamily,
+        )
+        Text(
+            stringResource(R.string.please_check_your_connection),
+            style = MaterialTheme.typography.bodyMedium,
+            fontFamily = customFontFamily,
+        )
     }
 }
 
@@ -373,31 +392,15 @@ fun Brands(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
             GlideImage(
                 model = brands.imageUrl ?: "",
-                contentDescription = "Brand Logo",
-                modifier = Modifier.size(80.dp)
+                contentDescription = stringResource(R.string.brand_image),
+                modifier = SharedModifiers.roundedImageModifier(80.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-
-//            Text(
-//                text = brands.title,
-//                fontSize = 18.sp,
-//                fontFamily = customFontFamily,
-//                fontWeight = FontWeight.Bold,
-//                color = Color.Black,
-//                maxLines = 1,
-//                overflow = TextOverflow.Ellipsis
-//            )
-
         }
     }
-}
-
-fun <T> groupProductsInRows(products: List<T>): List<List<T>> {
-    return products.chunked(2)
 }
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -405,49 +408,79 @@ fun <T> groupProductsInRows(products: List<T>): List<List<T>> {
 fun ProductItem(
     product: Product,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isFavorite: Boolean,
+    isToggling: Boolean,
+    onToggleFavorite: () -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
+        border = BorderStroke(1.dp, colorResource(R.color.content_color)),
         modifier = modifier
-            .height(200.dp)
-            .clickable { onClick() },
-        border = BorderStroke(1.dp, colorResource(id = R.color.black))
+            .then(SharedModifiers.cardModifier(100.dp))
+            .clickable { onClick() }
+
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorResource(R.color.white)),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
-            GlideImage(
-                model = product.productImage,
-                contentDescription = product.productTitle,
+            Row(
                 modifier = Modifier
-                    .size(100.dp)
+                    .fillMaxSize()
+                    .background(colorResource(R.color.white))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                GlideImage(
+                    model = product.productImage,
+                    contentDescription = product.productTitle,
+                    modifier = SharedModifiers.roundedImageModifier(80.dp),
+                    contentScale = ContentScale.Crop
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(60.dp)
+                        .background(colorResource(R.color.dark_blue))
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    product.productTitle,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = customFontFamily,
+                )
+            }
+
+            IconButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
                     .padding(8.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = product.productTitle.substringAfter("|").trim(),
-                fontSize = 14.sp,
-                fontFamily = customFontFamily,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black,
-                modifier = Modifier
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+                    .background(Color.White.copy(alpha = 0.8f), shape = CircleShape)
+            ) {
+                if (isToggling) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = if (isFavorite) colorResource(R.color.content_color) else Color.Black
+                    )
+                }
+            }
         }
     }
 }
-
 
 @Suppress("DEPRECATION")
 @Composable
@@ -470,7 +503,7 @@ fun CouponCarousel(copuons: List<Coupon>) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .height(270.dp)
             .padding(horizontal = 16.dp)
     ) {
         HorizontalPager(
@@ -493,14 +526,7 @@ fun CouponCarousel(copuons: List<Coupon>) {
                     painter = painterResource(id = coupon.img),
                     contentDescription = coupon.title,
                     contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(16.dp))
-                        .border(
-                            BorderStroke(2.dp, Color.White),
-                            RoundedCornerShape(16.dp)
-                        )
-
+                    modifier = SharedModifiers.couponImageModifier()
                 )
 
                 Row(
@@ -534,25 +560,48 @@ fun CouponCarousel(copuons: List<Coupon>) {
 
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("🎉 Congrats!") },
-            text = { Text("Use coupon code: ${selectedCoupon?.title}") },
+            title = { Text(stringResource(R.string.congrats), fontFamily = customFontFamily) },
+            text = {
+                Text(
+                    selectedCoupon?.title?.let {
+                        stringResource(R.string.use_coupon_code, it)
+                    } ?: "",
+                    fontFamily = customFontFamily,
+                )
+            },
             confirmButton = {
                 Row {
-                    TextButton(onClick = {
-                        val clip = ClipData.newPlainText(
-                            "Coupon Code",
-                            selectedCoupon?.title ?: ""
+                    TextButton(
+                        onClick = { showDialog = false },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = colorResource(R.color.content_color)
                         )
-                        clipboardManager.setPrimaryClip(clip)
-                        Toast.makeText(context, "Coupon copied to clipboard", Toast.LENGTH_SHORT)
-                            .show()
-                        showDialog = false
-                    }) {
-                        Text("Copy")
+                    ) {
+                        Text(stringResource(R.string.close), fontFamily = customFontFamily)
                     }
+
                     Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(onClick = { showDialog = false }) {
-                        Text("Close")
+
+                    TextButton(
+                        onClick = {
+                            val clip = ClipData.newPlainText(
+                                context.getString(R.string.coupon_code),
+                                selectedCoupon?.title ?: ""
+                            )
+                            clipboardManager.setPrimaryClip(clip)
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.coupon_copied_to_clipboard),
+                                Toast.LENGTH_SHORT,
+                            )
+                                .show()
+                            showDialog = false
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = colorResource(R.color.content_color)
+                        )
+                    ) {
+                        Text(stringResource(R.string.copy), fontFamily = customFontFamily)
                     }
                 }
             }

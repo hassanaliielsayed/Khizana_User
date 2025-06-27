@@ -1,6 +1,5 @@
 package com.example.khizana_user.data.repository
 
-import android.util.Log
 import com.example.khizana_user.data.repository.mapper.toProductByCategoryModel
 import com.example.khizana_user.domain.model.ProductByCategory
 import com.example.khizana_user.domain.repository.CategoryRepository
@@ -11,7 +10,7 @@ class CategoryRepositoryImp @Inject constructor(private val remoteDateSource: Re
     override suspend fun getAllProducts(): List<ProductByCategory> {
 
         val response =  remoteDateSource.fetchAllProducts()
-            .map { it.toProductByCategoryModel() }
+            .map { it.toProductByCategoryModel() }.distinctBy { it.productTitle }
 
         return response
     }

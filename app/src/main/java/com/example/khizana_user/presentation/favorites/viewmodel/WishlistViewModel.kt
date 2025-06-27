@@ -5,15 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.FavoriteList
-import com.example.khizana_user.domain.usecase.favouriteusecases.AddToFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.DeleteFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.GetFavoritesUseCase
-import com.example.khizana_user.domain.usecase.favouriteusecases.RemoveFromFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.AddToFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.DeleteFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.GetFavoritesUseCase
+import com.example.khizana_user.domain.usecase.favourite.RemoveFromFavoritesUseCase
 import com.example.khizana_user.utils.ConnectionLiveData
 import com.example.khizana_user.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,40 +24,32 @@ class WishlistViewModel @Inject constructor(
     private val removeFromFavoritesUseCase: RemoveFromFavoritesUseCase,
     private val getFavoritesUseCase: GetFavoritesUseCase,
     private val deleteFavoritesUseCase: DeleteFavoritesUseCase,
-    private val connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val _favoritesState = MutableStateFlow<FavoriteList?>(null)
-    val favoritesState: StateFlow<FavoriteList?> = _favoritesState
+    val favoritesState = _favoritesState.asStateFlow()
 
     private val _toggleFavoriteState = MutableStateFlow<Result<Boolean>>(Result.Success(false))
-    val toggleFavoriteState: StateFlow<Result<Boolean>> = _toggleFavoriteState
+    val toggleFavoriteState = _toggleFavoriteState.asStateFlow()
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
-
-    init {
-        observeNetworkState()
-    }
-
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
-    }
+    private val _loading = MutableStateFlow(true)
+    val loading = _loading.asStateFlow()
 
     fun loadFavorites(customerId: Long) {
         viewModelScope.launch {
+            _loading.value = true
             getFavoritesUseCase(customerId)
-                .onSuccess { _favoritesState.value = it }
+                .onSuccess {
+                    _favoritesState.value = it
+                }
                 .onFailure {
                     Log.e("WishlistViewModel", "Failed to load favorites: ${it.message}")
                     _favoritesState.value = null
                 }
+            _loading.value = false
         }
     }
+
 
     fun clearFavorites(customerId: Long) {
         viewModelScope.launch {
@@ -110,6 +103,5 @@ class WishlistViewModel @Inject constructor(
             }
         }
     }
-
 
 }

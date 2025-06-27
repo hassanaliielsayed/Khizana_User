@@ -1,6 +1,5 @@
 package com.example.khizana_user.domain.repository
 
-import com.example.khizana_user.data.dto.ShopifyCustomerDto
 import com.example.khizana_user.domain.model.Customer
 
 interface ShopifyRepository {

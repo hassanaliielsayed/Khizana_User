@@ -19,11 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
+import com.example.khizana_user.utils.customFontFamily
 
 @Composable
 fun OrderSuccessScreen(
@@ -49,15 +51,17 @@ fun OrderSuccessScreen(
             text = "Order Placed Successfully!",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = Color.Black,
+            fontFamily = customFontFamily,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Your order will arrive in 3 days, If You have any Problems Please Contact Us",
+            text = "Your order will be arrive soon.., If You have any Problems Please Contact Us",
             fontSize = 18.sp,
-            color = Color.Gray
+            color = Color.Gray,
+            fontFamily = customFontFamily,
         )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -65,8 +69,14 @@ fun OrderSuccessScreen(
             Button(
                 onClick = onBackToHomeClick,
                 shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue)),
             ) {
-                Text("Back to Home", fontSize = 16.sp)
+                Text(
+                    "Back to Home",
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    fontFamily = customFontFamily,
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -74,8 +84,14 @@ fun OrderSuccessScreen(
             Button(
                 onClick = onContactUsClick,
                 shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.dark_blue)),
             ) {
-                Text("Contact Us", fontSize = 16.sp)
+                Text(
+                    "Contact Us",
+                    fontSize = 16.sp,
+                    color = Color.Black,
+                    fontFamily = customFontFamily,
+                )
             }
 
         }

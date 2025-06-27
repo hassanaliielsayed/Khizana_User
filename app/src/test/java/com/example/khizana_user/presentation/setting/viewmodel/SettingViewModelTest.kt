@@ -1,0 +1,111 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
+package com.example.khizana_user.presentation.setting.viewmodel
+
+import com.example.khizana_user.domain.usecase.auth.LogoutUseCase
+import com.example.khizana_user.domain.usecase.home.GetExchangeRateUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.*
+import com.example.khizana_user.utils.CurrencyHelper
+import io.mockk.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.*
+import org.junit.After
+import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Test
+
+@ExperimentalCoroutinesApi
+class SettingViewModelTest {
+
+    private val testDispatcher = UnconfinedTestDispatcher()
+
+    private lateinit var getExchangeRateUseCase: GetExchangeRateUseCase
+    private lateinit var clearCustomerUseCase: ClearCustomerUseCase
+    private lateinit var saveCurrencyUseCase: SaveCurrencyUseCase
+    private lateinit var getCurrencyUseCase: GetCurrencyUseCase
+    private lateinit var logoutUseCase: LogoutUseCase
+    private lateinit var saveAddressUseCase: SaveAddressUseCase
+    private lateinit var getAddressUseCase: GetAddressUseCase
+
+    private lateinit var viewModel: SettingViewModel
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+
+        getExchangeRateUseCase = mockk()
+        clearCustomerUseCase = mockk(relaxed = true)
+        saveCurrencyUseCase = mockk(relaxed = true)
+        getCurrencyUseCase = mockk()
+        logoutUseCase = mockk()
+        saveAddressUseCase = mockk(relaxed = true)
+        getAddressUseCase = mockk()
+
+        coEvery { getCurrencyUseCase() } returns flowOf("USD")
+        coEvery { getAddressUseCase() } returns Pair("Giza", "Dokki")
+
+        viewModel = SettingViewModel(
+            getExchangeRateUseCase,
+            clearCustomerUseCase,
+            saveCurrencyUseCase,
+            getCurrencyUseCase,
+            logoutUseCase,
+            saveAddressUseCase,
+            getAddressUseCase
+        )
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `initial state uses saved currency and address`() = runTest {
+        advanceUntilIdle()
+        assertEquals("USD", viewModel.state.value)
+        assertEquals("USD", CurrencyHelper.currencyUnit)
+        assertEquals("Giza", viewModel.governorate.value)
+        assertEquals("Dokki", viewModel.city.value)
+    }
+
+    @Test
+    fun `updateCurrency changes the current state`() = runTest {
+        viewModel.updateCurrency("SAR")
+        assertEquals("SAR", viewModel.state.value)
+    }
+
+    @Test
+    fun `saveCurrency invokes use case`() = runTest {
+        viewModel.saveCurrency("EUR")
+        advanceUntilIdle()
+        coVerify { saveCurrencyUseCase("EUR") }
+    }
+
+    @Test
+    fun `logout invokes clearCustomerUseCase on success`() = runTest {
+        coEvery { logoutUseCase() } returns Result.success(Unit)
+        viewModel.logout()
+        advanceUntilIdle()
+        coVerify { clearCustomerUseCase() }
+    }
+
+    @Test
+    fun `logout does not call clearCustomerUseCase on failure`() = runTest {
+        coEvery { logoutUseCase() } returns Result.failure(Exception("Logout error"))
+        viewModel.logout()
+        advanceUntilIdle()
+        coVerify(exactly = 0) { clearCustomerUseCase() }
+    }
+
+    @Test
+    fun `saveAddress updates state and invokes use case`() = runTest {
+        viewModel.saveAddress("Cairo", "Nasr City")
+        advanceUntilIdle()
+        assertEquals("Cairo", viewModel.governorate.value)
+        assertEquals("Nasr City", viewModel.city.value)
+        coVerify { saveAddressUseCase("Cairo", "Nasr City") }
+    }
+}

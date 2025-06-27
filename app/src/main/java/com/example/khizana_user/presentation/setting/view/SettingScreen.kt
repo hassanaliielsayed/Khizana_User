@@ -3,6 +3,8 @@ package com.example.khizana_user.presentation.setting.view
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,14 +15,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,15 +49,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.example.khizana_user.R
+import com.example.khizana_user.R.string.city
+import com.example.khizana_user.presentation.AppLogo
 import com.example.khizana_user.presentation.home.view.NoInternetConnectionView
 import com.example.khizana_user.presentation.setting.viewmodel.SettingViewModel
+import com.example.khizana_user.utils.customFontFamily
+import com.example.khizana_user.utils.isGuestUser
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(
     navController: NavHostController,
@@ -49,103 +76,386 @@ fun SettingScreen(
     onAboutUsClick: () -> Unit = {},
     viewModel: SettingViewModel = hiltViewModel()
 ) {
+
+    val egyptGovernorates = listOf(
+        "Cairo",
+        "Giza",
+        "Alexandria",
+        "Dakahlia",
+        "Red Sea",
+        "Beheira",
+        "Fayoum",
+        "Gharbia",
+        "Ismailia",
+        "Menoufia",
+        "Minya",
+        "Qalyubia",
+        "New Valley",
+        "Suez",
+        "Aswan",
+        "Assiut",
+        "Beni Suef",
+        "Port Said",
+        "Damietta",
+        "South Sinai",
+        "Kafr El Sheikh",
+        "Matrouh",
+        "Luxor",
+        "Qena",
+        "North Sinai",
+        "Sohag"
+    )
+    var showAddressDialog by remember { mutableStateOf(false) }
+    val governorate by viewModel.governorate.collectAsStateWithLifecycle()
+    val city by viewModel.city.collectAsStateWithLifecycle()
+    var tempGovernorate by remember { mutableStateOf("") }
+    var tempCity by remember { mutableStateOf("") }
+
+
     val context = LocalContext.current
     var showCurrencyDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val selectedCurrency by viewModel.state.collectAsStateWithLifecycle()
 
-    val connectionState by viewModel.networkState.collectAsStateWithLifecycle()
+    LaunchedEffect(showAddressDialog) {
+        if (showAddressDialog) {
+            tempGovernorate = governorate
+            tempCity = city
+        }
+    }
 
-    if (!connectionState) {
-        NoInternetConnectionView()
-        return
-    } else {
-
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    AppLogo()
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
+            )
+        },
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        listOf(Color(0xFFF0F0F0), Color(0xFFE6E6E6))
-                    )
-                )
-                .padding(16.dp)
+                .background(colorResource(id = R.color.light_background))
+                .padding(horizontal = 16.dp)
+                .padding(innerPadding)
         ) {
+
             Text(
-                text = "Settings",
-                fontSize = 20.sp,
+                text = stringResource(R.string.settings),
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    textAlign = TextAlign.Center
+                ),
                 fontWeight = FontWeight.Bold,
+                color = colorResource(id = R.color.content_color),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 32.dp, bottom = 16.dp)
+                    .padding(top = 32.dp, bottom = 24.dp),
+                fontFamily = customFontFamily
             )
 
-            SettingItem(
-                title = "Address",
-                value = "Cairo, Egypt",
-                onClick = { /* TODO */ }
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            SettingItem(
-                title = "Currency",
-                value = selectedCurrency,
-                onClick = { showCurrencyDialog = true }
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            SettingItem(
-                title = "Contact us",
-                onClick = onContactUsClick
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-
-            SettingItem(
-                title = "About us",
-                onClick = onAboutUsClick
-            )
-
-            Spacer(modifier = Modifier.height(144.dp))
-
-            Button(
-                onClick = { showLogoutDialog = true },
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(24.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Gray,
-                    contentColor = Color.White
-                )
+                    .padding(horizontal = 8.dp),
+                elevation = CardDefaults.cardElevation(4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                shape = RoundedCornerShape(12.dp),
             ) {
-                Text(text = "Logout")
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    SettingItem(
+                        title = stringResource(R.string.address),
+                        value = if (governorate.isNotEmpty() && city.isNotEmpty()) {
+                            "$governorate, $city"
+                        } else {
+                            stringResource(R.string.cairo_egypt)
+                        },
+                        onClick = { showAddressDialog = true }
+                    )
+
+                    Divider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = colorResource(R.color.dark_blue),
+                        thickness = 2.dp
+                    )
+
+                    SettingItem(
+                        title = stringResource(R.string.currency),
+                        value = selectedCurrency,
+                        onClick = { showCurrencyDialog = true }
+                    )
+
+                    Divider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = colorResource(R.color.dark_blue),
+                        thickness = 2.dp
+                    )
+
+                    SettingItem(
+                        title = stringResource(R.string.contact_us),
+                        onClick = onContactUsClick
+                    )
+
+                    Divider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = colorResource(R.color.dark_blue),
+                        thickness = 2.dp
+                    )
+
+                    SettingItem(
+                        title = stringResource(R.string.about_us),
+                        onClick = onAboutUsClick
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(25.dp))
+
+            if (isGuestUser()) {
+                Button(
+                    onClick = {
+                        navController.navigate(context.getString(R.string.login)) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(24.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(
+                            id = R.color.content_color
+                        )
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.login),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = customFontFamily,
+                    )
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = colorResource(R.color.content_color)
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        colorResource(R.color.content_color).copy(alpha = 0.5f)
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.logout),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = customFontFamily,
+                        fontSize = 20.sp
+                    )
+                }
             }
         }
+    }
+
+
+    if (showAddressDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddressDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.select_address),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontFamily = customFontFamily,
+                )
+            },
+            text = {
+                Column {
+                    // Governorate Dropdown
+                    var expanded by remember { mutableStateOf(false) }
+
+                    Text(
+                        text = stringResource(R.string.governorate),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontFamily = customFontFamily,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { expanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = tempGovernorate.ifEmpty { stringResource(R.string.select_governorate) },
+                                modifier = Modifier.weight(1f),
+                                fontFamily = customFontFamily,
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDownward,
+                                contentDescription = null
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            egyptGovernorates.forEach { governorate ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = governorate,
+                                            fontFamily = customFontFamily,
+                                        )
+                                    },
+                                    onClick = {
+                                        tempGovernorate = governorate
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    //City Input
+                    Text(
+                        text = stringResource(R.string.city),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontFamily = customFontFamily,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = tempCity,
+                        onValueChange = { tempCity = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text(
+                                stringResource(R.string.enter_city),
+                                fontFamily = customFontFamily,
+                            )
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (tempGovernorate.isNotEmpty() && tempCity.isNotEmpty()) {
+                            viewModel.saveAddress(tempGovernorate, tempCity)
+                            showAddressDialog = false
+                        } else {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.please_select_governorate_and_city),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(R.color.dark_blue)
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.save),
+                        fontFamily = customFontFamily,
+                        color = Color.Black
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showAddressDialog = false }
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        fontFamily = customFontFamily,
+                    )
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = MaterialTheme.shapes.large
+        )
     }
 
     if (showCurrencyDialog) {
         AlertDialog(
             onDismissRequest = { showCurrencyDialog = false },
-            title = { Text("Select Currency") },
+            title = {
+                Text(
+                    text = stringResource(R.string.select_currency),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontFamily = customFontFamily,
+                )
+            },
             text = {
                 Column {
-                    listOf("EGP", "USD").forEach { currency ->
+                    listOf(
+                        stringResource(R.string.egp),
+                        stringResource(R.string.usd)
+                    ).forEach { currency ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
                                     viewModel.updateCurrency(currency)
                                     viewModel.saveCurrency(currency)
-                                    viewModel.getExchangeRate("EGP", selectedCurrency)
+                                    viewModel.getExchangeRate(
+                                        context.getString(R.string.egp),
+                                        selectedCurrency
+                                    )
                                     showCurrencyDialog = false
                                     Toast
-                                        .makeText(context, "Currency Updated", Toast.LENGTH_SHORT)
+                                        .makeText(
+                                            context,
+                                            context.getString(R.string.currency_updated),
+                                            Toast.LENGTH_SHORT
+                                        )
                                         .show()
                                 }
-                                .padding(vertical = 8.dp)
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = currency)
+                            RadioButton(
+                                selected = currency == selectedCurrency,
+                                onClick = {
+                                    viewModel.updateCurrency(currency)
+                                    viewModel.saveCurrency(currency)
+                                    viewModel.getExchangeRate(
+                                        context.getString(R.string.egp),
+                                        selectedCurrency
+                                    )
+                                    showCurrencyDialog = false
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.currency_updated),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = currency,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                                fontFamily = customFontFamily,
+                            )
                         }
                     }
                 }
@@ -153,64 +463,91 @@ fun SettingScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showCurrencyDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel), fontFamily = customFontFamily)
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = MaterialTheme.shapes.large
         )
     }
 
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Confirm Logout") },
-            text = { Text("Are you sure you want to logout?") },
+            title = {
+                Text(
+                    text = stringResource(R.string.confirm_logout),
+                    style = MaterialTheme.typography.titleLarge, fontFamily = customFontFamily,
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.are_you_sure_you_want_to_logout),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = customFontFamily,
+                )
+            },
             confirmButton = {
-                TextButton(onClick = {
-                    viewModel.logout()
-                    showLogoutDialog = false
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true } // Clears backstack
-                    }
-                }) {
-                    Text("Logout")
-                }
+                TextButton(
+                    onClick = {
+                        viewModel.logout()
+                        showLogoutDialog = false
+                        navController.navigate(context.getString(R.string.login)) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) { Text(stringResource(R.string.logout), fontFamily = customFontFamily) }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel), fontFamily = customFontFamily)
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = MaterialTheme.shapes.large
         )
     }
 }
 
+
 @Composable
-fun SettingItem(title: String, value: String? = null, onClick: () -> Unit) {
+fun SettingItem(
+    title: String,
+    value: String? = null,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(8.dp))
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            fontSize = 16.sp
-        )
-        if (value != null) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = value,
-                color = Color.Gray,
-                fontSize = 14.sp
+                text = title,
+                fontSize = 20.sp,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface, fontFamily = customFontFamily,
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            if (value != null) {
+                Text(
+                    text = value,
+                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    fontFamily = customFontFamily,
+                )
+            }
         }
+
         Icon(
-            imageVector = Icons.Default.KeyboardArrowRight,
-            contentDescription = "Arrow",
-            tint = Color.Gray
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = stringResource(R.string.arrow),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
     }
 }

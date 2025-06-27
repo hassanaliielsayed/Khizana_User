@@ -1,6 +1,5 @@
 package com.example.khizana_user.data.repository
 
-import android.util.Log
 import com.example.khizana_user.data.dto.ShopifyCreateCustomerRequest
 import com.example.khizana_user.data.dto.ShopifyCustomerData
 import com.example.khizana_user.data.repository.mapper.toDomain

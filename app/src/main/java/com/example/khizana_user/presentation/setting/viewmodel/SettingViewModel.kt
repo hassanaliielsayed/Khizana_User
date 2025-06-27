@@ -2,16 +2,15 @@ package com.example.khizana_user.presentation.setting.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
-import com.example.khizana_user.domain.usecase.sharedperfernceusecase.ClearCustomerUseCase
-import com.example.khizana_user.domain.usecase.GetCurrencyUseCase
-import com.example.khizana_user.domain.usecase.GetExchangeRateUseCase
-import com.example.khizana_user.domain.usecase.SaveCurrencyUseCase
-import com.example.khizana_user.domain.usecase.authusecases.LogoutUseCase
-import com.example.khizana_user.utils.ConnectionLiveData
+import com.example.khizana_user.domain.usecase.sharedperference.ClearCustomerUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.GetCurrencyUseCase
+import com.example.khizana_user.domain.usecase.home.GetExchangeRateUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.SaveCurrencyUseCase
+import com.example.khizana_user.domain.usecase.auth.LogoutUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.GetAddressUseCase
+import com.example.khizana_user.domain.usecase.sharedperference.SaveAddressUseCase
 import com.example.khizana_user.utils.CurrencyHelper
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,19 +25,27 @@ class SettingViewModel @Inject constructor(
     private val saveCurrencyUseCase: SaveCurrencyUseCase,
     private val getCurrencyUseCase: GetCurrencyUseCase,
     private val logoutUseCase: LogoutUseCase,
-    private val connectionLiveData: ConnectionLiveData
-
+    private val saveAddressUseCase: SaveAddressUseCase,
+    private val getAddressUseCase: GetAddressUseCase,
     ) : ViewModel() {
 
     private val _state = MutableStateFlow("EGP")
     val state = _state.asStateFlow()
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
+    private val _governorate = MutableStateFlow("")
+    val governorate = _governorate.asStateFlow()
+
+    private val _city = MutableStateFlow("")
+    val city = _city.asStateFlow()
 
     init {
 
-        observeNetworkState()
+        viewModelScope.launch {
+            val (gov, city) = getAddressUseCase()
+            gov?.let { _governorate.value = it }
+            city?.let { _city.value = it }
+        }
+
         viewModelScope.launch {
             getCurrencyUseCase().collect { savedCurrency ->
                 CurrencyHelper.currencyUnit = savedCurrency ?: "EGP"
@@ -46,13 +53,16 @@ class SettingViewModel @Inject constructor(
                 Log.i("taag", ": ${CurrencyHelper.currencyUnit} ")
             }
         }
-
     }
 
-    private fun observeNetworkState() {
+    fun saveAddress(governorate: String, city: String) {
         viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
+            try {
+                saveAddressUseCase(governorate, city)
+                _governorate.value = governorate
+                _city.value = city
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }
@@ -63,9 +73,8 @@ class SettingViewModel @Inject constructor(
                 val result = getExchangeRateUseCase(base, target)
                 CurrencyHelper.exchangeRates = result.rate
                 CurrencyHelper.currencyUnit = result.code
-                Log.i("SettingViewModel", "Updated exchange rate: ${result.rate} ${result.code}")
             } catch (e: Exception) {
-                Log.e("SettingViewModel", "Error fetching exchange rate: ${e.message}")
+                e.stackTrace
             }
         }
     }
@@ -75,9 +84,6 @@ class SettingViewModel @Inject constructor(
             val result = logoutUseCase()
             if (result.isSuccess) {
                 clearCustomerUseCase()
-                Log.d("SettingViewModel", "User fully logged out.")
-            } else {
-                Log.e("SettingViewModel", "Logout failed: ${result.exceptionOrNull()?.message}")
             }
         }
     }

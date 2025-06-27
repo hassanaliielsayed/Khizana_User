@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".MyApplication"
@@ -19,6 +20,36 @@
         android:theme="@style/Theme.Khizana_User"
         tools:targetApi="31">
         <activity
+            android:name=".presentation.ShimmerEffect"
+            android:exported="false"
+            android:label="@string/title_activity_shimmer_effect"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
+            android:name=".presentation.TopBarIconButton"
+            android:exported="false"
+            android:label="@string/title_activity_top_bar_icon_button"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
+            android:name=".presentation.home.view.HomeScreenTopSection"
+            android:exported="false"
+            android:label="@string/title_activity_home_screen_top_section"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
+            android:name=".presentation.AppLogo"
+            android:exported="false"
+            android:label="@string/title_activity_app_logo"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
+            android:name=".presentation.onboarding.OnboardingScreen"
+            android:exported="false"
+            android:label="@string/title_activity_onboarding_screen"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
+            android:name=".presentation.SearchScreen"
+            android:exported="false"
+            android:label="@string/title_activity_search_screen"
+            android:theme="@style/Theme.Khizana_User" />
+        <activity
             android:name=".presentation.order.view.OrderDetails"
             android:exported="false"
             android:label="@string/title_activity_order_details"
@@ -28,11 +59,7 @@
             android:exported="false"
             android:label="@string/title_activity_profile_screen"
             android:theme="@style/Theme.Khizana_User" />
-        <activity
-            android:name=".presentation.profile.Profile"
-            android:exported="false"
-            android:label="@string/title_activity_profile"
-            android:theme="@style/Theme.Khizana_User" />
+        <activity android:name=".presentation.onboarding.OnboardingActivity" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -49,7 +76,7 @@
         <activity
             android:name=".presentation.splash.view.SplashScreen"
             android:exported="true"
-            android:label="@string/title_activity_splash_screen"
+            android:label="@string/app_name"
             android:theme="@style/Theme.Khizana_User">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

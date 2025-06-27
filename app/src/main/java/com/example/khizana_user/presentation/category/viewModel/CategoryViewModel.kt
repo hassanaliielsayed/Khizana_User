@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.ProductByCategory
-import com.example.khizana_user.domain.usecase.GetAllProductsByCategoryUseCase
+import com.example.khizana_user.domain.usecase.category.GetAllProductsByCategoryUseCase
 import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
-    private val getAllProductsByCategoryUseCase: GetAllProductsByCategoryUseCase,
-    private val connectionLiveData: ConnectionLiveData
+    private val getAllProductsByCategoryUseCase: GetAllProductsByCategoryUseCase
 ) : ViewModel() {
 
     private val _allProducts = MutableStateFlow<List<ProductByCategory>>(emptyList())
@@ -30,21 +29,13 @@ class CategoryViewModel @Inject constructor(
     private var currentMainCategory: String = "All"
     private var currentSubCategory: String = "All"
 
-    private val _networkState = MutableStateFlow(true)
-    val networkState: StateFlow<Boolean> = _networkState
+    private var currentPrice: Float = Float.MAX_VALUE
+
 
     init {
-        observeNetworkState()
         getAllProducts()
     }
 
-    private fun observeNetworkState() {
-        viewModelScope.launch {
-            connectionLiveData.asFlow().collect { isConnected ->
-                _networkState.value = isConnected
-            }
-        }
-    }
 
     fun getAllProducts() {
         viewModelScope.launch {
@@ -70,7 +61,6 @@ class CategoryViewModel @Inject constructor(
 
     private fun filterProducts() {
         _products.value = _allProducts.value.filter { product ->
-
             val main = when (currentMainCategory) {
                 "All" -> true
                 else -> product.productTags.any { it.equals(currentMainCategory, ignoreCase = true) }
@@ -81,7 +71,21 @@ class CategoryViewModel @Inject constructor(
                 else -> product.product_type?.equals(currentSubCategory, ignoreCase = true) ?: false
             }
 
-            main && sub
+            val priceFilter = product.productPrice <= currentPrice
+
+            main && sub && priceFilter
         }
     }
+
+    fun filterProductsByPrice(price: Float) {
+        currentPrice = price
+        filterProducts()
+    }
+
+    fun filterProductsBySearch(query: String) {
+        _products.value = _allProducts.value.filter {
+            it.productTitle.contains(query, ignoreCase = true)
+        }
+    }
+
 }

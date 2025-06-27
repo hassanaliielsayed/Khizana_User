@@ -1,26 +1,25 @@
 package com.example.khizana_user.di
 
-import android.content.Context
 import com.example.khizana_user.data.dataSource.local.CustomerPreferencesDataSourceImpl
 import com.example.khizana_user.data.dataSource.remote.CartRemoteDataSourceImpl
 import com.example.khizana_user.data.dataSource.remote.OrderRemoteDataSourceImpl
 import com.example.khizana_user.data.dataSource.remote.RemoteDataSourceImp
 import com.example.khizana_user.data.repository.CategoryRepositoryImp
 import com.example.khizana_user.data.dataSource.remote.WishlistRemoteDataSourceImpl
-import com.example.khizana_user.data.repository.CartRemoteDataSource
-import com.example.khizana_user.data.repository.CartRepositoryImpl
-import com.example.khizana_user.data.repository.CustomerPreferencesDataSource
-import com.example.khizana_user.data.repository.CustomerPreferencesRepositoryImpl
+import com.example.khizana_user.data.repository.cart.CartRemoteDataSource
+import com.example.khizana_user.data.repository.cart.CartRepositoryImpl
+import com.example.khizana_user.data.repository.sharedpref.CustomerPreferencesDataSource
+import com.example.khizana_user.data.repository.sharedpref.CustomerPreferencesRepositoryImpl
 import com.example.khizana_user.data.repository.RemoteDataSource
 import com.example.khizana_user.data.repository.HomeRepositoryImp
-import com.example.khizana_user.data.repository.OrderRemoteDataSource
-import com.example.khizana_user.data.repository.OrderRepositoryImpl
+import com.example.khizana_user.data.repository.order.OrderRemoteDataSource
+import com.example.khizana_user.data.repository.order.OrderRepositoryImpl
 import com.example.khizana_user.data.repository.ProductRepositoryImp
 import com.example.khizana_user.data.repository.SettingRepositoryImpl
 import com.example.khizana_user.data.repository.ShopifyRepositoryImpl
 import com.example.khizana_user.domain.repository.CategoryRepository
-import com.example.khizana_user.data.repository.WishlistRemoteDataSource
-import com.example.khizana_user.data.repository.WishlistRepositoryImpl
+import com.example.khizana_user.data.repository.fav.WishlistRemoteDataSource
+import com.example.khizana_user.data.repository.fav.WishlistRepositoryImpl
 import com.example.khizana_user.domain.repository.CartRepository
 import com.example.khizana_user.domain.repository.CustomerPreferencesRepository
 import com.example.khizana_user.domain.repository.HomeRepository
@@ -29,12 +28,9 @@ import com.example.khizana_user.domain.repository.ProductRepository
 import com.example.khizana_user.domain.repository.SettingRepository
 import com.example.khizana_user.domain.repository.ShopifyRepository
 import com.example.khizana_user.domain.repository.WishlistRepository
-import com.example.khizana_user.utils.ConnectionLiveData
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 

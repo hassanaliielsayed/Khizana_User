@@ -1,6 +1,6 @@
 package com.example.khizana_user.presentation.order.view
 
-import androidx.compose.foundation.Image
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,25 +21,38 @@ import androidx.compose.foundation.lazy.items
 import androidx.navigation.NavHostController
 import com.example.khizana_user.presentation.nav.ScreenRoute
 import com.example.khizana_user.utils.Result
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.khizana_user.R
+import com.example.khizana_user.presentation.AppLogo
+import com.example.khizana_user.presentation.TopBarIconButton
+import com.example.khizana_user.presentation.profile.view.StatusBadge
 import com.example.khizana_user.utils.customFontFamily
+import com.example.khizana_user.utils.toCurrentCurrency
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrdersScreen(
     viewModel: OrderViewModel = hiltViewModel(),
     customerId: Long,
-    navController: NavHostController
+    navController: NavHostController,
+    onNavigateToSetting: () -> Unit,
+    onNavigateToCart: () -> Unit
 ) {
-    val state by viewModel.orders.collectAsState()
+    val state by viewModel.orders.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.fetchOrders(customerId)
@@ -49,34 +62,22 @@ fun OrdersScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        stringResource(R.string.project_name),
-                        fontFamily = customFontFamily,
-                        fontSize = 20.sp,
-                        color = Color.Black
-                    )
+                    AppLogo()
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorResource(id = R.color.dark_blue)),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.light_blue)
+                ),
                 actions = {
-
-                    IconButton(onClick = {
-
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Favorites",
-                            tint = Color.Black
-                        )
-                    }
-                    IconButton(onClick = {
-
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Cart",
-                            tint = Color.Black
-                        )
-                    }
+                    TopBarIconButton(
+                        icon = Icons.Default.Settings,
+                        contentDescription = stringResource(R.string.favorites),
+                        onClick = onNavigateToSetting
+                    )
+                    TopBarIconButton(
+                        icon = Icons.Default.ShoppingCart,
+                        contentDescription = stringResource(R.string.shopping_cart),
+                        onClick = onNavigateToCart
+                    )
                 }
             )
         }
@@ -88,16 +89,65 @@ fun OrdersScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            strokeWidth = 4.dp,
+                            color = colorResource(id = R.color.dark_blue)
+                        )
                     }
                 }
 
                 is Result.Success -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 8.dp)
                     ) {
-                        items(result.data) { order ->
-                            OrderItem(order, navController)
+                        Text(
+                            text = stringResource(R.string.your_orders),
+                            fontFamily = customFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp,
+                            modifier = Modifier
+                                .padding(vertical = 24.dp)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = colorResource(id = R.color.black)
+                        )
+
+                        if (result.data.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ShoppingBag,
+                                        contentDescription = stringResource(R.string.no_orders),
+                                        tint = Color.LightGray,
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = stringResource(R.string.no_orders_yet),
+                                        fontFamily = customFontFamily,
+                                        fontSize = 20.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(result.data) { order ->
+                                    OrderItem(order, navController)
+                                }
+                            }
                         }
                     }
                 }
@@ -107,7 +157,25 @@ fun OrdersScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "Error: ${result.message}", color = Color.Red)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = stringResource(R.string.error),
+                                tint = Color.Red,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = stringResource(R.string.error, result.message),
+                                color = Color.Red,
+                                fontFamily = customFontFamily,
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
             }
@@ -115,30 +183,86 @@ fun OrdersScreen(
     }
 }
 
-
 @Composable
 fun OrderItem(order: Orders, navController: NavHostController) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
             .clickable {
                 navController.navigate("${ScreenRoute.OrderDetails.route}/${order.id}")
             },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(6.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(
-                0xFFE3F2FD
-            )
+            containerColor = Color(0xFFE3F2FD)
         )
     ) {
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text("Order ID: ${order.id}")
-            Text("Price: ${order.totalPrice} ${order.currency}")
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.order, order.id),
+                    fontFamily = customFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    color = colorResource(id = R.color.white)
+                )
+
+                Text(
+                    text = order.createdAt.formatAsShortDate(context),
+                    fontFamily = customFontFamily,
+                    fontSize = 16.sp,
+                    color = Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.total_amount1),
+                        fontFamily = customFontFamily,
+                        fontSize = 16.sp,
+                        color = Color.DarkGray
+                    )
+                    Text(
+                        text = order.totalPrice.toCurrentCurrency() +  " EGP",
+                        fontFamily = customFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = colorResource(id = R.color.black)
+                    )
+                }
+
+                StatusBadge(status = order.financialStatus)
+            }
         }
     }
 }
 
+fun String.formatAsShortDate(context: Context): String {
+    return try {
+        val inputFormat =
+            SimpleDateFormat(context.getString(R.string.yyyy_mm_dd), Locale.getDefault())
+        val outputFormat =
+            SimpleDateFormat(context.getString(R.string.mmm_dd_yyyy), Locale.getDefault())
 
+        inputFormat.parse(this)?.let { date ->
+            outputFormat.format(date)
+        } ?: this
+    } catch (e: Exception) {
+        this
+    }
+}
 

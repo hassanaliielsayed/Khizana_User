@@ -10,7 +10,6 @@ import com.example.khizana_user.data.dto.ShopifyCustomerCreatedResponse
 import com.example.khizana_user.data.dto.ShopifyCustomerSearchResponseDto
 import retrofit2.Response
 
-
 interface RemoteDataSource {
 
     suspend fun fetchAllBrands():  List<BrandResponseDto>

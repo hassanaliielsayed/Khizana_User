@@ -1,8 +1,7 @@
 package com.example.khizana_user.data.dataSource.remote.firebase
 
 import android.content.Context
-import android.util.Log
-import com.example.khizana_user.data.repository.AuthDataSource
+import com.example.khizana_user.data.repository.auth.AuthDataSource
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -11,7 +10,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class FirebaseAuthDataSourceImpl @Inject constructor(
+open class FirebaseAuthDataSourceImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : AuthDataSource {
 

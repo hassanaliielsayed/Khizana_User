@@ -4,6 +4,7 @@ import com.example.khizana_user.data.dto.ProductDto
 import com.example.khizana_user.domain.model.ProductByCategory
 
 fun ProductDto.toProductByCategoryModel(): ProductByCategory {
+    val firstVariant = variants?.firstOrNull()
     return ProductByCategory(
         id = this.id,
         productTitle = this.title,
@@ -11,6 +12,7 @@ fun ProductDto.toProductByCategoryModel(): ProductByCategory {
         productVendor = this.vendor,
         productTags = this.tags.split(",").map { it.trim() },
         product_type = this.product_type,
-        productPrice = this.variants.firstOrNull()?.price?.toDoubleOrNull() ?: 0.0
+        productPrice = this.variants.firstOrNull()?.price?.toDoubleOrNull() ?: 0.0,
+        variantId = firstVariant?.id,
     )
 }
