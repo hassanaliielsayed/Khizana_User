@@ -28,7 +28,12 @@ import com.example.khizana_user.R
 import com.example.khizana_user.presentation.onboarding.OnboardingActivity
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 
 @AndroidEntryPoint
 @SuppressLint("CustomSplashScreen")
@@ -44,16 +49,30 @@ class SplashScreen : ComponentActivity() {
 
         setContent {
             Khizana_UserTheme {
+                val viewModel: AuthViewModel = hiltViewModel()
+                val customer by viewModel.currentCustomer.collectAsStateWithLifecycle()
+                val sharedPreferences = remember {
+                    getSharedPreferences("khizana_prefs", Context.MODE_PRIVATE)
+                }
+                val isFirstTime = remember { sharedPreferences.getBoolean("isFirstTime", true) }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     SplashContent(
                         onFinish = {
-                            if (isFirstTime) {
-                                startActivity(Intent(this, OnboardingActivity::class.java))
-                            } else {
-                                startActivity(Intent(this, MainActivity::class.java))
+                            when {
+                                isFirstTime -> {
+                                    sharedPreferences.edit().putBoolean("isFirstTime", false).apply()
+                                    startActivity(Intent(this, OnboardingActivity::class.java))
+                                }
+                                customer != null -> {
+                                    startActivity(Intent(this, MainActivity::class.java))
+                                }
+                                else -> {
+                                    startActivity(Intent(this, MainActivity::class.java))
+                                }
                             }
                             finish()
                         }
