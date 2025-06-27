@@ -10,7 +10,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class FirebaseAuthDataSourceImpl @Inject constructor(
+open class FirebaseAuthDataSourceImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : AuthDataSource {
 

@@ -2,7 +2,6 @@ package com.example.khizana_user.presentation.auth.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.example.khizana_user.domain.model.Customer
 import com.example.khizana_user.domain.usecase.auth.CheckEmailVerifiedUseCase
@@ -83,7 +82,7 @@ class AuthViewModel @Inject constructor(
                 if (verified && !email.isNullOrBlank() && !didRegisterShopify) {
                     Log.d("AuthViewModel", "Observer triggered Shopify registration")
                     didRegisterShopify = true
-                    val name = registeredUserName ?: "User"
+                    val name = registeredUserName ?: "Yousef"
                     registerWithShopify(name, email)
                 }
             }.collect()

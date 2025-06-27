@@ -325,13 +325,13 @@ fun FavoriteItemCard(
                     fontSize = 18.sp
                 )
 
-                Text(
-                    text = stringResource(R.string.quantity1, item.quantity),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colorResource(R.color.content_color),
-                    fontFamily = customFontFamily,
-                    fontSize = 16.sp
-                )
+//                Text(
+//                    text = stringResource(R.string.quantity1, item.quantity),
+//                    style = MaterialTheme.typography.bodySmall,
+//                    color = colorResource(R.color.content_color),
+//                    fontFamily = customFontFamily,
+//                    fontSize = 16.sp
+//                )
             }
 
             if (isLoading) {
