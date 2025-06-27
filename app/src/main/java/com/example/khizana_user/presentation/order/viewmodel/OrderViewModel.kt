@@ -32,7 +32,6 @@ class OrderViewModel @Inject constructor(
     private val updateDraftOrderUseCase: UpdateDraftOrderUseCase,
     private val getOrdersByCustomerIdUseCase: GetOrdersByCustomerIdUseCase,
     private val getOrderByIdUseCase: GetOrderByIdUseCase,
-    private val connectionLiveData: ConnectionLiveData,
     private val getProductImageUseCase: getProductImageUseCase
 ) : ViewModel() {
 

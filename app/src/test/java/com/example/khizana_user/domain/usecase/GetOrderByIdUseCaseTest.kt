@@ -3,6 +3,7 @@ package com.example.khizana_user.domain.usecase
 import com.example.khizana_user.domain.model.OrderItem
 import com.example.khizana_user.domain.model.Orders
 import com.example.khizana_user.domain.repository.OrderRepository
+import com.example.khizana_user.domain.usecase.order.GetOrderByIdUseCase
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.Dispatchers
 import io.mockk.coEvery

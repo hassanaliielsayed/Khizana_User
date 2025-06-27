@@ -2,13 +2,13 @@ package com.example.khizana_user.presentation.productdetails.viewmodel
 
 import com.example.khizana_user.utils.Result
 import com.example.khizana_user.domain.model.Orders
-import com.example.khizana_user.domain.usecase.GetOrderByIdUseCase
-import com.example.khizana_user.domain.usecase.GetOrdersByCustomerIdUseCase
-import com.example.khizana_user.domain.usecase.getProductImageUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.CompleteDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.GetDraftOrderUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.SendInvoiceUseCase
-import com.example.khizana_user.domain.usecase.orderusecase.UpdateDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.CompleteDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.GetDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.GetOrderByIdUseCase
+import com.example.khizana_user.domain.usecase.order.GetOrdersByCustomerIdUseCase
+import com.example.khizana_user.domain.usecase.order.SendInvoiceUseCase
+import com.example.khizana_user.domain.usecase.order.UpdateDraftOrderUseCase
+import com.example.khizana_user.domain.usecase.order.getProductImageUseCase
 import com.example.khizana_user.presentation.order.viewmodel.OrderViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.*
@@ -18,9 +18,10 @@ import org.junit.Before
 import org.junit.Test
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class OrderViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -55,6 +56,7 @@ class OrderViewModelTest {
         getOrdersByCustomerIdUseCase = mockk()
         getOrderByIdUseCase = mockk()
         getProductImageUseCase = mockk()
+        getProductImageUseCase = mockk()
 
         viewModel = OrderViewModel(
             completeOrderUseCase,
@@ -63,7 +65,8 @@ class OrderViewModelTest {
             updateDraftOrderUseCase,
             getOrdersByCustomerIdUseCase,
             getOrderByIdUseCase,
-            getProductImageUseCase
+            getProductImageUseCase,
+
         )
     }
 
