@@ -38,9 +38,8 @@ class AuthViewModel @Inject constructor(
     private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
     private val checkEmailVerifiedUseCase: CheckEmailVerifiedUseCase,
     private val getCurrentUserEmailUseCase: GetCurrentUserEmailUseCase,
-    val getCurrentUserNameUseCase: GetCurrentUserNameUseCase,
-    getCustomerUseCase: GetCustomerUseCase,
-    private val connectionLiveData: ConnectionLiveData
+    private val getCurrentUserNameUseCase: GetCurrentUserNameUseCase,
+    getCustomerUseCase: GetCustomerUseCase
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -75,42 +74,28 @@ class AuthViewModel @Inject constructor(
     private fun observeVerificationAndRegister() {
         viewModelScope.launch {
             combine(_isEmailVerified, _currentUserEmail) { verified, email ->
-                Log.d(
-                    "AuthViewModel",
-                    "observeVerificationAndRegister - verified=$verified, email=$email, didRegisterShopify=$didRegisterShopify"
-                )
                 if (verified && !email.isNullOrBlank() && !didRegisterShopify) {
-                    Log.d("AuthViewModel", "Observer triggered Shopify registration")
                     didRegisterShopify = true
-                    val name = registeredUserName ?: "Yousef"
-                    registerWithShopify(name, email)
+                    registerWithShopify(registeredUserName ?: "Yousef", email)
                 }
             }.collect()
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            if (currentUser != null && currentUser.email != null) {
-                Log.d(
-                    "AuthViewModel",
-                    "App init: re-fetching Shopify customer for ${currentUser.email}"
-                )
-                fetchShopifyCustomer(currentUser.email!!)
-            }
         }
 
+        viewModelScope.launch {
+            val email = getCurrentUserEmailUseCase()
+            if (!email.isNullOrBlank()) {
+                fetchShopifyCustomer(email)
+            }
+        }
     }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            Log.d("AuthViewModel", "Logging in with Firebase: $email")
             _authState.value = AuthState.Loading
             val result = loginUseCase(email, password)
             if (result.isSuccess) {
-                Log.d("AuthViewModel", "Firebase login success")
                 fetchShopifyCustomer(email)
             } else {
-                Log.e(
-                    "AuthViewModel",
-                    "Firebase login failed: ${result.exceptionOrNull()?.message}"
-                )
                 _authState.value = AuthState.Error(result.exceptionOrNull()?.message)
             }
         }
@@ -118,43 +103,31 @@ class AuthViewModel @Inject constructor(
 
     fun register(email: String, password: String, name: String) {
         viewModelScope.launch {
-            Log.d("AuthViewModel", "Starting registration for: $email")
             _authState.value = AuthState.Loading
             val result = registerUseCase(email, password)
             if (result.isSuccess) {
-                Log.d("AuthViewModel", "Firebase registration success for: $email")
                 _currentUserEmail.value = email
                 registeredUserName = name
 
                 sendEmailVerificationUseCase().onSuccess {
-                    Log.d("AuthViewModel", "Verification email sent to $email")
                     _authState.value = AuthState.VerificationEmailSent
                 }.onFailure {
-                    Log.e(
-                        "AuthViewModel",
-                        "Failed to send verification email to $email: ${it.message}"
-                    )
                     _authState.value = AuthState.Error("Could not send verification email")
                 }
             } else {
-                val error = result.exceptionOrNull()?.message ?: "Unknown"
-                Log.e("AuthViewModel", "Registration failed: $error")
-                _authState.value = AuthState.Error(error)
+                _authState.value = AuthState.Error(result.exceptionOrNull()?.message ?: "Unknown")
             }
         }
     }
 
     fun registerWithShopify(name: String, email: String) {
         viewModelScope.launch {
-            Log.d("AuthViewModel", "Registering with Shopify - name=$name, email=$email")
             _authState.value = AuthState.Loading
             val result = registerShopifyCustomerUseCase(name, email)
-            result.onSuccess { customer ->
-                Log.d("AuthViewModel", "Shopify registration success: $customer")
-                saveCustomerUseCase(customer)
+            result.onSuccess {
+                saveCustomerUseCase(it)
                 _authState.value = AuthState.Success
             }.onFailure {
-                Log.e("AuthViewModel", "Shopify registration failed: ${it.message}")
                 _authState.value = AuthState.Error("Shopify registration failed: ${it.message}")
             }
         }
@@ -162,38 +135,25 @@ class AuthViewModel @Inject constructor(
 
     fun fetchShopifyCustomer(email: String) {
         viewModelScope.launch {
-            Log.d("AuthViewModel", "Fetching Shopify customer by email: $email")
             val result = getShopifyCustomerByEmailUseCase(email)
-            if (result.isSuccess) {
-                val customer = result.getOrNull()
+            result.onSuccess { customer ->
                 if (customer != null) {
-                    Log.d("AuthViewModel", "Shopify customer found: $customer")
                     saveCustomerUseCase(customer)
                     _authState.value = AuthState.Success
                 } else {
-                    Log.e("AuthViewModel", "No customer found in Shopify for $email")
                     _authState.value = AuthState.Error("Customer not found in Shopify")
                 }
-            } else {
-                Log.e(
-                    "AuthViewModel",
-                    "Shopify fetch failed: ${result.exceptionOrNull()?.message}"
-                )
-                _authState.value = AuthState.Error(result.exceptionOrNull()?.message)
+            }.onFailure {
+                _authState.value = AuthState.Error(it.message)
             }
         }
     }
 
     fun saveCustomer(customer: Customer) {
-        viewModelScope.launch {
-            Log.d("AuthViewModel", "Saving customer to DataStore: $customer")
-            saveCustomerUseCase(customer)
-        }
+        viewModelScope.launch { saveCustomerUseCase(customer) }
     }
 
-
     fun resetState() {
-        Log.d("AuthViewModel", "Resetting auth state (but preserving email)")
         _authState.value = AuthState.Idle
         _shopifyRegisterResult.value = null
     }
@@ -206,39 +166,22 @@ class AuthViewModel @Inject constructor(
             if (result.isSuccess) {
                 val email = getCurrentUserEmailUseCase()
                 val name = getCurrentUserNameUseCase() ?: "Guest"
-
-                if (email != null) {
-                    Log.d("AuthViewModel", "Google login success. Checking Shopify for $email")
-
-                    val shopifyResult = getShopifyCustomerByEmailUseCase(email)
-
-                    if (shopifyResult.isSuccess) {
-                        val customer = shopifyResult.getOrNull()
+                if (!email.isNullOrBlank()) {
+                    getShopifyCustomerByEmailUseCase(email).onSuccess { customer ->
                         if (customer != null) {
-                            Log.d("AuthViewModel", "Shopify customer found: $customer")
                             saveCustomer(customer)
                             _authState.value = AuthState.Success
                         } else {
-                            Log.d(
-                                "AuthViewModel",
-                                "Shopify customer not found. Registering new customer."
-                            )
                             registerWithShopify(name, email)
                         }
-                    } else {
-                        val errorMsg =
-                            shopifyResult.exceptionOrNull()?.message ?: "Unknown Shopify error"
-                        Log.e("AuthViewModel", "Shopify fetch failed: $errorMsg")
-                        _authState.value = AuthState.Error(errorMsg)
+                    }.onFailure {
+                        _authState.value = AuthState.Error(it.message)
                     }
                 } else {
-                    Log.e("AuthViewModel", "Google sign-in failed: Email is null")
                     _authState.value = AuthState.Error("Google sign-in failed: Missing email")
                 }
             } else {
-                val errorMsg = result.exceptionOrNull()?.message ?: "Unknown login error"
-                Log.e("AuthViewModel", "Google login failed: $errorMsg")
-                _authState.value = AuthState.Error(errorMsg)
+                _authState.value = AuthState.Error(result.exceptionOrNull()?.message ?: "Unknown login error")
             }
         }
     }
@@ -247,22 +190,16 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             val result = loginAsGuestUseCase()
-
             if (result.isSuccess) {
-                val user = FirebaseAuth.getInstance().currentUser
-                if (user?.isAnonymous == true) {
-                    val guest = Customer(
-                        id = -1L,
-                        name = "Guest",
-                        email = "guest@anonymous.com",
-                        isVerified = false,
-                        currency = "EGP"
-                    )
-                    saveCustomerUseCase(guest)
-                    _authState.value = AuthState.Success
-                } else {
-                    _authState.value = AuthState.Error("Anonymous user creation failed.")
-                }
+                val guest = Customer(
+                    id = -1L,
+                    name = "Guest",
+                    email = "guest@anonymous.com",
+                    isVerified = false,
+                    currency = "EGP"
+                )
+                saveCustomerUseCase(guest)
+                _authState.value = AuthState.Success
             } else {
                 _authState.value = AuthState.Error(result.exceptionOrNull()?.message)
             }
@@ -279,13 +216,12 @@ class AuthViewModel @Inject constructor(
 
     fun checkEmailVerificationStatus(onVerified: (String) -> Unit) {
         viewModelScope.launch {
-            val isVerified = checkEmailVerifiedUseCase()
-            _isEmailVerified.value = isVerified
+            val verified = checkEmailVerifiedUseCase()
+            _isEmailVerified.value = verified
 
-            if (isVerified) {
+            if (verified) {
                 val email = getCurrentUserEmailUseCase()
                 if (!email.isNullOrEmpty()) {
-                    Log.d("AuthViewModel", "Email verified: $email")
                     onVerified(email)
                 } else {
                     _authState.value = AuthState.Error("Email not found after verification.")
@@ -298,22 +234,11 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             val verified = checkEmailVerifiedUseCase()
             val email = getCurrentUserEmailUseCase()
-
-            Log.d(
-                "AuthViewModel",
-                "reloadUser() called - verified=$verified, email=$email, didRegisterShopify=$didRegisterShopify"
-            )
-
             _isEmailVerified.value = verified
             _currentUserEmail.value = email
-
             if (verified && !email.isNullOrBlank() && !didRegisterShopify) {
-                Log.d(
-                    "AuthViewModel",
-                    "Detected email verification for $email, starting Shopify registration"
-                )
                 didRegisterShopify = true
-                val name = registeredUserName ?: "User"
+                val name = registeredUserName ?: "Yousef"
                 registerWithShopify(name, email)
             }
         }
@@ -325,4 +250,3 @@ class AuthViewModel @Inject constructor(
         }
     }
 }
-
