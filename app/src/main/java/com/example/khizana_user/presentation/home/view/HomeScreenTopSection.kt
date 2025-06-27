@@ -68,7 +68,7 @@ fun HomeScreenTopSection(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = stringResource(R.string.welcome, currentCustomer?.name ?: "Yousef"),
+                text = stringResource(R.string.welcome, currentCustomer?.name ?: ""),
                 fontSize = 22.sp,
                 fontFamily = customFontFamily,
                 color = Color.White
