@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.khizana_user.R
 import com.example.khizana_user.domain.model.Customer
+import com.example.khizana_user.presentation.auth.viewmodel.AuthViewModel
 import com.example.khizana_user.utils.customFontFamily
 
 @Composable
@@ -67,7 +68,7 @@ fun HomeScreenTopSection(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = stringResource(R.string.welcome, currentCustomer?.name ?: ""),
+                text = stringResource(R.string.welcome, currentCustomer?.name ?: "Yousef"),
                 fontSize = 22.sp,
                 fontFamily = customFontFamily,
                 color = Color.White

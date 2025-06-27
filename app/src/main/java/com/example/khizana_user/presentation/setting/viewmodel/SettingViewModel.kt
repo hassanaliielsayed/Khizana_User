@@ -73,9 +73,8 @@ class SettingViewModel @Inject constructor(
                 val result = getExchangeRateUseCase(base, target)
                 CurrencyHelper.exchangeRates = result.rate
                 CurrencyHelper.currencyUnit = result.code
-                Log.i("SettingViewModel", "Updated exchange rate: ${result.rate} ${result.code}")
             } catch (e: Exception) {
-                Log.e("SettingViewModel", "Error fetching exchange rate: ${e.message}")
+                e.stackTrace
             }
         }
     }
@@ -85,9 +84,6 @@ class SettingViewModel @Inject constructor(
             val result = logoutUseCase()
             if (result.isSuccess) {
                 clearCustomerUseCase()
-                Log.d("SettingViewModel", "User fully logged out.")
-            } else {
-                Log.e("SettingViewModel", "Logout failed: ${result.exceptionOrNull()?.message}")
             }
         }
     }

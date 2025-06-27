@@ -18,9 +18,10 @@ import org.junit.Before
 import org.junit.Test
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class OrderViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -55,6 +56,7 @@ class OrderViewModelTest {
         getOrdersByCustomerIdUseCase = mockk()
         getOrderByIdUseCase = mockk()
         getProductImageUseCase = mockk()
+        getProductImageUseCase = mockk()
 
         viewModel = OrderViewModel(
             completeOrderUseCase,
@@ -63,7 +65,8 @@ class OrderViewModelTest {
             updateDraftOrderUseCase,
             getOrdersByCustomerIdUseCase,
             getOrderByIdUseCase,
-            getProductImageUseCase
+            getProductImageUseCase,
+
         )
     }
 
