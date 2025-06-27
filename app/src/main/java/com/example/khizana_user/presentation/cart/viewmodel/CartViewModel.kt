@@ -29,7 +29,6 @@ class CartViewModel @Inject constructor(
     private val clearCartUseCase: ClearCartUseCase,
     private val validateCouponUseCase: ValidateCouponUseCase,
     private val removeFromCartUseCase: RemoveFromCartUseCase,
-    private val connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val _cartState = MutableStateFlow<Result<FavoriteList>>(Result.Loading)

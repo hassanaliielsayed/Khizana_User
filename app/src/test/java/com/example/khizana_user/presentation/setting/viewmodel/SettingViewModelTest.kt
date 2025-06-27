@@ -1,4 +1,4 @@
-@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@file:OptIn(ExperimentalCoroutinesApi::class)
 
 package com.example.khizana_user.presentation.setting.viewmodel
 
@@ -48,7 +48,9 @@ class SettingViewModelTest {
             clearCustomerUseCase,
             saveCurrencyUseCase,
             getCurrencyUseCase,
-            logoutUseCase
+            logoutUseCase,
+            saveAddressUseCase = TODO(),
+            getAddressUseCase = TODO()
         )
 
     }
