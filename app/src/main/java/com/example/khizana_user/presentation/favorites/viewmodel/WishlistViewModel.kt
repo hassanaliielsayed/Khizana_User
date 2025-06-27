@@ -24,7 +24,6 @@ class WishlistViewModel @Inject constructor(
     private val removeFromFavoritesUseCase: RemoveFromFavoritesUseCase,
     private val getFavoritesUseCase: GetFavoritesUseCase,
     private val deleteFavoritesUseCase: DeleteFavoritesUseCase,
-    private val connectionLiveData: ConnectionLiveData
 ) : ViewModel() {
 
     private val _favoritesState = MutableStateFlow<FavoriteList?>(null)

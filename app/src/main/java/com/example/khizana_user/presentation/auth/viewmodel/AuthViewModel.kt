@@ -82,7 +82,7 @@ class AuthViewModel @Inject constructor(
                 if (verified && !email.isNullOrBlank() && !didRegisterShopify) {
                     Log.d("AuthViewModel", "Observer triggered Shopify registration")
                     didRegisterShopify = true
-                    val name = registeredUserName ?: "User"
+                    val name = registeredUserName ?: "Yousef"
                     registerWithShopify(name, email)
                 }
             }.collect()
