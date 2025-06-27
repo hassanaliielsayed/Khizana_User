@@ -3,17 +3,30 @@ package com.example.khizana_user.data.dataSource.remote
 
 
 import com.example.khizana_user.data.dataSource.remote.api.ShopifyDraftOrderService
-import com.example.khizana_user.data.dto.draftorderDto.*
-import com.example.khizana_user.domain.model.FavoriteItem
-import io.mockk.*
+import com.example.khizana_user.data.dto.draftorderDto.CustomerData
+import com.example.khizana_user.data.dto.draftorderDto.DraftOrderDto
+import com.example.khizana_user.data.dto.draftorderDto.DraftOrderItemDto
+import com.example.khizana_user.data.dto.draftorderDto.DraftOrderResponse
+import com.example.khizana_user.data.dto.draftorderDto.ProductImageDto
+import com.example.khizana_user.data.dto.draftorderDto.ProductImagesResponse
+import com.example.khizana_user.data.dto.draftorderDto.VariantData
+import com.example.khizana_user.data.dto.draftorderDto.VariantResponse
+import io.mockk.coEvery
+import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.*
-import okhttp3.ResponseBody
-import org.junit.*
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 import retrofit2.Response
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+
 
 @ExperimentalCoroutinesApi
 class CartRemoteDataSourceImplTest {
